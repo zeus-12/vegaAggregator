@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Orders Aggregator</title>
+
+    <link href="assets/css/main.css" rel="stylesheet" type="text/css" />
+    <link href="assets/css/styles.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="assets/js/jquery/jquery-ui.css">
+
+
+
+  </head>
+  <body style="background: #F6AF40">
+    <tag id="globalTimeDisplay" class="mainTime"></tag>
+    <tag class="buttonSettings" onclick="openSettingsWindow()">Settings</tag>
+    <center><img src="assets/images/gathering_orders.gif" style="width: 100%; max-width: 800px;"></center>
+    <h1 class="titleMain blink_me">Aggregating Orders</h1>
+    <p class="pendingOrder" id="pendingOrderMessage"></p>
+
+
+
+    <tag id="recentOrdersList" class="orderSection">
+      <tag class="recentOrderHead">RECENT ORDERS</tag>
+      <p class="lastOrder1"><b>KOT12</b> on <b>Table 12</b> by <tag class="stewardName">Kumar</tag><tag class="orderTime"> at 08:00 PM</tag></p>
+      <p class="lastOrder2"><b>KOT11</b> on <b>Table 12</b> by <tag class="stewardName">Kumar</tag><tag class="orderTime"> at 08:00 PM</tag></p>
+      <p class="lastOrder3"><b>KOT10</b> on <b>Table 12</b> by <tag class="stewardName">Kumar</tag><tag class="orderTime"> at 08:00 PM</tag></p>
+    </tag>
+
+    <tag style="position: fixed; bottom: 0; display: block; width: 100%;">
+      <p style="margin: 0 0 5px 0; text-align: center; color: #737373; letter-spacing: 2px; text-transform: uppercase; font-size: 10px; font-weight: 400;"><i class="fa fa-chevron-right blink_me"></i> Do <b>not</b> close this window <i class="fa fa-chevron-left blink_me"></i></p>
+    </tag>
+
+
+
+
+    <!-- SERVER URL SETTINGS -->
+    <div id="serverConnectionURLDisplayModal" class="modal" style="z-index: 10000;">
+         <div class="modal-dialog" style="top: 20%">
+            <!-- Modal content-->
+            <div class="modal-content">
+               <div class="modal-header defaultModalColoredHeader" style="background: #f3960e">
+                  <button  onclick="hideSettingsWindow()" style="float: right; border: none; background: none; outline: none; color: #FFF;" class="btn clearButton">X</button>
+                  <h4 class="modal-title" style="color: #FFF"><i class="fa fa-desktop" style="margin-right: 8px"></i>Server Settings</h4>
+               </div>
+               <div class="modal-body" style="max-height: 420px; overflow-y: auto !important; overflow-x: none !important; padding: 30px 20px;">
+
+                     <div class="row">
+                        <div class="col-lg-12">
+                           <div class="form-group">
+                              <label class="myLabel">Server IP</label>
+                              <input type="text" value="" placeholder="Server URL" style="border: none; border-bottom: 1px solid #ddd; padding-left: 0" class="form-control tip" id="add_custom_server_url"/>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div class="row">
+                        <div class="col-lg-12">
+                           <div class="form-group">
+                              <label class="myLabel">Slave Machine ID</label>
+                              <input type="text" value="" placeholder="Client ID" style="border: none; border-bottom: 1px solid #ddd; padding-left: 0" class="form-control tip" id="add_custom_slave_client_id"/>
+                           </div>
+                        </div>
+                     </div>
+
+
+               </div>
+               <div class="modal-footer" style="padding: 0">
+                  <button style="width: 100%; border: none; border-radius: 0; height: 45px; outline: none !important;" class="btn btn-warning" onclick="setServerConnectionDetails()">Save</button>
+               </div>
+            </div>
+         </div>
+    </div>
+
+
+
+    <!-- SERVER CONNECTION FAILURE : SCREEN LOCK -->
+    <div id="serverErrorLock" style="display: none">
+        <div id="wrapper">
+            <section id="mainLock" style="padding: 35px 44px 20px 44px">
+                <header>
+                    <span class=""><img src="assets/images/server_error.png" alt=""></span>
+                    <h1 style="font-size: 28px; color: #c20016; font-family: 'Roboto';">Server Not Connected</h1>
+                </header>
+
+                <div style="margin: 0">
+                    <p style="color: #777">Please switch on the Server and/or check the connection to it.</p>
+                    <a href="#" onclick="testLocalServerConnection(1)" style="text-transform: none; letter-spacing: normal; border-bottom: 1px solid grey; margin-top: 15px;">Retry?</a>
+                    <tag style="display: block; font-size: 80%" id="refreshServerCheckCounter">-</tag>
+
+                    <a href="#" onclick="openSettingsWindow()" style="text-transform: none; letter-spacing: normal; border: none; position: absolute; top: 10px; right: 5px; width: 30px; color: #ccc; font-size: 18px; cursor: pointer;"><i class="fa fa-cog"></i></a>
+                    
+                </div>
+            </section>
+        </div>
+    </div> 
+
+
+
+
+
+    <!-- CLIENT ACTIVATION : SCREEN LOCK -->
+    <div id="applicationErrorLock" style="display: none">
+        <div id="wrapper">
+            <section id="mainLock" style="padding: 35px 44px 20px 44px;">
+                <header>
+                    <span class=""><img src="assets/images/alert.png" alt=""></span>
+                    <h1 style="font-size: 28px; color: #edac0d; font-family: 'Roboto';">Slave Client Not Found</h1>
+                </header>
+
+                <div style="margin: 0;">
+                    <p style="color: #777">Please recheck the Client Machine ID and try again</p>
+                    <a href="#" onclick="checkClientConnection()" style="text-transform: none; letter-spacing: normal; border-bottom: 1px solid grey; margin-top: 15px;">Try Again</a>
+               
+                    <a href="#" onclick="openSettingsWindow()" style="text-transform: none; letter-spacing: normal; border: none; position: absolute; top: 10px; right: 5px; width: 30px; color: #ccc; font-size: 18px; cursor: pointer;"><i class="fa fa-cog"></i></a>
+                </div>
+            </section>
+        </div>
+    </div> 
+
+
+
+
+        <!-- LOADING MODAL -->
+        <div id="generalLoadingModal" class="modal" style="z-index: 2600 !important;">
+             <div class="modal-dialog" style="width: 100%">
+                <!-- Modal content-->
+                <div class="modal-content" style="border-radius: 4px; position: absolute; right: 10px; top: 10px; min-width: 18em !important; background: none">
+                   <section id="mainLoading">
+                      <header>
+                         <span id="loadingIcon"></span>
+                         <span class="loadingCounter" id="generalLoaderCount"></span>
+                         <span class="blink_me loadingText" id="generalLoaderText">Loading...</span>
+                      </header>
+                   </section>
+                </div>
+             </div>
+          </div>
+
+
+        <!-- INFO BAR - TOAST -->
+        <div id="infobar"></div>  
+
+
+
+<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+<script src="assets/js/jquery/jquery.min.js"></script>
+<script src="assets/js/moment.min.js"></script>
+<script src="assets/js/jquery/jquery-ui.min.js"></script>
+
+<script src="assets/js/communicator.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/punching.js"></script>
+
+  
+
+  </body>
+</html>

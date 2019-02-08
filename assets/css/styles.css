@@ -1,0 +1,368 @@
+
+/* Offline Google Fonts */
+
+/* cyrillic */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Oswald Regular'), local('Oswald-Regular'), url(./fonts/google-fonts/TK3iWkUHHAIjg752HT8Gl-1PK62t.woff2) format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Oswald Regular'), local('Oswald-Regular'), url(./fonts/google-fonts/TK3iWkUHHAIjg752Fj8Gl-1PK62t.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Oswald Regular'), local('Oswald-Regular'), url(./fonts/google-fonts/TK3iWkUHHAIjg752Fz8Gl-1PK62t.woff2) format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Oswald Regular'), local('Oswald-Regular'), url(./fonts/google-fonts/TK3iWkUHHAIjg752GT8Gl-1PKw.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), local('Roboto-Regular'), url(./fonts/google-fonts/KFOmCnqEu92Fr1Mu72xKKTU1Kvnz.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), local('Roboto-Regular'), url(./fonts/google-fonts/KFOmCnqEu92Fr1Mu5mxKKTU1Kvnz.woff2) format('woff2');
+  unicode-range: U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek-ext */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), local('Roboto-Regular'), url(./fonts/google-fonts/KFOmCnqEu92Fr1Mu7mxKKTU1Kvnz.woff2) format('woff2');
+  unicode-range: U+1F00-1FFF;
+}
+/* greek */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), local('Roboto-Regular'), url(./fonts/google-fonts/KFOmCnqEu92Fr1Mu4WxKKTU1Kvnz.woff2) format('woff2');
+  unicode-range: U+0370-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), local('Roboto-Regular'), url(./fonts/google-fonts/KFOmCnqEu92Fr1Mu7WxKKTU1Kvnz.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), local('Roboto-Regular'), url(./fonts/google-fonts/KFOmCnqEu92Fr1Mu7GxKKTU1Kvnz.woff2) format('woff2');
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Roboto';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto'), local('Roboto-Regular'), url(./fonts/google-fonts/KFOmCnqEu92Fr1Mu4mxKKTU1Kg.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+.blink_me {
+  animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {  
+  50% { opacity: 0.3; }
+}
+
+
+.titleMain{
+	margin: 0;
+    text-align: center;
+    text-transform: uppercase;
+    color: #FFF;
+    font-family: 'Oswald';
+    letter-spacing: 4px;
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.buttonSettings{
+	margin: 0;
+	padding: 10px;
+	position: absolute;
+    right: 0;
+    top: 0;
+    font-family: 'Roboto';
+    font-size: 12px;
+    font-weight: 400;
+    cursor: pointer;
+    color: #9e693b;
+}
+
+.buttonSettings:hover, .buttonSettings:active, .buttonSettings:focus{
+	color: #5a391c;
+}
+
+.mainTime{
+	position: absolute;
+    font-size: 21px;
+    text-transform: uppercase;
+    color: #ffd394;
+    font-family: 'Roboto';
+    font-weight: 300;
+    left: 15px;
+    top: 10px;
+}
+
+.pendingOrder{
+	margin: 0;
+    text-align: center;
+    font-family: sans-serif;
+    text-transform: uppercase;
+    font-size: 14px;
+    color: #ffd28c;
+}
+
+
+.orderSection{
+	/*border-top: 1px solid #dc9c39;*/
+    display: block;
+    margin-top: 30px;	
+}
+
+.recentOrderHead{
+    margin-top: 10px;
+    display: block;
+    text-align: center;
+    font-size: 16px;
+    font-family: 'Oswald';
+    color: #ffd28c;	
+}
+
+.lastOrder1{
+	margin: 10px 0 0 0;
+    text-align: center;
+    font-family: 'Roboto';
+    font-size: 20px;
+    color: #b77f27;
+}
+
+.lastOrder2{
+	margin: 0;
+    text-align: center;
+    font-family: 'Roboto';
+    font-size: 17px;
+    color: #d69530;
+}
+
+.lastOrder3{
+	margin: 2px 0 0 0;
+    text-align: center;
+    font-family: 'Roboto';
+    font-size: 15px;
+    color: #d69530;
+}
+
+.orderTime{
+	font-size: 60%;
+	opacity: 0.8;
+}
+
+.stewardName{
+
+}
+
+.myLabel{
+  font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 10px;
+}
+
+
+
+#infobar {
+    visibility: hidden; /* Hidden by default. Visible on click */
+    min-width: 250px; /* Set a default minimum width */
+    
+    background-color: #c0392b; /* Black background color */
+    color: #fff; /* White text color */
+    text-align: center; /* Centered text */
+    border-radius: 2px; /* Rounded borders */
+    padding: 16px; /* Padding */
+    position: fixed; /* Sit on top of the screen */
+    z-index: 10000; /* Add a z-index if needed */
+    right: 30px; /* Center the snackbar */
+    bottom: 30px; /* 30px from the bottom */
+}
+
+
+#infobar.show {
+    visibility: visible; 
+    -webkit-animation: fadein 0.5s, fadeout 0.5s 4.5s;
+    animation: fadein 0.5s, fadeout 0.5s 4.5s;
+}
+
+/* Animations to fade the snackbar in and out */
+@-webkit-keyframes fadein {
+    from {bottom: 0; opacity: 0;} 
+    to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadein {
+    from {bottom: 0; opacity: 0;}
+    to {bottom: 30px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+    from {bottom: 30px; opacity: 1;} 
+    to {bottom: 0; opacity: 0;}
+}
+
+@keyframes fadeout {
+    from {bottom: 30px; opacity: 1;}
+    to {bottom: 0; opacity: 0;}
+}
+
+
+
+
+/*server error lock*/
+#serverErrorLock, #applicationErrorLock{
+  position: fixed; left: 0; top: 0; 
+  z-index: 2000; width: 100%; height: 100%; 
+  overflow: visible; 
+background: #FF512F;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to bottom, #DD2476, #FF512F);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to bottom, #DD2476, #FF512F); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+}
+
+
+
+
+/* Wrapper */
+
+  #wrapper {
+    display: -moz-flex;
+    display: -webkit-flex;
+    display: -ms-flex;
+    display: flex;
+    -moz-align-items: center;
+    -webkit-align-items: center;
+    -ms-align-items: center;
+    align-items: center;
+    -moz-justify-content: center;
+    -webkit-justify-content: center;
+    -ms-justify-content: center;
+    justify-content: center;
+    -moz-flex-direction: column;
+    -webkit-flex-direction: column;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -moz-perspective: 1000px;
+    -webkit-perspective: 1000px;
+    -ms-perspective: 1000px;
+    perspective: 1000px;
+    position: relative;
+    min-height: 100%;
+    padding: 1.5em;
+    z-index: 2;
+  }
+
+    #wrapper > * {
+      z-index: 1;
+    }
+
+    #wrapper:before {
+      content: '';
+      display: block;
+    }
+
+  #mainLock {
+    position: relative;
+    max-width: 27em;
+    min-width: 27em;
+    padding: 4.5em 3em 3em 3em ;
+    background: #ffffff;
+    border-radius: 4px;
+    cursor: default;
+    opacity: 0.95;
+    text-align: center;
+    -moz-transform-origin: 50% 50%;
+    -webkit-transform-origin: 50% 50%;
+    -ms-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+    -moz-transform: rotateX(0deg);
+    -webkit-transform: rotateX(0deg);
+    -ms-transform: rotateX(0deg);
+    transform: rotateX(0deg);
+    -moz-transition: opacity 1s ease, -moz-transform 1s ease;
+    -webkit-transition: opacity 1s ease, -webkit-transform 1s ease;
+    -ms-transition: opacity 1s ease, -ms-transform 1s ease;
+    transition: opacity 1s ease, transform 1s ease;
+  }
+
+    #mainLock .avatar {
+      position: relative;
+      display: block;
+      margin-bottom: 1.5em;
+    }
+
+      #mainLock .avatar img {
+        display: block;
+        margin: 0 auto;
+        border-radius: 100%;
+        box-shadow: 0 0 0 1.5em #ffffff;
+        border: none;
+      }
+
+      #mainLock .avatar:before {
+        content: '';
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: -3em;
+        width: calc(100% + 6em);
+        height: 1px;
+        z-index: -1;
+        background: #c8cccf;
+      }
+
+      .lockScreenInput{
+        border: solid 1px #c8cccf; 
+        width: 100%;
+        height: 50px; text-align: center; font-size: 18px; border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .lockScreenInput:focus, .lockScreenInput:active, .lockScreenInput:hover{
+        border-color: #c0392b;
+        outline: none;
+      }
+
+
