@@ -13,7 +13,11 @@
   </head>
   <body style="background: #F6AF40">
     <tag id="globalTimeDisplay" class="mainTime"></tag>
+    <tag id="operationButtons">
+      <tag class="buttonSettings" style="right: 70px" onclick="operationPause()">Running</tag>
+    </tag>
     <tag class="buttonSettings" onclick="openSettingsWindow()">Settings</tag>
+    
     <center><img src="assets/images/gathering_orders.gif" style="width: 100%; max-width: 800px;"></center>
     <h1 class="titleMain blink_me">Aggregating Orders</h1>
     <p class="pendingOrder" id="pendingOrderMessage"></p>
