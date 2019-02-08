@@ -2,6 +2,8 @@
 
 function  initialisePunching(){
 
+    console.log('test')
+
           $.ajax({
             type: 'GET',
             url: COMMON_LOCAL_SERVER_IP+'/accelerate_taps_orders/_design/orders/_view/view?include_docs=true',
@@ -18,33 +20,40 @@ function  initialisePunching(){
                     document.getElementById("pendingOrderMessage").innerHTML = data.total_rows+' Pending Order'+(data.total_rows > 1 ? 's': '');
               
                     var orderData = data.rows[0].doc;
-                    var kotID = orderData.KOTNumber;
 
-                    //Check if it's already existing KOT (editing or not)
-                    var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : ''; 
-                    if(!accelerate_licencee_branch || accelerate_licencee_branch == ''){
-                      showToast('Invalid Licence Error: KOT can not be generated. Please contact Accelerate Support if problem persists.', '#e74c3c');
-                      return '';
+                    if(orderData.KOTNumber != ''){ //Editing Order case..
+
+                        var kotID = orderData.KOTNumber;
+
+                        //Check if it's already existing KOT (editing or not)
+                        var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : 'NAVALUR'; 
+                        if(!accelerate_licencee_branch || accelerate_licencee_branch == ''){
+                          showToast('Invalid Licence Error: KOT can not be generated. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                          return '';
+                        }
+
+                        var kot_request_data = accelerate_licencee_branch +"_KOT_"+ kotID;
+
+                        $.ajax({
+                          type: 'GET',
+                          url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+kot_request_data,
+                          timeout: 10000,
+                          success: function(newKOTData) {
+                            if(data._id != ""){
+                                printEditedKOT(orderData, newKOTData);
+                            }
+                          },
+                          error: function(data) {
+                            //KOT not found 
+                          }
+                        });
+                    }
+                    else{
+                        printFreshKOT(orderData); //Fresh Order case..
                     }
 
-                    var kot_request_data = accelerate_licencee_branch +"_KOT_"+ kotID;
 
-                    $.ajax({
-                      type: 'GET',
-                      url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+kot_request_data,
-                      timeout: 10000,
-                      success: function(data) {
-                        if(data._id != ""){
-                            printEditedKOT(orderData, data);
-                        }
-                        else{
-                            printFreshKOT(orderData);  
-                        }
-                      },
-                      error: function(data) {
-                        printFreshKOT(orderData);  
-                      }
-                    });
+                    
               }
             },
             error: function(data){
@@ -59,8 +68,7 @@ initialisePunching();
 
 
 function printEditedKOT(existing_kot, new_kot){
-    console.log(existing_kot, new_kot)
-
+//    console.log(existing_kot, new_kot)
 
   //Process Next KOT
   setTimeout(function(){
@@ -305,6 +313,7 @@ function printFreshKOT(new_kot){
                                     }
 
                                     function startRelayPrinting(index){
+                                        console.log(allPrintersList)
 
                                         console.log('Relay Print - Round '+index+' on '+allPrintersList[index].name)
 

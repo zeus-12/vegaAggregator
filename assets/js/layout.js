@@ -1,5 +1,5 @@
 
-let COMMON_LOCAL_SERVER_IP = 'http://admin:admin@127.0.0.1:5984/';
+let COMMON_LOCAL_SERVER_IP = 'http://admin:admin@192.168.1.3:5984/';
 
 
 let $ = jQuery.noConflict();
