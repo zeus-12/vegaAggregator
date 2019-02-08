@@ -591,3 +591,9 @@ function printFreshKOT(new_kot){
 function showPrintingAnimation(){
 
 }
+
+function finishPrintingAnimation(){
+
+}
+
+
