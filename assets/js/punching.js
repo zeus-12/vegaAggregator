@@ -150,10 +150,11 @@ function removeAlreadyPrintedKOT(id, revID){
 function printFreshKOT(new_kot){
 
            var obj = new_kot;
-           delete obj._rev;
 
            var super_memory_id = obj._id;
            var super_memory_rev = obj._rev;
+
+           delete obj._rev;
 
           //Acquire a new KOT Number
           $.ajax({
