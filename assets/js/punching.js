@@ -13,7 +13,13 @@ function  initialisePunching(){
             success: function(data) {
 
               if(data.total_rows == 0){
-                
+                    document.getElementById("pendingOrderMessage").innerHTML = 'No Pending Orders';
+                    
+                    //Process Next KOT
+                    setTimeout(function(){
+                        initialisePunching();
+                    }, 5000);
+
               }
               else{
                     //Update Message
@@ -51,8 +57,6 @@ function  initialisePunching(){
                     else{
                         printFreshKOT(orderData); //Fresh Order case..
                     }
-
-
                     
               }
             },
@@ -64,6 +68,7 @@ function  initialisePunching(){
 }
 
 initialisePunching();
+refreshRecentOrdersStream();
 
 
 
@@ -77,14 +82,174 @@ function printEditedKOT(existing_kot, new_kot){
 
 }
 
+function refreshRecentOrdersStream(){
+
+    var order_stream = window.localStorage.orderStream && window.localStorage.orderStream != '' ? JSON.parse(window.localStorage.orderStream) : [];
+
+    if(order_stream.length == 1){
+        document.getElementById("recentOrdersList").innerHTML = ''+
+              '<tag class="recentOrderHead">RECENT ORDERS</tag>'+
+              '<p class="lastOrder1"><b>'+order_stream[0].KOTNumber+'</b> on <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
+    }
+    else if(order_stream.length == 2){
+        document.getElementById("recentOrdersList").innerHTML = ''+
+              '<tag class="recentOrderHead">RECENT ORDERS</tag>'+
+              '<p class="lastOrder1"><b>'+order_stream[1].KOTNumber+'</b> on <b>'+order_stream[1].table+'</b> by <tag class="stewardName">'+(order_stream[1].steward != '' ? order_stream[1].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[1].time+'</tag></p>'+
+              '<p class="lastOrder2"><b>'+order_stream[0].KOTNumber+'</b> on <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
+    }
+    else if(order_stream.length == 3){
+        document.getElementById("recentOrdersList").innerHTML = ''+
+              '<tag class="recentOrderHead">RECENT ORDERS</tag>'+
+              '<p class="lastOrder1"><b>'+order_stream[2].KOTNumber+'</b> on <b>'+order_stream[2].table+'</b> by <tag class="stewardName">'+(order_stream[2].steward != '' ? order_stream[2].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[2].time+'</tag></p>'+
+              '<p class="lastOrder2"><b>'+order_stream[1].KOTNumber+'</b> on <b>'+order_stream[1].table+'</b> by <tag class="stewardName">'+(order_stream[1].steward != '' ? order_stream[1].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[1].time+'</tag></p>'+
+              '<p class="lastOrder3"><b>'+order_stream[0].KOTNumber+'</b> on <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
+    }
+    else{
+        document.getElementById("recentOrdersList").innerHTML = '';
+    }
+}
+
+
+function removeAlreadyPrintedKOT(id, revID){
+
+        $.ajax({
+          type: 'DELETE',
+          url: COMMON_LOCAL_SERVER_IP+'/accelerate_taps_orders/'+id+'?rev='+revID,
+          contentType: "application/json",
+          dataType: 'json',
+          timeout: 10000,
+          success: function(data) {     
+            
+          },
+          error: function(data) {
+            showToast('Server Warning: Unable to modify Order KOT. Please contact Accelerate Support.', '#e67e22');
+          }
+        });         
+}
+
+
+
+
+
 
 function printFreshKOT(new_kot){
 
-    var obj = new_kot;
+           var obj = new_kot;
 
-    initialiseKOTPrinting();
+           var super_memory_id = obj._id;
+           var super_memory_rev = obj._rev;
 
-    
+          //Acquire a new KOT Number
+          $.ajax({
+            type: 'GET',
+            url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/ACCELERATE_KOT_INDEX',
+            contentType: "application/json",
+            dataType: 'json',
+            timeout: 10000,
+            success: function(data) {
+
+                var num = parseInt(data.value) + 1;
+                var kot = 'K' + num;
+
+                //assigning KOT number
+                obj.KOTNumber = kot;
+                var memory_revID = data._rev;
+
+
+
+                      //Set _id from Branch mentioned in Licence
+                      var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : ''; 
+                      if(!accelerate_licencee_branch || accelerate_licencee_branch == ''){
+                        showToast('Invalid Licence Error: KOT can not be generated. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                        return '';
+                      }
+
+                      obj._id = accelerate_licencee_branch+'_KOT_'+kot;
+                    
+
+                      var remember_obj = '';
+                      var original_order_object_cart = obj.cart;
+
+                      //Post to local Server
+                      $.ajax({
+                        type: 'POST',
+                        url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/',
+                        data: JSON.stringify(obj),
+                        contentType: "application/json",
+                        dataType: 'json',
+                        timeout: 10000,
+                        success: function(data) {
+                          if(data.ok){
+                            showToast('KOT #'+num+' generated Successfully', '#27ae60');
+                          
+
+                            //Render order stream
+                            var order_stream = window.localStorage.orderStream && window.localStorage.orderStream != '' ? JSON.parse(window.localStorage.orderStream) : [];
+
+                            if(order_stream.length < 3){
+                                order_stream.push({
+                                    "KOTNumber" : new_kot.KOTNumber,
+                                    "table": new_kot.table,
+                                    "steward": new_kot.stewardName,
+                                    "time": new_kot.timeKOT != '' ? moment(new_kot.timeKOT, 'hhmm').format('hh:mm A') : moment(new_kot.timePunch, 'hhmm').format('hh:mm A')
+                                });
+                                window.localStorage.orderStream = JSON.stringify(order_stream);
+                            }
+                            else{
+                                order_stream.push({
+                                    "KOTNumber" : new_kot.KOTNumber,
+                                    "table": new_kot.table,
+                                    "steward": new_kot.stewardName,
+                                    "time": new_kot.timeKOT != '' ?  moment(new_kot.timeKOT, 'hhmm').format('hh:mm A') : moment(new_kot.timePunch, 'hhmm').format('hh:mm A')
+                                });
+
+                                var new_stream = order_stream.slice(1, 4);
+                                window.localStorage.orderStream = JSON.stringify(new_stream);
+                            }
+
+
+                            refreshRecentOrdersStream();
+                            initialiseKOTPrinting();
+                            removeAlreadyPrintedKOT(super_memory_id, super_memory_rev);
+
+                          }
+                        },
+                        error: function(data) {
+                            showToast('System Error: Unable to update KOT Index. Next KOT Number might be faulty. Please contact Accelerate Support.', '#e74c3c');
+                        }
+                        });
+
+
+
+                          //Update KOT number on server
+                          var updateData = {
+                            "_rev": memory_revID,
+                            "identifierTag": "ACCELERATE_KOT_INDEX",
+                            "value": num
+                          }
+
+                          $.ajax({
+                            type: 'PUT',
+                            url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_KOT_INDEX/',
+                            data: JSON.stringify(updateData),
+                            contentType: "application/json",
+                            dataType: 'json',
+                            timeout: 10000,
+                            success: function(data) {
+                              
+                            },
+                            error: function(data) {
+                              showToast('System Error: Unable to update KOT Index. Next KOT Number might be faulty. Please contact Accelerate Support.', '#e74c3c');
+                            }
+                          });
+            
+            },
+            error: function(data){
+                showToast('Unable to assign KOT Number. Please try again.', '#e74c3c');
+            }
+        });
+
+
 
                     //Send KOT for Printing
                     function initialiseKOTPrinting(){
@@ -96,8 +261,6 @@ function printFreshKOT(new_kot){
                             else if($('#serverErrorLock').is(':visible')) {
                                 return '';
                             }
-
-
                             
                             var isKOTRelayingEnabled = window.localStorage.appOtherPreferences_KOTRelayEnabled ? (window.localStorage.appOtherPreferences_KOTRelayEnabled == 1 ? true : false) : false;
                             var isKOTRelayingEnabledOnDefault = window.localStorage.appOtherPreferences_KOTRelayEnabledDefaultKOT ? (window.localStorage.appOtherPreferences_KOTRelayEnabledDefaultKOT == 1 ? true : false) : false;
