@@ -520,6 +520,8 @@ function printFreshKOT(new_kot){
                                                             startRelayPrinting(index+1);
                                                         }
                                                         else{
+                                                            //Process Next KOT
+                                                            setTimeout(function(){ initialisePunching(); }, 5000);
                                                             finishPrintingAnimation();
                                                         }
                                                     }
@@ -528,6 +530,8 @@ function printFreshKOT(new_kot){
                                                             startRelayPrinting(index+1);
                                                         }
                                                         else{
+                                                            //Process Next KOT
+                                                            setTimeout(function(){ initialisePunching(); }, 5000);
                                                             finishPrintingAnimation();
                                                         }
                                                     }
@@ -572,16 +576,15 @@ function printFreshKOT(new_kot){
                                       g++;
                                     }
                                 }
+
+
+                                //Process Next KOT
+                                setTimeout(function(){
+                                    initialisePunching();
+                                  }, 5000);
                                     
                             }
-
                     } //end - initialise KOT Prints
-
-
-  //Process Next KOT
-  setTimeout(function(){
-    initialisePunching();
-  }, 5000);
 }
 
 
