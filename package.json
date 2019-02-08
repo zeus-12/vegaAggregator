@@ -1,5 +1,5 @@
 {
-  "name": "Vega Aggregator",
+  "name": "VegaAggregator",
   "version": "0.0.9",
   "description": "Subsidiary application for Vega POS to aggregate orders from different sources",
   "main": "main.js",
