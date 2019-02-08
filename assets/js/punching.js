@@ -1,8 +1,23 @@
+let PAUSE_FLAG = false;
 
+function operationPause(){
+    document.getElementById("operationButtons").innerHTML = '<tag class="buttonSettings" style="right: 70px; color: red; font-weight: bold" onclick="operationStart()">Paused</tag>';
+    PAUSE_FLAG = true;
+}
+
+function operationStart(){
+    document.getElementById("operationButtons").innerHTML = '<tag class="buttonSettings" style="right: 70px" onclick="operationPause()">Running</tag>';
+    PAUSE_FLAG = false;
+    initialisePunching();
+}
 
 function  initialisePunching(){
 
-    console.log('test')
+        if(PAUSE_FLAG){
+            return '';
+        }
+
+          console.log('Checking for orders...')
 
           $.ajax({
             type: 'GET',
