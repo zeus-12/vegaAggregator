@@ -11,7 +11,7 @@ function operationStart(){
     initialisePunching();
 }
 
-function  initialisePunching(){
+function initialisePunching(){
 
         if(PAUSE_FLAG){
             return '';
@@ -91,14 +91,620 @@ refreshRecentOrdersStream();
 
 
 
-function printEditedKOT(existing_kot, new_kot){
- 
-  console.log(existing_kot, new_kot)
+function printEditedKOT(originalData, new_kot){
 
-  //Process Next KOT
-  setTimeout(function(){
-    initialisePunching();
-  }, 5000);
+  generateEditedKOT();
+
+  var super_memory_id = new_kot._id;
+  var super_memory_rev = new_kot._rev;
+ 
+
+  /*Generate KOT for Editing Order */
+  function generateEditedKOT(){
+
+    var changed_cart_products = new_kot.cart;
+    var original_cart_products = originalData.cart;
+
+
+    //Check if Item Deleted or Count Decreased (only Admins can do this!)
+    var hasRestrictedEdits = false;
+
+    //Track changes in the KOT
+    var comparisonResult = [];
+
+
+    //Search for changes in the existing items
+    checkForItemChanges(original_cart_products[0], 0);
+
+    function checkForItemChanges(checkingItem, index){
+      //Find each item in original cart in the changed cart
+      var itemFound = false;
+      for(var i = 0; i < changed_cart_products.length; i++){
+        
+        //same item found, check for its quantity and report changes
+        if((checkingItem.code == changed_cart_products[i].code) && (checkingItem.cartIndex == changed_cart_products[i].cartIndex)){
+          
+          itemFound = true;
+
+          //Change in Quantity
+          if(changed_cart_products[i].qty > checkingItem.qty){ //qty increased
+            //console.log(checkingItem.name+' x '+changed_cart_products[i].qty+' ('+(changed_cart_products[i].qty-checkingItem.qty)+' More)');
+            
+            var tempItem = changed_cart_products[i];
+            tempItem.change = "QUANTITY_INCREASE";
+            tempItem.oldValue = checkingItem.qty;
+            if(changed_cart_products[i].comments != '' && checkingItem.comments != changed_cart_products[i].comments){
+              tempItem.newComments = changed_cart_products[i].comments;
+            }
+            comparisonResult.push(tempItem);
+          }
+          else if(changed_cart_products[i].qty < checkingItem.qty){ //qty decreased
+            //console.log(changed_cart_products[i].name+' x '+changed_cart_products[i].qty+' ('+(checkingItem.qty-changed_cart_products[i].qty)+' Less)');
+            
+            var tempItem = changed_cart_products[i];
+            tempItem.change = "QUANTITY_DECREASE";
+            tempItem.oldValue = checkingItem.qty;
+            if(changed_cart_products[i].comments != '' && checkingItem.comments != changed_cart_products[i].comments){
+              tempItem.newComments = changed_cart_products[i].comments;
+            }
+            comparisonResult.push(tempItem);
+
+            hasRestrictedEdits = true;
+          }
+          else{ //same qty
+            //console.log(checkingItem.name+' x '+checkingItem.qty);
+          }
+
+          break;
+          
+        }
+
+        //Last iteration to find the item
+        if(i == changed_cart_products.length-1){
+          if(!itemFound){ //Item Deleted
+              
+              var tempItem = checkingItem;
+              
+              tempItem.change = "ITEM_DELETED";
+              tempItem.oldValue = "";
+              if(changed_cart_products[i].comments != '' && checkingItem.comments != changed_cart_products[i].comments){
+                tempItem.newComments = changed_cart_products[i].comments;
+              }
+              comparisonResult.push(tempItem);
+
+              hasRestrictedEdits = true;
+          }
+        }
+      }
+
+      if(original_cart_products[index+1]){
+        checkForItemChanges(original_cart_products[index+1], index+1);
+      }
+      else{
+        checkForNewItems();
+      }
+
+    } //end - function
+
+
+    //Search for new additions to the Cart
+    function checkForNewItems(){
+      var j = 0;
+      while(changed_cart_products[j]){
+
+        for(var m = 0; m < original_cart_products.length; m++){
+          //check if item is found, not found implies New Item!
+          if((changed_cart_products[j].cartIndex == original_cart_products[m].cartIndex) && (changed_cart_products[j].code == original_cart_products[m].code)){
+            //Item Found
+            break;
+          }
+
+          //Last iteration to find the item
+          if(m == original_cart_products.length-1){
+            //console.log(changed_cart_products[j].name+' x '+changed_cart_products[j].qty+' (New)');
+            
+            var tempItem = changed_cart_products[j];
+            tempItem.change = "NEW_ITEM";
+            tempItem.oldValue = "";
+            if(changed_cart_products[j].comments != ''){
+              tempItem.newComments = changed_cart_products[j].comments;
+            }
+            
+            comparisonResult.push(tempItem);
+          }
+        }
+
+        //last iteration
+        if(j == changed_cart_products.length - 1){
+          generateEditedKOTAfterProcess(originalData.KOTNumber, changed_cart_products, comparisonResult, hasRestrictedEdits)
+        } 
+
+        j++;
+      }
+    }
+
+  }
+
+
+
+
+  function generateEditedKOTAfterProcess(kotID, newCart, compareObject, hasRestrictedEdits){
+
+      var isUserAnAdmin = false;
+
+      if(compareObject.length == 0){
+        //Process Next KOT
+        setTimeout(function(){ initialisePunching(); }, 5000);
+        return ''
+      }
+
+      //Set _id from Branch mentioned in Licence
+      var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : ''; 
+      if(!accelerate_licencee_branch || accelerate_licencee_branch == ''){
+        showToast('Invalid Licence Error: KOT can not be generated. Please contact Accelerate Support if problem persists.', '#e74c3c');
+        return '';
+      }
+
+      var kot_request_data = accelerate_licencee_branch +"_KOT_"+ kotID;
+
+      $.ajax({
+        type: 'GET',
+        url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+kot_request_data,
+        timeout: 10000,
+        success: function(data) {
+          if(data._id != ""){
+            
+            var kot = data;
+
+            //Updates the KOT
+            kot.timeKOT = moment().format('hhmm');
+            kot.cart = newCart;
+
+
+
+        /* RECALCULATE New Figures*/
+        var subTotal = 0;
+        var packagedSubTotal = 0;
+
+        var n = 0;
+        while(kot.cart[n]){
+          subTotal = subTotal + kot.cart[n].qty * kot.cart[n].price;
+
+          if(kot.cart[n].isPackaged){
+            packagedSubTotal += kot.cart[n].qty * kot.cart[n].price;
+          }
+
+          n++;
+        }
+
+
+
+      /*Calculate Taxes and Other Charges*/
+          var k = 0;
+          if(kot.extras.length > 0){
+              for(k = 0; k < kot.extras.length; k++){
+
+                var tempExtraTotal = 0;
+
+                if(kot.extras[k].isPackagedExcluded){
+                    if(kot.extras[k].value != 0){
+                      if(kot.extras[k].unit == 'PERCENTAGE'){
+                        tempExtraTotal = (kot.extras[k].value * (subTotal - packagedSubTotal))/100;
+                      }
+                      else if(kot.extras[k].unit == 'FIXED'){
+                        tempExtraTotal = kot.extras[k].value;
+                      }
+                    }
+              }
+              else{
+                    if(kot.extras[k].value != 0){
+                      if(kot.extras[k].unit == 'PERCENTAGE'){
+                        tempExtraTotal = kot.extras[k].value * subTotal/100;
+                      }
+                      else if(kot.extras[k].unit == 'FIXED'){
+                        tempExtraTotal = kot.extras[k].value;
+                      }
+                    }               
+              }
+
+
+                tempExtraTotal = Math.round(tempExtraTotal * 100) / 100;
+
+                kot.extras[k] = {
+                  "name": kot.extras[k].name,
+                  "value": kot.extras[k].value,
+                  "unit": kot.extras[k].unit,
+                  "amount": tempExtraTotal,
+                  "isPackagedExcluded": kot.extras[k].isPackagedExcluded
+                };
+              }
+          }
+
+
+
+
+            /*Calculate Discounts if Any*/     
+            if(kot.discount){
+                  var tempExtraTotal = 0;
+                  if(kot.discount.value != 0){
+                    if(kot.discount.unit == 'PERCENTAGE'){
+                      tempExtraTotal = kot.discount.value * subTotal/100;
+                    }
+                    else if(kot.discount.unit == 'FIXED'){
+                      tempExtraTotal = kot.discount.value;
+                    }
+                  }
+
+                  tempExtraTotal = Math.round(tempExtraTotal * 100) / 100;
+
+                  kot.discount.amount = tempExtraTotal;
+            }
+
+
+            /*Calculate Custom Extras if Any*/     
+            if(kot.customExtras){
+                  var tempExtraTotal = 0;
+                  if(kot.customExtras.value != 0){
+                    if(kot.customExtras.unit == 'PERCENTAGE'){
+                      tempExtraTotal = kot.customExtras.value * subTotal/100;
+                    }
+                    else if(kot.customExtras.unit == 'FIXED'){
+                      tempExtraTotal = kot.customExtras.value;
+                    }
+                  }
+
+                  tempExtraTotal = Math.round(tempExtraTotal * 100) / 100;
+
+                  kot.customExtras.amount = tempExtraTotal;
+            }
+
+
+            var minimum_cooking_time = 0;
+
+            for(var t = 0; t < compareObject.length; t++){
+              if(compareObject[t].change == "NEW_ITEM" || compareObject[t].change == "QUANTITY_INCREASE"){
+            
+            /* min cooking time */
+            if(compareObject[t].cookingTime && compareObject[t].cookingTime > 0){
+              if(minimum_cooking_time <= compareObject[t].cookingTime){
+                minimum_cooking_time = compareObject[t].cookingTime;
+              }
+            }
+
+              }
+            }
+
+
+                  //Update on Server
+                  $.ajax({
+                    type: 'PUT',
+                    url: COMMON_LOCAL_SERVER_IP+'accelerate_kot/'+(kot._id)+'/',
+                    data: JSON.stringify(kot),
+                    contentType: "application/json",
+                    dataType: 'json',
+                    timeout: 10000,
+                    success: function(data) {
+                       
+                          //Show minimum cooking time...
+                          var display_minimum_cooking_time_flag = window.localStorage.appOtherPreferences_minimumCookingTime && window.localStorage.appOtherPreferences_minimumCookingTime == 1 ? true : false;
+
+                          if(display_minimum_cooking_time_flag && minimum_cooking_time > 0){
+                            flashMinimumCookingTime(minimum_cooking_time);
+                          }
+
+
+                          sendKOTChangesToPrinterPreProcess(kot, compareObject);
+
+                          showToast('Changed KOT #'+kot.KOTNumber+' generated Successfully', '#27ae60');
+
+                          removeAlreadyPrintedKOT(super_memory_id, super_memory_rev);
+                      
+                    },
+                    error: function(data) {
+                        showToast('System Error: Unable to update the Order. Please contact Accelerate Support.', '#e74c3c');
+                    }
+                  });         
+
+          }
+          else{
+            showToast('Not Found Error: #'+kotID+' not found on Server. Please contact Accelerate Support.', '#e74c3c');
+          }
+        },
+        error: function(data) {
+          showToast('System Error: Unable to read KOTs data. Please contact Accelerate Support.', '#e74c3c');
+        }
+      }); 
+  }
+
+
+
+    function sendKOTChangesToPrinterPreProcess(kot, compareObject){
+
+                      
+              var isKOTRelayingEnabled = window.localStorage.appOtherPreferences_KOTRelayEnabled ? (window.localStorage.appOtherPreferences_KOTRelayEnabled == 1 ? true : false) : false;
+              var isKOTRelayingEnabledOnDefault = window.localStorage.appOtherPreferences_KOTRelayEnabledDefaultKOT ? (window.localStorage.appOtherPreferences_KOTRelayEnabledDefaultKOT == 1 ? true : false) : false;
+
+                      var default_set_KOT_printer = window.localStorage.systemOptionsSettings_defaultKOTPrinter ? window.localStorage.systemOptionsSettings_defaultKOTPrinter : '';
+                          var default_set_KOT_printer_data = null;
+                          var only_KOT_printer = null;
+
+
+                          findDefaultKOTPrinter();
+
+                          function findDefaultKOTPrinter(){
+
+                                var allConfiguredPrintersList = window.localStorage.configuredPrintersData ? JSON.parse(window.localStorage.configuredPrintersData) : [];
+
+                                var g = 0;
+                                while(allConfiguredPrintersList[g]){
+
+                                  if(allConfiguredPrintersList[g].type == 'KOT'){
+                                    for(var a = 0; a < allConfiguredPrintersList[g].list.length; a++){
+                                        if(allConfiguredPrintersList[g].list[a].name == default_set_KOT_printer){
+                                          default_set_KOT_printer_data = allConfiguredPrintersList[g].list[a];
+                                        }
+                                        else if(only_KOT_printer == null){
+                                          only_KOT_printer = allConfiguredPrintersList[g].list[a];
+                                        }
+                                    }
+
+                                    break;
+                                  }
+                                 
+                                  g++;
+                                }
+                          }
+
+                          if(default_set_KOT_printer_data == null){
+                            default_set_KOT_printer_data = only_KOT_printer;
+                          }
+
+
+                      if(isKOTRelayingEnabled){
+
+                        var relayRuleList = window.localStorage.custom_kot_relays ? JSON.parse(window.localStorage.custom_kot_relays) : [];
+                        var relaySkippedItems = [];
+
+                        populateRelayRules();
+
+                        function populateRelayRules(){
+                          var n = 0;
+                          while(relayRuleList[n]){
+
+                            relayRuleList[n].subcart = [];
+
+                            for(var i = 0; i < compareObject.length; i++){
+                              if(compareObject[i].category == relayRuleList[n].name && relayRuleList[n].printer != ''){
+                                relayRuleList[n].subcart.push(compareObject[i]);
+                              }
+                            } 
+
+                            if(n == relayRuleList.length - 1){
+                              generateRelaySkippedItems();
+                            }
+
+                            n++;
+                          }
+
+                          if(relayRuleList.length == 0){
+                            generateRelaySkippedItems();
+                          }
+                        }
+
+                        function generateRelaySkippedItems(){
+                          var m = 0;
+                          while(compareObject[m]){
+
+                            if(relayRuleList.length != 0){
+                              for(var i = 0; i < relayRuleList.length; i++){
+                                if(compareObject[m].category == relayRuleList[i].name && relayRuleList[i].printer != ''){
+                                  //item found
+                                  break;
+                                }
+
+                                if(i == relayRuleList.length - 1){ //last iteration and item not found
+                                  relaySkippedItems.push(compareObject[m])
+                                }
+                              } 
+                            }
+                            else{ //no relays set, skip all items
+                              relaySkippedItems.push(compareObject[m]);
+                            }
+
+                            if(m == compareObject.length - 1){
+
+                              if(relaySkippedItems.length > 0){
+                                //Print skipped items (non-relayed items)
+                                var defaultKOTPrinter = window.localStorage.systemOptionsSettings_defaultKOTPrinter ? window.localStorage.systemOptionsSettings_defaultKOTPrinter : '';
+                                
+                                if(defaultKOTPrinter == ''){
+                                  sendKOTChangesToPrinter(kot, relaySkippedItems);
+                                }
+                                else{
+                          var allConfiguredPrintersList = window.localStorage.configuredPrintersData ? JSON.parse(window.localStorage.configuredPrintersData) : [];
+                            var selected_printer = '';
+
+                            var g = 0;
+                            while(allConfiguredPrintersList[g]){
+                              if(allConfiguredPrintersList[g].type == 'KOT'){
+                            for(var a = 0; a < allConfiguredPrintersList[g].list.length; a++){
+                                  if(allConfiguredPrintersList[g].list[a].name == defaultKOTPrinter){
+                                    selected_printer = allConfiguredPrintersList[g].list[a];
+
+                                    if(isKOTRelayingEnabledOnDefault){
+                                      sendKOTChangesToPrinter(kot, relaySkippedItems, selected_printer);
+                                    }
+                                    else{
+                                      sendKOTChangesToPrinter(kot, compareObject, selected_printer);
+                                    }
+
+                                    break;
+                                  }
+                              }
+                              }
+                              
+
+                              if(g == allConfiguredPrintersList.length - 1){
+                                if(selected_printer == ''){ //No printer found, print on default!
+                                  if(isKOTRelayingEnabledOnDefault){
+                                      sendKOTChangesToPrinter(kot, relaySkippedItems, default_set_KOT_printer_data);
+                                    }
+                                    else{
+                                        sendKOTChangesToPrinter(kot, compareObject, default_set_KOT_printer_data);
+                                      }
+                                }
+                              }
+                              
+                              g++;
+                            }
+                                }
+
+                              }
+                              else{
+                        if(!isKOTRelayingEnabledOnDefault){
+                              sendKOTChangesToPrinter(kot, compareObject, default_set_KOT_printer_data);
+                          }                               
+                              }
+
+                              printRelayedKOT(relayRuleList); 
+                              
+                            }
+
+                            m++;
+                          }
+                        }
+
+                        function printRelayedKOT(relayedList){
+
+                          var allConfiguredPrintersList = window.localStorage.configuredPrintersData ? JSON.parse(window.localStorage.configuredPrintersData) : [];
+                          var g = 0;
+                          var allPrintersList = [];
+
+                          while(allConfiguredPrintersList[g]){
+                            
+                            for(var a = 0; a < allConfiguredPrintersList[g].list.length; a++){
+                              if(!isItARepeat(allConfiguredPrintersList[g].list[a].name)){
+                                allPrintersList.push({
+                                  "name": allConfiguredPrintersList[g].list[a].name,
+                                  "target": allConfiguredPrintersList[g].list[a].target,
+                                  "template": allConfiguredPrintersList[g].list[a]
+                                });
+                                }
+                            }
+
+                            if(g == allConfiguredPrintersList.length - 1){
+                              startRelayPrinting(0);
+                            }
+                            
+                            g++;
+                          }
+
+                    function isItARepeat(name){
+                      var h = 0;
+                      while(allPrintersList[h]){
+                        if(allPrintersList[h].name == name){
+                          return true;
+                        }
+
+                        if(h == allPrintersList.length - 1){ // last iteration
+                          return false;
+                        }
+                        h++;
+                      }
+                    }
+
+                    function startRelayPrinting(index){
+
+                      console.log('*Relay Print - Round '+index+' on '+allPrintersList[index].name)
+
+                      if(index == 0){
+                        showPrintingAnimation();
+                      }
+
+                        //add some delay
+                        setTimeout(function(){ 
+                            
+                        var relayedItems = [];
+                        for(var i = 0; i < relayedList.length; i++){
+                          if(relayedList[i].subcart.length > 0 && relayedList[i].printer == allPrintersList[index].name){
+                            relayedItems = relayedItems.concat(relayedList[i].subcart)  
+                          }
+
+                          if(i == relayedList.length - 1){ //last iteration
+
+                            if(relayedItems.length > 0){
+                              
+                              sendKOTChangesToPrinter(kot, relayedItems, allPrintersList[index].template);
+                              
+                              if(allPrintersList[index+1]){
+                                startRelayPrinting(index+1);
+                              }
+                              else{
+                                finishPrintingAnimation();
+                                  //Process Next KOT
+                                  setTimeout(function(){ initialisePunching(); }, 5000);
+                              }
+                            }
+                            else{
+                              if(allPrintersList[index+1]){
+                                startRelayPrinting(index+1);
+                              }
+                              else{
+                                  finishPrintingAnimation();
+                                  //Process Next KOT
+                                  setTimeout(function(){ initialisePunching(); }, 5000);
+                              }
+                            }
+                          }
+                        }
+
+                      }, 999);
+                    }
+
+                        }
+                      }
+                      else{ //no relay (normal case)
+                        
+                        var defaultKOTPrinter = window.localStorage.systemOptionsSettings_defaultKOTPrinter ? window.localStorage.systemOptionsSettings_defaultKOTPrinter : '';
+                        
+                        if(defaultKOTPrinter == ''){
+                          sendKOTChangesToPrinter(kot, compareObject);
+                        }
+                        else{
+                            var allConfiguredPrintersList = window.localStorage.configuredPrintersData ? JSON.parse(window.localStorage.configuredPrintersData) : [];
+                              var selected_printer = '';
+
+                              var g = 0;
+                              while(allConfiguredPrintersList[g]){
+                                if(allConfiguredPrintersList[g].type == 'KOT'){
+                              for(var a = 0; a < allConfiguredPrintersList[g].list.length; a++){
+                                    if(allConfiguredPrintersList[g].list[a].name == defaultKOTPrinter){
+                                      selected_printer = allConfiguredPrintersList[g].list[a];
+                                      sendKOTChangesToPrinter(kot, compareObject, selected_printer);
+                                      break;
+                                    }
+                                }
+                                }
+                                
+
+                                if(g == allConfiguredPrintersList.length - 1){
+                                  if(selected_printer == ''){ //No printer found, print on default!
+                                    sendKOTChangesToPrinter(kot, compareObject);
+                                  }
+                                }
+                                
+                                g++;
+                              }
+                        }
+
+
+                          //Process Next KOT
+                          setTimeout(function(){ initialisePunching(); }, 5000);
+                          
+                      }
+
+    }
+
 
 }
 
@@ -292,7 +898,7 @@ function printFreshKOT(new_kot){
                                     "KOTNumber" : new_kot.KOTNumber,
                                     "table": new_kot.table,
                                     "steward": new_kot.stewardName,
-                                    "time": new_kot.timeKOT != '' ? moment(new_kot.timeKOT, 'hhmm').format('hh:mm A') : moment(new_kot.timePunch, 'hhmm').format('hh:mm A')
+                                    "time": new_kot.timeKOT != '' ? moment(new_kot.timeKOT, 'hhmm').format('hh:mm a') : moment(new_kot.timePunch, 'hhmm').format('hh:mm A')
                                 });
                                 window.localStorage.orderStream = JSON.stringify(order_stream);
                             }
@@ -301,7 +907,7 @@ function printFreshKOT(new_kot){
                                     "KOTNumber" : new_kot.KOTNumber,
                                     "table": new_kot.table,
                                     "steward": new_kot.stewardName,
-                                    "time": new_kot.timeKOT != '' ?  moment(new_kot.timeKOT, 'hhmm').format('hh:mm A') : moment(new_kot.timePunch, 'hhmm').format('hh:mm A')
+                                    "time": new_kot.timeKOT != '' ?  moment(new_kot.timeKOT, 'hhmm').format('hh:mm a') : moment(new_kot.timePunch, 'hhmm').format('hh:mm A')
                                 });
 
                                 var new_stream = order_stream.slice(1, 4);
