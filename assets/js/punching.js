@@ -59,13 +59,17 @@ function  initialisePunching(){
                           type: 'GET',
                           url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+kot_request_data,
                           timeout: 10000,
-                          success: function(newKOTData) {
+                          success: function(oldKOTData) {
                             if(data._id != ""){
-                                printEditedKOT(orderData, newKOTData);
+                                printEditedKOT(oldKOTData, orderData);
+                            }
+                            else{
+                              showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
                             }
                           },
                           error: function(data) {
                             //KOT not found 
+                            showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
                           }
                         });
                     }
@@ -88,7 +92,8 @@ refreshRecentOrdersStream();
 
 
 function printEditedKOT(existing_kot, new_kot){
-//    console.log(existing_kot, new_kot)
+ 
+  console.log(existing_kot, new_kot)
 
   //Process Next KOT
   setTimeout(function(){
@@ -144,6 +149,81 @@ function removeAlreadyPrintedKOT(id, revID){
 
 
 
+function addToTableMapping(tableID, kotID, assignedTo){
+
+    var today = new Date();
+    var hour = today.getHours();
+    var mins = today.getMinutes();
+
+    if(hour<10) {
+        hour = '0'+hour;
+    } 
+
+    if(mins<10) {
+        mins = '0'+mins;
+    }
+
+    $.ajax({
+      type: 'GET',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_tables/_design/filter-tables/_view/filterbyname?startkey=["'+tableID+'"]&endkey=["'+tableID+'"]',
+      timeout: 10000,
+      success: function(data) {
+        if(data.rows.length == 1){
+
+              var tableData = data.rows[0].value;
+
+              var remember_id = null;
+              var remember_rev = null;
+
+              if(tableData.table == tableID){
+
+                remember_id = tableData._id;
+                remember_rev = tableData._rev;
+
+                if(tableData.status != 0 && tableData.status != 5){
+                  showToast('Warning: Table #'+tableID+' was not free. But Order is punched.', '#e67e22');
+                }
+                else{
+                  tableData.assigned = assignedTo;
+                  tableData.remarks = "";
+                  tableData.KOT = kotID;
+                  tableData.status = 1;
+                  tableData.lastUpdate = hour+''+mins;  
+                }            
+
+
+                    //Update
+                    $.ajax({
+                      type: 'PUT',
+                      url: COMMON_LOCAL_SERVER_IP+'accelerate_tables/'+remember_id+'/',
+                      data: JSON.stringify(tableData),
+                      contentType: "application/json",
+                      dataType: 'json',
+                      timeout: 10000,
+                      success: function(data) {
+                        
+                      },
+                      error: function(data) {
+                        showToast('System Error: Unable to update Tables data. Please contact Accelerate Support.', '#e74c3c');
+                      }
+                    });   
+
+              }
+              else{
+                showToast('Not Found Error: Tables data not found. Please contact Accelerate Support.', '#e74c3c');
+              }
+        }
+        else{
+          showToast('Not Found Error: Tables data not found. Please contact Accelerate Support.', '#e74c3c');
+        }
+
+      },
+      error: function(data) {
+        showToast('System Error: Unable to read Tables data. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+}
 
 
 
@@ -197,7 +277,11 @@ function printFreshKOT(new_kot){
                         timeout: 10000,
                         success: function(data) {
                           if(data.ok){
+
                             showToast('KOT #'+num+' generated Successfully', '#27ae60');
+
+                            //Add to table maping
+                            addToTableMapping(obj.table, kot, obj.stewardName);
                           
 
                             //Render order stream
@@ -493,7 +577,6 @@ function printFreshKOT(new_kot){
                                     }
 
                                     function startRelayPrinting(index){
-                                        console.log(allPrintersList)
 
                                         console.log('Relay Print - Round '+index+' on '+allPrintersList[index].name)
 
