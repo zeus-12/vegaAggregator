@@ -2,12 +2,22 @@ let PAUSE_FLAG = false;
 
 function operationPause(){
     document.getElementById("operationButtons").innerHTML = '<tag class="buttonSettings" style="right: 70px; color: red; font-weight: bold" onclick="operationStart()">Paused</tag>';
+    
+    document.getElementById("statusTitle").innerHTML = "Not Running";
+    $("#mainBGImage").attr("src","assets/images/paused_gathering.png");
+    $("#statusTitle").removeClass("blink_me");
+    
     PAUSE_FLAG = true;
 }
 
 function operationStart(){
     document.getElementById("operationButtons").innerHTML = '<tag class="buttonSettings" style="right: 70px" onclick="operationPause()">Running</tag>';
     PAUSE_FLAG = false;
+    
+    document.getElementById("statusTitle").innerHTML = "Aggregating Orders";
+    $("#mainBGImage").attr("src","assets/images/gathering_orders.gif");
+    $("#statusTitle").addClass("blink_me");
+
     initialisePunching();
 }
 

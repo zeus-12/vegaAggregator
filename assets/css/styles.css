@@ -100,15 +100,21 @@
 
 
 .titleMain{
-	margin: 0;
+	  margin: 0;
     text-align: center;
     text-transform: uppercase;
-    color: #FFF;
+    color: #c35611;
     font-family: 'Oswald';
-    letter-spacing: 4px;
-    font-size: 36px;
+    letter-spacing: 0;
+    font-size: 42px;
     font-weight: bold;
 }
+
+#statusTitle.blink_me{
+  color: #FFF !important;
+}
+
+
 
 .buttonSettings{
 	margin: 0;
@@ -365,4 +371,132 @@ background: linear-gradient(to bottom, #DD2476, #FF512F); /* W3C, IE 10+/ Edge, 
         outline: none;
       }
 
+.settingsWindow{
+    margin: 50px 50px 0 0;
+    width: 100%;
+    max-width: 600px;
+    float: right;
+    background: #FFF;
+    border-radius: 5px;
+    min-height: 400px;
+    overflow: scroll;  
+}
 
+.settingsTitle{
+     margin: 5px 15px;
+    padding: 10px 0;
+    font-weight: 300;
+    font-family: 'Oswald';
+    font-size: 28px;
+    color: #f39c12;
+    border-bottom: 1px solid #f39c12; 
+}
+
+
+
+
+
+.modeSelectionIcon{
+  background: none;
+  opacity: 0;
+  font-size: 14px;
+  color: #FFF;
+  position: absolute;
+  right: 10px;
+  top: 16px;
+}
+
+.selectedMode .modeSelectionIcon{
+    opacity: 1 !important;
+}
+
+.billModalSelect{
+  position: relative; display: none; width: 100%; 
+  box-shadow: #90a6b1 3px 3px 6px 0px;
+}
+
+.billModeListedButton{
+    position: relative;
+    width: 100%;
+    display: block;
+    background: #1abc9c;
+    color: #FFF !important;
+    text-align: left;
+    padding: 8px 35px 8px 8px;
+    border: none;
+    outline: none;
+    border-bottom: 1px solid #14987e !important;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.printerWindowClose{
+    float: right;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 16px;
+    font-family: sans-serif;
+    font-weight: bold;
+    line-height: 32px;
+    background: #ffdead;
+    color: #f39c12;
+    cursor: pointer;
+}
+
+.printerWindowClose:hover, .printerWindowClose:active, .printerWindowClose:focus{
+  background: #f39c12;
+  color: #FFF;
+}
+
+.modeSelectionBrief{
+  display: block;
+  font-size: 10px;
+  color: #beefd2;
+  letter-spacing: 1px;
+}
+
+.selectedMode, .billModeListedButton:hover{
+  background: #14987e !important;
+}
+
+.selectModeClose{
+    position: absolute;
+    bottom: 0;
+    right: 10px;
+    height: 30px;
+    width: 40%;
+    text-align: right;
+    line-height: 30px;
+    font-size: 12px;
+    text-decoration: underline;
+    font-weight: bold;
+    color: #848484; 
+    display: none; 
+    cursor: pointer;
+}
+
+.selectModeUnset{
+    position: absolute;
+    bottom: 0;
+    left: 10px;
+    height: 30px;
+    width: 40%;
+    text-align: left;
+    line-height: 30px;
+    font-size: 12px;
+    text-decoration: underline;
+    font-weight: bold;
+    color: #848484; 
+    display: none; 
+    cursor: pointer;
+}
+
+.selectModeClose:hover, .selectModeClose:active, .selectModeClose:focus,
+.selectModeUnset:hover, .selectModeUnset:active, .selectModeUnset:focus{
+  color: #ff7a7a;
+}
+  color: #ff7a7a;
+}
