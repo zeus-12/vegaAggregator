@@ -524,6 +524,7 @@ function checkClientConnection(){
                   //Success Callbacks
                   testLocalServerConnection();
                   applySystemOptionSettings();
+                  applyBillLayout();
                   applyKOTRelays();
                   applyConfiguredPrinters();
                   loadRegisteredDevices();
@@ -932,6 +933,88 @@ function applySystemOptionSettings(){
 
 
 
+/* Apply Bill Layout */
+function applyBillLayout(){
+
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_BILL_LAYOUT" 
+                  },
+      "fields"    : ["identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_BILL_LAYOUT'){
+
+              var layoutData = data.docs[0].value;
+
+              var n = 0;
+              while(layoutData[n]){
+                
+                switch(layoutData[n].name){
+                  case "data_custom_header_image":{
+                    window.localStorage.bill_custom_header_image = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_top_right_name":{
+                    window.localStorage.bill_custom_top_right_name = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_top_right_value":{
+                    window.localStorage.bill_custom_top_right_value = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_bottom_pay_heading":{
+                    window.localStorage.bill_custom_bottom_pay_heading = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_bottom_pay_brief":{
+                    window.localStorage.bill_custom_bottom_pay_brief = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_footer_comments":{
+                    window.localStorage.bill_custom_footer_comments = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_footer_address":{
+                    window.localStorage.bill_custom_footer_address = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_footer_contact":{
+                    window.localStorage.bill_custom_footer_contact = layoutData[n].value;
+                    break;
+                  }
+                }
+
+                n++;
+              }
+
+          }
+          else{
+            showToast('Not Found Error: Billing Layout data not found. Please contact Accelerate Support.', '#e74c3c');
+          }
+        }
+        else{
+          showToast('Not Found Error: Billing Layout data not found. Please contact Accelerate Support.', '#e74c3c');
+        }
+        
+      },
+      error: function(data) {
+        showToast('System Error: Billing Layout data not found. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+
+}
 
 /* Apply KOT Relays */
 function applyKOTRelays(){

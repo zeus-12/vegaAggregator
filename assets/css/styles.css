@@ -498,5 +498,132 @@ background: linear-gradient(to bottom, #DD2476, #FF512F); /* W3C, IE 10+/ Edge, 
 .selectModeUnset:hover, .selectModeUnset:active, .selectModeUnset:focus{
   color: #ff7a7a;
 }
-  color: #ff7a7a;
+
+
+.errorListingWindow{
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+}
+
+.errorListingButton{
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    font-size: 42px;
+    font-weight: bold;
+    color: #ff9c8f;
+    text-align: center;
+    line-height: 1.8em;
+    font-family: 'Oswald';
+    background: #FF4B2B;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.errorListingButton:hover, .errorListingButton:active, .errorListingButton:focus{
+  transform: scale(1.1);
+  color: #FFF;
+}
+
+.errorListingBlock{
+    width: 640px;
+    background: #FFF;
+    display: block;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    padding: 10px 5px;
+}
+
+#errorListingWindowRenderContent{
+    max-height: 340px;
+    overflow: scroll;
+    display: block;
+    padding: 10px;  
+}
+
+.errorListingTitle{
+    text-transform: uppercase;
+    font-family: 'Oswald';
+    letter-spacing: 0;
+    color: #dd4b39;
+    font-weight: bold;
+    font-size: 24px;
+    text-align: left;
+    margin: 5px 0 10px 10px;
+    padding: 0;
+}
+
+.errorListingItem{
+    display: block;
+    padding: 8px 90px 8px 8px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #585353;
+    position: relative;
+    border: 1px solid #ffdddd;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.errorListingItem:hover, .errorListingItem:focus, .errorListingItem:active{
+    background: #e24b5e;
+    color: #FFF;
+    border-color: #e24b5e;
+}
+
+.errorListingFixButton{
+    cursor: pointer;
+    width: 80px;
+    padding: 3px;
+    background: #e24b5e;
+    text-align: center;
+    right: 6px;
+    top: 15px;
+    border-radius: 3px;
+    color: #FFF;
+    font-size: 13px;
+    text-transform: uppercase;
+    position: absolute;
+    font-weight: bold;
+}
+
+.errorListingTime{
+    display: block;
+    top: 0;
+    font-size: 11px;  
+}
+
+.errorListingOwner{
+  font-size: 80%;
+  opacity: 0.8;
+}
+
+.errorListingItem:hover .errorListingFixButton,
+.errorListingItem:active .errorListingFixButton,
+.errorListingItem:focus .errorListingFixButton{
+    background: #FFF;
+    color: #1abc9c;
+}
+
+.errorListWindowClose{
+    float: right;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 16px;
+    font-family: sans-serif;
+    font-weight: bold;
+    line-height: 32px;
+    background: #ffdead;
+    color: #f39c12;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.errorListWindowClose:hover, .errorListWindowClose:active, .errorListWindowClose:focus{
+  background: #f39c12;
+  color: #FFF;
 }

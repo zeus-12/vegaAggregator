@@ -14,12 +14,199 @@ function operationStart(){
     document.getElementById("operationButtons").innerHTML = '<tag class="buttonSettings" style="right: 70px" onclick="operationPause()">Running</tag>';
     PAUSE_FLAG = false;
     
-    document.getElementById("statusTitle").innerHTML = "Aggregating Orders";
+    document.getElementById("statusTitle").innerHTML = "Accepting Orders";
     $("#mainBGImage").attr("src","assets/images/gathering_orders.gif");
     $("#statusTitle").addClass("blink_me");
 
     initialisePunching();
 }
+
+/* 
+  ERROR LOGGING
+*/
+
+function addToErrorLog(time, category, type, kot_id, optionalParametersObject){
+
+  /*
+    category --> REQUEST or ORDER
+    type --> 'KOT_NOT_FOUND' etc.
+    optionalParametersObject --> requestObject etc.
+  */
+
+  var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
+
+  //Check if already added.
+  var n = 0;
+  while(log[n]){
+    if(category == "REQUEST"){
+      if(log[n].parameters.action == optionalParametersObject.action && log[n].kotId == kot_id){
+        return '';
+      }
+    }
+    else if(category == "ORDER"){
+      if(log[n].category == "ORDER" && log[n].kotId == kot_id){
+        return '';
+      }
+    }
+    
+    n++;
+  }
+
+
+  log.push({
+    "time": time,
+    "category": category,
+    "type": type,
+    "kotId": kot_id,
+    "parameters": optionalParametersObject
+  });
+
+
+  window.localStorage.errorLog = JSON.stringify(log);
+  renderErrorsLogCount();
+}
+
+function renderErrorsLogCount(){
+  var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
+  if(log.length < 1){
+    document.getElementById("errorListingWindowCounter").style.display = 'none';
+  }
+  else{
+    document.getElementById("errorListingWindowCounter").style.display = 'block';
+    document.getElementById("errorListingWindowCounter").innerHTML = log.length;
+  }
+
+  if($('#errorListingWindowModal').is(':visible')) {
+    renderErrorsLog();
+  }
+
+}
+
+renderErrorsLogCount();
+
+
+
+function renderErrorsLog(){
+  var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
+  if(log.length < 1){
+    document.getElementById("errorListingWindowModal").style.display = 'none';
+    return '';
+  }
+  else{
+
+    var renderContent = '';
+
+    var n = 0;
+    while(log[n]){
+      
+      if(log[n].category == 'ORDER'){
+        renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Failed to edit the <b>Running Order</b> on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="removeOrderRequest(\''+log[n].kotId+'\')" class="errorListingFixButton">Remove</tag></tag>';
+      }
+      else if(log[n].category == 'REQUEST'){
+        
+        switch(log[n].parameters.action){
+          case "PRINT_VIEW":{
+            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Printing <b>View</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreActionRequest(\''+log[n].parameters._id+'\')" class="errorListingFixButton">Ignore</tag></tag>';
+            break;
+          }
+          case "PRINT_KOT":{
+            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Printing <b>Duplicate KOT</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreActionRequest(\''+log[n].parameters._id+'\')" class="errorListingFixButton">Ignore</tag></tag>';
+            break;
+          }
+          case "PRINT_BILL":{
+            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Generating <b>Bill</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreActionRequest(\''+log[n].parameters._id+'\')" class="errorListingFixButton">Ignore</tag></tag>';
+            break;
+          }
+
+        }
+        
+      }
+
+      n++;
+    }
+
+    document.getElementById("errorListingWindowModal").style.display = 'block';
+    document.getElementById("errorListingWindowRenderContent").innerHTML = renderContent;    
+  
+  }
+}
+
+
+function hideErrorListing(){
+  document.getElementById("errorListingWindowModal").style.display = 'none'; 
+}
+
+
+function ignoreActionRequest(request_id){
+
+          $.ajax({
+            type: 'GET',
+            url: COMMON_LOCAL_SERVER_IP+'/accelerate_action_requests/'+request_id,
+            timeout: 10000,
+            success: function(data) {
+              
+              var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
+              
+              var n = 0;
+              while(log[n]){
+
+                if(log[n].parameters._id == request_id){
+                  log.splice(n,1);
+                  break;
+                }
+
+                n++;
+              }
+
+              window.localStorage.errorLog = JSON.stringify(log);
+
+              removeAlreadyProccessedActionRequest(data._id, data._rev, 'RENDER_ERROR_LOG');
+            },
+            error: function(data){
+                showToast('Unable to find the request on the server. Please try again.', '#e74c3c');
+            }
+
+          });     
+}
+
+
+function removeOrderRequest(kot_id){
+
+          $.ajax({
+            type: 'GET',
+            url: COMMON_LOCAL_SERVER_IP+'/accelerate_taps_orders/'+kot_id,
+            timeout: 10000,
+            success: function(data) {
+              
+              var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
+              
+              var n = 0;
+              while(log[n]){
+
+                if(log[n].kotId == kot_id && log[n].category == "ORDER"){
+                  log.splice(n,1);
+                  break;
+                }
+
+                n++;
+              }
+
+              window.localStorage.errorLog = JSON.stringify(log);
+
+              removeAlreadyPrintedKOT(data._id, data._rev, 'RENDER_ERROR_LOG');
+            },
+            error: function(data){
+              showToast('Unable to find the KOT on the server. Please try again.', '#e74c3c');
+            }
+
+          });     
+}
+
+
+/*
+  PUNCHING
+*/
+
 
 function initialisePunching(){
 
@@ -27,7 +214,142 @@ function initialisePunching(){
             return '';
         }
 
-          console.log('Checking for orders...')
+
+        //Ignore List (to skip these already noted errors)
+        var ignoreList = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
+
+
+        checkForRequests(0);
+
+        //Check for Requests
+        function checkForRequests(index){
+
+          console.log('Checking for Requests...');
+
+          $.ajax({
+            type: 'GET',
+            url: COMMON_LOCAL_SERVER_IP+'/accelerate_action_requests/_design/requests/_view/fetchall',
+            contentType: "application/json",
+            dataType: 'json',
+            timeout: 10000,
+            success: function(data) {
+
+              if(data.rows.length == 0){
+                checkForOrders(0);
+              }
+              else{
+                        var requestData = data.rows[index].value;
+              
+                        //Check if this is added into the ignoreList
+                        var e = 0;
+                        while(ignoreList[e]){
+                          if(ignoreList[e].kotId == requestData.KOT && ignoreList[e].parameters.action == requestData.action){
+                            
+                            if(data.rows.length > index + 1){ //more requests pending..
+                              checkForRequests(index + 1);
+                              return '';
+                            }
+                            else{
+                              checkForOrders(0);
+                              return '';
+                            }
+                            
+                          }
+                          e++;
+                        }
+
+
+
+                        //fetch KOT
+                        var kot_request_data = requestData.KOT;
+
+                        $.ajax({
+                          type: 'GET',
+                          url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+kot_request_data,
+                          timeout: 10000,
+                          success: function(kotData) {
+                            if(data._id != ""){
+                                
+                                switch(requestData.action){
+                                  case "PRINT_VIEW":{
+                                    sendToPrinter(kotData, 'VIEW');
+                                    showToast('Items View of #'+kotData.KOTNumber+' generated Successfully', '#27ae60');
+                                    
+                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
+                                    break;
+                                  }
+                                  case "PRINT_KOT":{
+                                    console.log('Print KOT...')
+                                    break;
+                                  }
+                                  case "PRINT_BILL":{ 
+
+
+                                    confirmBillGeneration(kotData, requestData);
+
+                                    console.log('Print Bill...')
+                                    break;
+                                  }
+                                }                                
+                                
+                                //Process Next KOT
+                                setTimeout(function(){
+                                    initialisePunching();
+                                }, 5000);
+
+                            }
+                            else{
+                              showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                              checkForOrders(0);
+                            }
+                          },
+                          error: function(data) {
+
+                                var action_name = '';
+                                switch(requestData.action){
+                                  case "PRINT_VIEW":{
+                                    action_name = 'Printing View';
+                                    break;
+                                  }
+                                  case "PRINT_KOT":{
+                                    action_name = 'Printing Duplicate KOT';
+                                    break;
+                                  }
+                                  case "PRINT_BILL":{ 
+                                    action_name = 'Generating Bill';
+                                    break;
+                                  }
+                                }   
+
+
+                                //KOT not found 
+                                var splits = kot_request_data.split('_');
+                                showToast(action_name+' has been Failed: KOT #<b>'+splits[2]+'</b> is not found.', '#e74c3c');
+
+                                //Add to Error Log
+                                addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'KOT_NOT_FOUND', requestData.KOT, requestData);
+
+                                checkForOrders(0);
+                          }
+                        });
+                    
+              }
+            },
+            error: function(data){
+                showToast('System Error: Unable to fetch print requests. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                checkForOrders(0);
+            }
+
+          });    
+        
+        }
+
+
+        //Check for Orders
+        
+        function checkForOrders(index){
+
+          console.log('Checking for Orders...');
 
           $.ajax({
             type: 'GET',
@@ -50,7 +372,38 @@ function initialisePunching(){
                     //Update Message
                     document.getElementById("pendingOrderMessage").innerHTML = data.total_rows+' Pending Order'+(data.total_rows > 1 ? 's': '');
               
-                    var orderData = data.rows[0].doc;
+                    var orderData = data.rows[index].doc;
+
+
+                    //Check if this is added into the ignoreList
+                    var e = 0;
+                    while(ignoreList[e]){
+                      if(ignoreList[e].kotId == orderData._id && ignoreList[e].category == "ORDER"){
+
+                            //show warning symbol
+                            document.getElementById("pendingOrderMessage").innerHTML = data.total_rows+' Pending Order'+(data.total_rows > 1 ? 's': '')+' <i onclick="renderErrorsLog()" class="fa fa-warning" style="color: #ff0000; cursor: pointer;"></i>';
+
+                            if(data.rows.length > index + 1){ //more orders pending..
+                              checkForOrders(index + 1);
+                              return '';
+                            }
+                            else{
+
+                              //Process Round
+                              setTimeout(function(){
+                                  initialisePunching();
+                              }, 5000);
+
+                              return '';
+                            }
+
+                      }
+                      
+                      e++;
+                    }
+
+
+
 
                     if(orderData.KOTNumber != ''){ //Editing Order case..
 
@@ -71,15 +424,35 @@ function initialisePunching(){
                           timeout: 10000,
                           success: function(oldKOTData) {
                             if(data._id != ""){
-                                printEditedKOT(oldKOTData, orderData);
+                              printEditedKOT(oldKOTData, orderData);
                             }
                             else{
                               showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                              
+                              //Process Next KOT
+                              setTimeout(function(){
+                                  initialisePunching();
+                              }, 5000);
                             }
                           },
                           error: function(data) {
                             //KOT not found 
-                            showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                            showToast('Editing KOT Failed: KOT #<b>'+kotID+'</b> is not found on the server.', '#e74c3c');
+
+                            //Add to Error Log
+                            var errorObj = {
+                              "table" : orderData.table,
+                              "staffName" : orderData.stewardName,
+                              "staffCode" : orderData.stewardCode,
+                              "machine": orderData.machineName
+                            }
+
+                            addToErrorLog(moment().format('hh:mm a'), 'ORDER', 'KOT_NOT_FOUND', kot_request_data, errorObj);
+
+                            //Process Next KOT
+                            setTimeout(function(){
+                                initialisePunching();
+                            }, 5000);
                           }
                         });
                     }
@@ -90,15 +463,22 @@ function initialisePunching(){
               }
             },
             error: function(data){
-                showToast('Local Server not responding. Please try again.', '#e74c3c');
+              showToast('System Error: Unable to fetch orders. Please contact Accelerate Support if problem persists.', '#e74c3c');
+              
+              //Process Next KOT
+              setTimeout(function(){
+                initialisePunching();
+              }, 5000);
+
             }
 
-          });           
+          }); 
+
+        }          
 }
 
 initialisePunching();
 refreshRecentOrdersStream();
-
 
 
 function printEditedKOT(originalData, new_kot){
@@ -746,7 +1126,7 @@ function refreshRecentOrdersStream(){
 }
 
 
-function removeAlreadyPrintedKOT(id, revID){
+function removeAlreadyPrintedKOT(id, revID, optionalRequest){
 
         $.ajax({
           type: 'DELETE',
@@ -755,13 +1135,36 @@ function removeAlreadyPrintedKOT(id, revID){
           dataType: 'json',
           timeout: 10000,
           success: function(data) {     
-            
+            if(optionalRequest == 'RENDER_ERROR_LOG'){
+              renderErrorsLogCount();
+            }              
           },
           error: function(data) {
             showToast('Server Warning: Unable to modify Order KOT. Please contact Accelerate Support.', '#e67e22');
           }
         });         
 }
+
+
+function removeAlreadyProccessedActionRequest(id, revID, optionalRequest){
+
+        $.ajax({
+          type: 'DELETE',
+          url: COMMON_LOCAL_SERVER_IP+'/accelerate_action_requests/'+id+'?rev='+revID,
+          contentType: "application/json",
+          dataType: 'json',
+          timeout: 10000,
+          success: function(data) {     
+            if(optionalRequest == 'RENDER_ERROR_LOG'){
+              renderErrorsLogCount();
+            }
+          },
+          error: function(data) {
+            showToast('Server Warning: Unable to modify action request. Please contact Accelerate Support.', '#e67e22');
+          }
+        });         
+}
+
 
 
 
@@ -1281,8 +1684,8 @@ function printFreshKOT(new_kot){
 
                                 //Process Next KOT
                                 setTimeout(function(){
-                                    initialisePunching();
-                                  }, 5000);
+                                  initialisePunching();
+                                }, 5000);
                                     
                             }
                     } //end - initialise KOT Prints
@@ -1297,4 +1700,391 @@ function finishPrintingAnimation(){
 
 }
 
+
+/* Bill Generation */
+function confirmBillGeneration(kotData, actionRequestObj){
+
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_BILL_INDEX" 
+                  },
+      "fields"    : ["_rev", "identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_BILL_INDEX'){
+
+            var billNumber = parseInt(data.docs[0].value) + 1;
+            confirmBillGenerationAfterProcess(billNumber, kotData, data.docs[0]._rev, actionRequestObj);
+                
+          }
+          else{
+            showToast('Not Found Error: Bill Index data not found. Please contact Accelerate Support.', '#e74c3c');
+          }
+        }
+        else{
+          showToast('Not Found Error: Bill Index data not found. Please contact Accelerate Support.', '#e74c3c');
+        }
+
+      },
+      error: function(data) {
+        showToast('System Error: Unable to read Bill Index. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+}
+
+
+function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionRequestObj){
+
+          console.log('Generating Bill > '+billNumber+' from KOT '+kotData.KOTNumber);
+
+          var kotfile = kotData;
+
+          var raw_cart = kotfile.cart;
+          var beautified_cart = [];
+
+          for(var n = 0; n < raw_cart.length; n++){
+            
+            if(n == 0){
+              beautified_cart.push(raw_cart[0]);
+            }
+            else{
+
+              var duplicateFound = false;
+              var k = 0;
+              while(beautified_cart[k]){
+                if(beautified_cart[k].code == raw_cart[n].code){
+                  if(beautified_cart[k].isCustom && raw_cart[n].isCustom){
+                    if(beautified_cart[k].variant == raw_cart[n].variant){
+                      beautified_cart[k].qty = beautified_cart[k].qty + raw_cart[n].qty;
+                      duplicateFound = true;
+                      break;
+                    }
+                  }
+                  else{
+                    beautified_cart[k].qty = beautified_cart[k].qty + raw_cart[n].qty;
+                    duplicateFound = true;
+                    break;
+                  }
+                }
+
+                k++;
+              }
+
+              if(!duplicateFound){
+                beautified_cart.push(raw_cart[n]);
+              }
+
+            }
+
+          }
+
+
+          kotfile.cart = beautified_cart;
+
+
+          var memory_id = kotfile._id;
+          var memory_rev = kotfile._rev;
+
+          kotfile.billNumber = billNumber,
+          kotfile.paymentMode = "";
+          kotfile.totalAmountPaid = "";
+          kotfile.paymentReference = "";
+
+          var branch_code = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : '';
+          kotfile.outletCode = branch_code != '' ? branch_code : 'UNKNOWN';
+
+
+          /* BILL SUM CALCULATION */
+
+          //Calculate Sum to be paid
+          var grandPayableBill = 0;
+          var n = 0;
+          while(kotfile.cart[n]){
+            grandPayableBill += kotfile.cart[n].price * kotfile.cart[n].qty;
+            n++;
+          }
+
+          //add extras
+          if(!jQuery.isEmptyObject(kotfile.extras)){
+            var m = 0;
+            while(kotfile.extras[m]){
+              grandPayableBill += kotfile.extras[m].amount;
+              m++;
+            }
+          } 
+
+          //add custom extras if any
+          if(!jQuery.isEmptyObject(kotfile.customExtras)){
+            grandPayableBill += kotfile.customExtras.amount;
+          }  
+
+
+          //substract discounts if any
+          if(!jQuery.isEmptyObject(kotfile.discount)){
+            grandPayableBill -= kotfile.discount.amount;
+          }  
+
+          grandPayableBill = parseFloat(grandPayableBill).toFixed(2);   
+          grandPayableBillRounded = properRoundOff(grandPayableBill);   
+
+          kotfile.payableAmount = grandPayableBillRounded;
+          kotfile.calculatedRoundOff = Math.round((grandPayableBillRounded - grandPayableBill) * 100) / 100;
+
+          kotfile.timeBill = getCurrentTime('TIME');
+          
+
+          //Remove Unwanted Stuff
+          delete kotfile.specialRemarks;
+          delete kotfile.allergyInfo;
+
+          var c = 0;
+          while(kotfile.cart[c]){
+            
+            delete kotfile.cart[c].ingredients;
+            delete kotfile.cart[c].comments;
+            
+            c++;
+          }
+
+
+            /*Save NEW BILL*/
+
+            //Remove _rev and _id (KOT File Scraps!)
+            var newBillFile = kotfile;
+            delete newBillFile._id;
+            delete newBillFile._rev
+
+
+            //Set _id from Branch mentioned in Licence
+            var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : ''; 
+            if(!accelerate_licencee_branch || accelerate_licencee_branch == ''){
+              showToast('Invalid Licence Error: Bill can not be generated. Please contact Accelerate Support if problem persists.', '#e74c3c');
+              return '';
+            }
+
+            kotfile._id = accelerate_licencee_branch+'_BILL_'+billNumber;
+
+
+            //Post to local Server
+            $.ajax({
+              type: 'POST',
+              url: COMMON_LOCAL_SERVER_IP+'/accelerate_bills/',
+              data: JSON.stringify(newBillFile),
+              contentType: "application/json",
+              dataType: 'json',
+              timeout: 10000,
+              success: function(data) {
+                if(data.ok){
+
+                        //DELETE THE KOT
+                        deleteKOTFromServer(memory_id, memory_rev);
+
+                        //DELETE ACTION REQUEST
+                        removeAlreadyProccessedActionRequest(actionRequestObj._id, actionRequestObj._rev);
+
+                        //PRINTING THE BILL
+                        sendToPrinter(newBillFile, 'BILL');
+                        billTableMapping(kotfile.table, billNumber, kotfile.payableAmount, 2);
+
+
+                        //Update bill number on server
+                        var updateData = {
+                            "_rev": revID,
+                            "identifierTag": "ACCELERATE_BILL_INDEX",
+                            "value": billNumber
+                        }
+
+                        $.ajax({
+                            type: 'PUT',
+                            url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_BILL_INDEX/',
+                            data: JSON.stringify(updateData),
+                            contentType: "application/json",
+                            dataType: 'json',
+                            timeout: 10000,
+                            success: function(data) {
+                              
+                            },
+                            error: function(data) {
+                              showToast('System Error: Unable to update Billing Index. Next Bill Number might be faulty. Please contact Accelerate Support.', '#e74c3c');
+                            }
+
+                        });  
+                }
+                else{
+                  showToast('Warning: Bill was not Generated. Try again.', '#e67e22');
+                }
+              },
+              error: function(data){   
+                if(data.responseJSON.error == "conflict"){
+                  showToast('Bill Number Conflict: <b>Apply Quick Fix #2</b> and try again. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                } 
+                else{
+                  showToast('System Error: Unable to generate the bill. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                }       
+              }
+            });  
+            //End - post KOT to Server
+   
+}
+
+function properRoundOff(amount){
+  return Math.round(amount);
+}
+
+
+//Returns today, and current time
+function getCurrentTime(type){
+          
+          var today = new Date();
+          var time;
+          var dd = today.getDate();
+          var mm = today.getMonth()+1; //January is 0!
+          var yyyy = today.getFullYear();
+          var hour = today.getHours();
+          var mins = today.getMinutes();
+
+          if(dd<10) {
+              dd = '0'+dd;
+          } 
+
+          if(mm<10) {
+              mm = '0'+mm;
+          } 
+
+          if(hour<10) {
+              hour = '0'+hour;
+          } 
+
+          if(mins<10) {
+              mins = '0'+mins;
+          }
+
+          today = dd + '-' + mm + '-' + yyyy;
+          time = hour + '' + mins;
+
+
+    if(type == 'TIME'){
+      return time;
+    }
+
+    if(type == 'DATE')
+      return today;
+
+    if(type == 'DATE_DDMMYY')
+      return dd+''+mm+''+yyyy;
+
+    if(type == 'DATE_DD-MM-YY')
+      return dd+'-'+mm+'-'+yyyy;
+
+    if(type == 'DATE_YYYY-MM-DD')
+      return yyyy+'-'+mm+'-'+dd;
+
+    if(type == 'DATE_STAMP')
+      return yyyy+''+mm+''+dd;
+   
+}
+
+function billTableMapping(tableID, billNumber, payableAmount, status){
+
+  if(status != 1 && status != 2 && status != 3){
+    showToast('Warning: Table #'+tableID+' was not mapped. But Bill is generated.', '#e67e22');
+    return '';
+  }
+
+    var today = new Date();
+    var hour = today.getHours();
+    var mins = today.getMinutes();
+
+    if(hour<10) {
+      hour = '0'+hour;
+    } 
+
+    if(mins<10) {
+        mins = '0'+mins;
+    }
+
+
+    $.ajax({
+      type: 'GET',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_tables/_design/filter-tables/_view/filterbyname?startkey=["'+tableID+'"]&endkey=["'+tableID+'"]',
+      timeout: 10000,
+      success: function(data) {
+        if(data.rows.length == 1){
+
+              var tableData = data.rows[0].value;
+
+              var remember_id = null;
+              var remember_rev = null;
+
+              if(tableData.table == tableID){
+
+                remember_id = tableData._id;
+                remember_rev = tableData._rev;
+
+                tableData.remarks = payableAmount;
+                tableData.KOT = billNumber;
+                tableData.status = status;
+                tableData.lastUpdate = hour+''+mins;            
+
+
+                    //Update
+                    $.ajax({
+                      type: 'PUT',
+                      url: COMMON_LOCAL_SERVER_IP+'accelerate_tables/'+remember_id+'/',
+                      data: JSON.stringify(tableData),
+                      contentType: "application/json",
+                      dataType: 'json',
+                      timeout: 10000,
+                      success: function(data) {
+
+
+                      },
+                      error: function(data) {
+                        showToast('System Error: Unable to update Tables data. Please contact Accelerate Support.', '#e74c3c');
+                      }
+                    });   
+
+              }
+              else{
+                showToast('Not Found Error: Tables data not found. Please contact Accelerate Support.', '#e74c3c');
+              }
+        }
+        else{
+          showToast('Not Found Error: Tables data not found. Please contact Accelerate Support.', '#e74c3c');
+        }
+
+      },
+      error: function(data) {
+        showToast('System Error: Unable to read Tables data. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+}
+
+
+function deleteKOTFromServer(id, revID){
+    $.ajax({
+      type: 'DELETE',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+id+'?rev='+revID,
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+
+      },
+      error: function(data) {
+        showToast('Server Warning: Unable to modify Order KOT. Please contact Accelerate Support.', '#e67e22');
+      }
+    }); 
+}
 

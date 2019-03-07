@@ -20,7 +20,7 @@
     <tag class="buttonSettings" onclick="openDevicesWindow()" style="right: 135px;">Connected Devices</tag>
     
     <center><img src="assets/images/gathering_orders.gif" style="width: 100%; max-width: 800px;" id="mainBGImage"></center>
-    <h1 class="titleMain blink_me" id="statusTitle">Aggregating Orders</h1>
+    <h1 class="titleMain blink_me" id="statusTitle">Accepting Orders</h1>
     <p class="pendingOrder" id="pendingOrderMessage"></p>
 
 
@@ -104,6 +104,18 @@
     </div>
 
 
+    <!-- ERRORS LISTING -->
+    <div class="errorListingWindow">
+      
+      <div class="errorListingBlock" id="errorListingWindowModal" style="display: none">
+        <h2 class="errorListingTitle">Error Log<tag class="errorListWindowClose" onclick="hideErrorListing()">X</tag></h2>
+        <tag id="errorListingWindowRenderContent"></tag>
+      </div>
+      <div class="errorListingButton" id="errorListingWindowCounter" onclick="renderErrorsLog()" style="display: none">0</div>
+    </div>
+
+
+
 
     <!-- SERVER CONNECTION FAILURE : SCREEN LOCK -->
     <div id="serverErrorLock" style="display: none">
@@ -152,6 +164,8 @@
 
 
 
+
+
         <!-- LOADING MODAL -->
         <div id="generalLoadingModal" class="modal" style="z-index: 2600 !important;">
              <div class="modal-dialog" style="width: 100%">
@@ -172,6 +186,8 @@
         <!-- INFO BAR - TOAST -->
         <div id="infobar"></div>  
 
+        <tag id="dummyQRCodeHolder" style="display: none"></tag>
+
 
 
 <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
@@ -179,6 +195,7 @@
 <script src="assets/js/jquery/jquery.min.js"></script>
 <script src="assets/js/moment.min.js"></script>
 <script src="assets/js/jquery/jquery-ui.min.js"></script>
+<script src="assets/js/customqr.js"></script>
 
 <script src="assets/js/communicator.js"></script>
 <script src="assets/js/layout.js"></script>
