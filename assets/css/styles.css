@@ -589,6 +589,22 @@ background: linear-gradient(to bottom, #DD2476, #FF512F); /* W3C, IE 10+/ Edge, 
     font-weight: bold;
 }
 
+.errorListingTryButton{
+    cursor: pointer;
+    width: 80px;
+    padding: 3px;
+    background: #19ad69;
+    text-align: center;
+    right: 6px;
+    top: 15px;
+    border-radius: 3px;
+    color: #FFF;
+    font-size: 13px;
+    text-transform: uppercase;
+    position: absolute;
+    font-weight: bold;
+}
+
 .errorListingTime{
     display: block;
     top: 0;
@@ -600,11 +616,40 @@ background: linear-gradient(to bottom, #DD2476, #FF512F); /* W3C, IE 10+/ Edge, 
   opacity: 0.8;
 }
 
+.systemError{
+    font-size: 10px;
+    font-weight: bold;
+    background: red;
+    color: #FFF;
+    padding: 2px 4px;
+    position: relative;
+    top: -2px;  
+}
+
+.errorWarning{
+  color: red;
+}
+
 .errorListingItem:hover .errorListingFixButton,
 .errorListingItem:active .errorListingFixButton,
-.errorListingItem:focus .errorListingFixButton{
+.errorListingItem:focus .errorListingFixButton,
+.errorListingItem:hover .errorListingTryButton,
+.errorListingItem:active .errorListingTryButton,
+.errorListingItem:focus .errorListingTryButton{ 
     background: #FFF;
     color: #1abc9c;
+}
+
+.errorListingItem:hover .errorWarning,
+.errorListingItem:active .errorWarning,
+.errorListingItem:focus .errorWarning{ 
+    color: #f39c12;
+}
+
+.errorListingItem:hover .systemError,
+.errorListingItem:active .systemError,
+.errorListingItem:focus .systemError{ 
+    background: #f39c12;
 }
 
 .errorListWindowClose{
@@ -626,4 +671,105 @@ background: linear-gradient(to bottom, #DD2476, #FF512F); /* W3C, IE 10+/ Edge, 
 .errorListWindowClose:hover, .errorListWindowClose:active, .errorListWindowClose:focus{
   background: #f39c12;
   color: #FFF;
+}
+
+
+
+/* printer progress */
+  #printerProgress {
+    position: relative;
+    background: none !important;
+    padding: 0;
+    text-align: left;
+    -moz-transform-origin: 50% 50%;
+    -webkit-transform-origin: 50% 50%;
+    -ms-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+    -moz-transform: rotateX(0deg);
+    -webkit-transform: rotateX(0deg);
+    -ms-transform: rotateX(0deg);
+    transform: rotateX(0deg);
+    -moz-transition: opacity 1s ease, -moz-transform 1s ease;
+    -webkit-transition: opacity 1s ease, -webkit-transform 1s ease;
+    -ms-transition: opacity 1s ease, -ms-transform 1s ease;
+    transition: opacity 1s ease, transform 1s ease;
+  }
+
+  #printerProgress .loadingText{
+    font-size: 14px;
+    color: #FFF;
+    display: block;
+    position: absolute;
+    bottom: 10px;
+    left: 60px;
+  }
+
+  .printerLoadingIcon{
+    width: 25px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+
+  .printerLoadingDoneIcon{
+    width: 35px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+
+@-webkit-keyframes quick_flash {
+  from,
+  to {
+    opacity: 1;
+  }
+
+  50%{
+    opacity: 0.2;
+  }
+}
+
+@keyframes quick_flash {
+  from,
+  to {
+    opacity: 1;
+  }
+
+  50%{
+    opacity: 0.2;
+  }
+}
+
+.quick_flash {
+  -webkit-animation-name: quick_flash;
+  animation-name: quick_flash;
+  animation-duration: 1s;
+}
+
+
+
+@-webkit-keyframes fadeBG {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeBG {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.fade_background {
+  -webkit-animation-name: fadeBG;
+  animation-name: fadeBG;
+  animation-duration: 1s;
 }

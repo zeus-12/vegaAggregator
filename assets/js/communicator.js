@@ -956,6 +956,160 @@ var html_template = kot_header_content +
 
 
 
+/*
+   PRINTING CANCELLED KOT
+*/
+
+if(type == 'CANCELLED_KOT'){
+
+//Render Items
+var total_items = 0;
+var total_quantity = 0;
+
+var itemsList = '';
+var n = 0;
+while(orderObject.cart[n]){
+
+   itemsList +='<tr>'+
+                  '<td><span style="font-size: 18px; text-decoration: line-through; str">'+orderObject.cart[n].name + (orderObject.cart[n].isCustom ? ' ('+orderObject.cart[n].variant+')' : '')+'</span>'+
+                  (orderObject.cart[n].comments && orderObject.cart[n].comments != '' ? '<newcomments class="itemComments" style="text-decoration: line-through; font-size: 11px;">- '+orderObject.cart[n].comments+'</newcomments>' : '')+
+                  '</td>'+
+                  '<td class="itemQuantity" style="text-align: right; font-size: 18px; text-decoration: line-through;">' +orderObject.cart[n].qty+
+                  '</td>'+
+               '</tr>'
+
+   total_quantity += orderObject.cart[n].qty;
+
+   n++;
+}
+
+total_items = n;
+
+var kot_header_content = '';
+var kot_footer_content = '';
+
+if(orderObject.orderDetails.modeType == 'DELIVERY' || orderObject.orderDetails.modeType == 'PARCEL'){
+   
+   kot_header_content = ''+
+      '<div class="KOTHeader" style="min-height: unset">'+
+         '<div style="text-align: center; font-size:14px; font-weight: bold; margin: 5px 0; background: #000; color: #FFF; padding: 4px 0">-- ORDER CANCELLED --</div>'+
+         '<table style="width: 100%">'+
+            '<col style="width: 30%">'+
+            '<col style="width: 40%">'+
+            '<col style="width: 30%">'+
+            '<tr>'+
+               '<td style="vertical-align: top">'+
+                  '<p>'+
+                     '<tag class="subLabel">KOT NO</tag>'+
+                     '<tag class="KOTNumber">'+orderObject.KOTNumber+'</tag>'+
+                  '</p>'+
+               '</td>'+
+               '<td style="vertical-align: top">'+
+                  '<p style="margin: 0">'+
+                     '<tag class="serviceType" style="font-size: 16px; font-weight: bold;">'+(orderObject.orderDetails.modeType == 'DELIVERY' ? 'PARCEL' : 'PARCEL <b style="font-size: 18px; padding: 1px 5px; background: #000; font-weight: bold; color: #FFF; border-radius: 2px;">#'+orderObject.table+'</b>')+'</tag>'+
+                  '</p>'+
+               '</td>'+
+               '<td style="vertical-align: top;">'+
+                  '<p style=" text-align: right; float: right">'+
+                     '<tag class="subLabel">TIME</tag>'+
+                     '<tag class="timeStamp" style="font-size: 14px; font-weight: bold;">'+(orderObject.timeKOT == "" ? getFancyTime(orderObject.timePunch) : getFancyTime(orderObject.timeKOT))+'</tag>'+
+                  '</p>'+
+               '</td>'+
+            '</tr>'+
+         '</table>'+
+      '</div>';
+
+   kot_footer_content = '<div class="billBottomContainer">'+
+                           '<div style="text-align: center; font-size:14px; font-weight: bold; background: #000; color: #FFF; padding: 3px 0">'+ orderObject.orderDetails.mode + ' - <b style="font-size: 16px;">'+orderObject.KOTNumber+'</b>'+
+                           '</div>'+   
+                        '</div>'; 
+}
+else if(orderObject.orderDetails.modeType == 'TOKEN'){
+
+   kot_header_content = ''+
+      '<div class="KOTHeader" style="min-height: unset">'+
+         '<div style="text-align: center; font-size:14px; font-weight: bold; margin: 5px 0; background: #000; color: #FFF; padding: 4px 0">-- ORDER CANCELLED --</div>'+
+         '<table style="width: 100%">'+
+            '<col style="width: 30%">'+
+            '<col style="width: 40%">'+
+            '<col style="width: 30%">'+
+            '<tr>'+
+               '<td style="vertical-align: top">'+
+                  '<p>'+
+                     '<tag class="subLabel">KOT NO</tag>'+
+                     '<tag class="KOTNumber">'+orderObject.KOTNumber+'</tag>'+
+                  '</p>'+
+               '</td>'+
+               '<td style="vertical-align: top">'+
+                  '<p style="margin: 0">'+
+                     '<tag class="serviceType" style="font-size: 16px; font-weight: bold;">SELF SERVICE <b style="font-size: 18px; padding: 1px 5px; background: #000; font-weight: bold; color: #FFF; border-radius: 2px;">'+orderObject.table+'</b></tag>'+
+                  '</p>'+
+               '</td>'+
+               '<td style="vertical-align: top;">'+
+                  '<p style=" text-align: right; float: right">'+
+                     '<tag class="subLabel">TIME</tag>'+
+                     '<tag class="timeStamp" style="font-size: 14px; font-weight: bold;">'+(orderObject.timeKOT == "" ? getFancyTime(orderObject.timePunch) : getFancyTime(orderObject.timeKOT))+'</tag>'+
+                  '</p>'+
+               '</td>'+
+            '</tr>'+
+         '</table>'+
+      '</div>';  
+}
+else if(orderObject.orderDetails.modeType == 'DINE'){
+
+   kot_header_content = ''+
+      '<div class="KOTHeader" style="min-height: unset">'+
+         '<div style="text-align: center; font-size:14px; font-weight: bold; margin: 5px 0; background: #000; color: #FFF; padding: 4px 0">-- ORDER CANCELLED --</div>'+
+         '<table style="width: 100%">'+
+            '<col style="width: 30%">'+
+            '<col style="width: 40%">'+
+            '<col style="width: 30%">'+
+            '<tr>'+
+               '<td style="vertical-align: top">'+
+                  '<p>'+
+                     '<tag class="subLabel">KOT NO</tag>'+
+                     '<tag class="KOTNumber">'+orderObject.KOTNumber+'</tag>'+
+                  '</p>'+
+               '</td>'+
+               '<td style="vertical-align: top">'+
+                  '<p style="margin: 0">'+
+                     '<tag class="serviceType" style="font-size: 16px; font-weight: bold;">ON TABLE <b style="font-size: 18px; padding: 1px 5px; background: #000; font-weight: bold; color: #FFF; border-radius: 2px;">'+orderObject.table+'</b></tag>'+
+                  '</p>'+
+               '</td>'+
+               '<td style="vertical-align: top;">'+
+                  '<p style=" text-align: right; float: right">'+
+                     '<tag class="subLabel">TIME</tag>'+
+                     '<tag class="timeStamp" style="font-size: 14px; font-weight: bold;">'+(orderObject.timeKOT == "" ? getFancyTime(orderObject.timePunch) : getFancyTime(orderObject.timeKOT))+'</tag>'+
+                  '</p>'+
+               '</td>'+
+            '</tr>'+
+         '</table>'+
+      '</div>';  
+
+   if(orderObject.stewardName != ""){
+
+      kot_footer_content = '<div class="billBottomContainer">'+
+                              '<div style="padding: 2px 0; text-align: center;">'+
+                                 '<tag style="font-size: 8px; font-weight: 300; text-transform: uppercase; letter-spacing: 2px; font-family: sans-serif;">TAKEN BY </tag>'+
+                                 '<b style="text-transform: uppercase; font-size:11px;">'+orderObject.stewardName+'</b>'+
+                              '</div>'+   
+                           '</div>';
+   } 
+}
+
+var html_template = kot_header_content +
+      '<div class="KOTContent">'+
+         '<table style="width: 100%">'+
+            '<col style="width: 85%">'+
+            '<col style="width: 15%">'+ itemsList +
+         '</table>'+
+      '</div>' + kot_footer_content;
+
+      postContentToTemplate(html_template);
+}
+
+
+
 
 /*
    PRINTING ITEMS VIEW
