@@ -100,15 +100,21 @@
 
 
 .titleMain{
-	margin: 0;
+	  margin: 0;
     text-align: center;
     text-transform: uppercase;
-    color: #FFF;
+    color: #c35611;
     font-family: 'Oswald';
-    letter-spacing: 4px;
-    font-size: 36px;
+    letter-spacing: 0;
+    font-size: 42px;
     font-weight: bold;
 }
+
+#statusTitle.blink_me{
+  color: #FFF !important;
+}
+
+
 
 .buttonSettings{
 	margin: 0;
@@ -365,4 +371,405 @@ background: linear-gradient(to bottom, #DD2476, #FF512F); /* W3C, IE 10+/ Edge, 
         outline: none;
       }
 
+.settingsWindow{
+    margin: 50px 50px 0 0;
+    width: 100%;
+    max-width: 600px;
+    float: right;
+    background: #FFF;
+    border-radius: 5px;
+    min-height: 400px;
+    overflow: scroll;  
+}
 
+.settingsTitle{
+     margin: 5px 15px;
+    padding: 10px 0;
+    font-weight: 300;
+    font-family: 'Oswald';
+    font-size: 28px;
+    color: #f39c12;
+    border-bottom: 1px solid #f39c12; 
+}
+
+
+
+
+
+.modeSelectionIcon{
+  background: none;
+  opacity: 0;
+  font-size: 14px;
+  color: #FFF;
+  position: absolute;
+  right: 10px;
+  top: 16px;
+}
+
+.selectedMode .modeSelectionIcon{
+    opacity: 1 !important;
+}
+
+.billModalSelect{
+  position: relative; display: none; width: 100%; 
+  box-shadow: #90a6b1 3px 3px 6px 0px;
+}
+
+.billModeListedButton{
+    position: relative;
+    width: 100%;
+    display: block;
+    background: #1abc9c;
+    color: #FFF !important;
+    text-align: left;
+    padding: 8px 35px 8px 8px;
+    border: none;
+    outline: none;
+    border-bottom: 1px solid #14987e !important;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.printerWindowClose{
+    float: right;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 16px;
+    font-family: sans-serif;
+    font-weight: bold;
+    line-height: 32px;
+    background: #ffdead;
+    color: #f39c12;
+    cursor: pointer;
+}
+
+.printerWindowClose:hover, .printerWindowClose:active, .printerWindowClose:focus{
+  background: #f39c12;
+  color: #FFF;
+}
+
+.modeSelectionBrief{
+  display: block;
+  font-size: 10px;
+  color: #beefd2;
+  letter-spacing: 1px;
+}
+
+.selectedMode, .billModeListedButton:hover{
+  background: #14987e !important;
+}
+
+.selectModeClose{
+    position: absolute;
+    bottom: 0;
+    right: 10px;
+    height: 30px;
+    width: 40%;
+    text-align: right;
+    line-height: 30px;
+    font-size: 12px;
+    text-decoration: underline;
+    font-weight: bold;
+    color: #848484; 
+    display: none; 
+    cursor: pointer;
+}
+
+.selectModeUnset{
+    position: absolute;
+    bottom: 0;
+    left: 10px;
+    height: 30px;
+    width: 40%;
+    text-align: left;
+    line-height: 30px;
+    font-size: 12px;
+    text-decoration: underline;
+    font-weight: bold;
+    color: #848484; 
+    display: none; 
+    cursor: pointer;
+}
+
+.selectModeClose:hover, .selectModeClose:active, .selectModeClose:focus,
+.selectModeUnset:hover, .selectModeUnset:active, .selectModeUnset:focus{
+  color: #ff7a7a;
+}
+
+
+.errorListingWindow{
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+}
+
+.errorListingButton{
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    font-size: 42px;
+    font-weight: bold;
+    color: #ff9c8f;
+    text-align: center;
+    line-height: 1.8em;
+    font-family: 'Oswald';
+    background: #FF4B2B;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.errorListingButton:hover, .errorListingButton:active, .errorListingButton:focus{
+  transform: scale(1.1);
+  color: #FFF;
+}
+
+.errorListingBlock{
+    width: 640px;
+    background: #FFF;
+    display: block;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    padding: 10px 5px;
+}
+
+#errorListingWindowRenderContent{
+    max-height: 340px;
+    overflow: scroll;
+    display: block;
+    padding: 10px;  
+}
+
+.errorListingTitle{
+    text-transform: uppercase;
+    font-family: 'Oswald';
+    letter-spacing: 0;
+    color: #dd4b39;
+    font-weight: bold;
+    font-size: 24px;
+    text-align: left;
+    margin: 5px 0 10px 10px;
+    padding: 0;
+}
+
+.errorListingItem{
+    display: block;
+    padding: 8px 90px 8px 8px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #585353;
+    position: relative;
+    border: 1px solid #ffdddd;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.errorListingItem:hover, .errorListingItem:focus, .errorListingItem:active{
+    background: #e24b5e;
+    color: #FFF;
+    border-color: #e24b5e;
+}
+
+.errorListingFixButton{
+    cursor: pointer;
+    width: 80px;
+    padding: 3px;
+    background: #e24b5e;
+    text-align: center;
+    right: 6px;
+    top: 15px;
+    border-radius: 3px;
+    color: #FFF;
+    font-size: 13px;
+    text-transform: uppercase;
+    position: absolute;
+    font-weight: bold;
+}
+
+.errorListingTryButton{
+    cursor: pointer;
+    width: 80px;
+    padding: 3px;
+    background: #19ad69;
+    text-align: center;
+    right: 6px;
+    top: 15px;
+    border-radius: 3px;
+    color: #FFF;
+    font-size: 13px;
+    text-transform: uppercase;
+    position: absolute;
+    font-weight: bold;
+}
+
+.errorListingTime{
+    display: block;
+    top: 0;
+    font-size: 11px;  
+}
+
+.errorListingOwner{
+  font-size: 80%;
+  opacity: 0.8;
+}
+
+.systemError{
+    font-size: 10px;
+    font-weight: bold;
+    background: red;
+    color: #FFF;
+    padding: 2px 4px;
+    position: relative;
+    top: -2px;  
+}
+
+.errorWarning{
+  color: red;
+}
+
+.errorListingItem:hover .errorListingFixButton,
+.errorListingItem:active .errorListingFixButton,
+.errorListingItem:focus .errorListingFixButton,
+.errorListingItem:hover .errorListingTryButton,
+.errorListingItem:active .errorListingTryButton,
+.errorListingItem:focus .errorListingTryButton{ 
+    background: #FFF;
+    color: #1abc9c;
+}
+
+.errorListingItem:hover .errorWarning,
+.errorListingItem:active .errorWarning,
+.errorListingItem:focus .errorWarning{ 
+    color: #f39c12;
+}
+
+.errorListingItem:hover .systemError,
+.errorListingItem:active .systemError,
+.errorListingItem:focus .systemError{ 
+    background: #f39c12;
+}
+
+.errorListWindowClose{
+    float: right;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 16px;
+    font-family: sans-serif;
+    font-weight: bold;
+    line-height: 32px;
+    background: #ffdead;
+    color: #f39c12;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.errorListWindowClose:hover, .errorListWindowClose:active, .errorListWindowClose:focus{
+  background: #f39c12;
+  color: #FFF;
+}
+
+
+
+/* printer progress */
+  #printerProgress {
+    position: relative;
+    background: none !important;
+    padding: 0;
+    text-align: left;
+    -moz-transform-origin: 50% 50%;
+    -webkit-transform-origin: 50% 50%;
+    -ms-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+    -moz-transform: rotateX(0deg);
+    -webkit-transform: rotateX(0deg);
+    -ms-transform: rotateX(0deg);
+    transform: rotateX(0deg);
+    -moz-transition: opacity 1s ease, -moz-transform 1s ease;
+    -webkit-transition: opacity 1s ease, -webkit-transform 1s ease;
+    -ms-transition: opacity 1s ease, -ms-transform 1s ease;
+    transition: opacity 1s ease, transform 1s ease;
+  }
+
+  #printerProgress .loadingText{
+    font-size: 14px;
+    color: #FFF;
+    display: block;
+    position: absolute;
+    bottom: 10px;
+    left: 60px;
+  }
+
+  .printerLoadingIcon{
+    width: 25px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+
+  .printerLoadingDoneIcon{
+    width: 35px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+
+@-webkit-keyframes quick_flash {
+  from,
+  to {
+    opacity: 1;
+  }
+
+  50%{
+    opacity: 0.2;
+  }
+}
+
+@keyframes quick_flash {
+  from,
+  to {
+    opacity: 1;
+  }
+
+  50%{
+    opacity: 0.2;
+  }
+}
+
+.quick_flash {
+  -webkit-animation-name: quick_flash;
+  animation-name: quick_flash;
+  animation-duration: 1s;
+}
+
+
+
+@-webkit-keyframes fadeBG {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeBG {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+.fade_background {
+  -webkit-animation-name: fadeBG;
+  animation-name: fadeBG;
+  animation-duration: 1s;
+}

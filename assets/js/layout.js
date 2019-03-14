@@ -1,5 +1,5 @@
 
-let COMMON_LOCAL_SERVER_IP = 'http://admin:admin@192.168.1.3:5984/';
+let COMMON_LOCAL_SERVER_IP = 'http://admin:admin@127.0.0.1:5984/';
 
 
 let $ = jQuery.noConflict();
@@ -96,6 +96,384 @@ function setServerConnectionDetails(){
 
 
 
+function openDevicesWindow(){
+  
+  var devices_list = window.localStorage.registeredDevicesData && window.localStorage.registeredDevicesData != "" ? JSON.parse(window.localStorage.registeredDevicesData) : [];
+
+  if(devices_list.length == 0){
+    showToast('Warning: There are no registered Devices found.', '#e67e22');   
+    return '';
+  }
+
+  document.getElementById("connectedDevicesSettingsWindow").style.display = 'block';
+
+  //render content
+  var renderContent = '';
+  
+  var n = 0;
+  while(devices_list[n]){
+
+    renderContent +=        '<tr role="row">'+
+                               '<td><b style="color: #32404c; font-family:\'Oswald\'; font-size: 18px;">'+(devices_list[n].machineCustomName != "" ? devices_list[n].machineCustomName : devices_list[n].machineUID)+'</b><tag style="color: #a0a0a0; display: block; font-size: 11px;">'+devices_list[n].machineUID+'</tag></td>'+
+                               '<td style="text-align: center; position: relative">'+(devices_list[n].defaultPrinters.VIEW && devices_list[n].defaultPrinters.VIEW != "" ? '<button onclick="assignDevicePrinter(\''+devices_list[n].machineUID+'\', \'VIEW\', \''+(devices_list[n].defaultPrinters.VIEW)+'\')" class="btn btn-success btn-sm"><i class="fa fa-print"></i> '+devices_list[n].defaultPrinters.VIEW+'</button>' : '<button onclick="assignDevicePrinter(\''+devices_list[n].machineUID+'\', \'VIEW\', \'\')" class="btn btn-default btn-sm" style="font-style: italic">Not Set</button>')+
+                                  '<div class="blue-box" style="width: 100%; position: relative; top: -30px;" id="printerSelection_VIEW_'+devices_list[n].machineUID+'"> </div>'+
+                                  '<tag class="selectModeUnset" onclick="unsetPrinterSelectionWindow(\''+devices_list[n].machineUID+'\', \'VIEW\')" id="printerSelectionUnset_VIEW_'+devices_list[n].machineUID+'">UNSET</tag>'+
+                                  '<tag class="selectModeClose" onclick="closePrinterSelectionWindow(\''+devices_list[n].machineUID+'\', \'VIEW\')" id="printerSelectionClose_VIEW_'+devices_list[n].machineUID+'">CLOSE</tag>'+
+                               '</td>'+
+                               '<td style="text-align: center; position: relative">'+(devices_list[n].defaultPrinters.BILL && devices_list[n].defaultPrinters.BILL != "" ? '<button onclick="assignDevicePrinter(\''+devices_list[n].machineUID+'\', \'BILL\', \''+(devices_list[n].defaultPrinters.BILL)+'\')" class="btn btn-success btn-sm"><i class="fa fa-print"></i> '+devices_list[n].defaultPrinters.BILL+'</button>' : '<button onclick="assignDevicePrinter(\''+devices_list[n].machineUID+'\', \'BILL\', \'\')" class="btn btn-default btn-sm" style="font-style: italic">Not Set</button>')+
+                                  '<div class="blue-box" style="width: 100%; position: relative; top: -30px;" id="printerSelection_BILL_'+devices_list[n].machineUID+'"> </div>'+
+                                  '<tag class="selectModeUnset" onclick="unsetPrinterSelectionWindow(\''+devices_list[n].machineUID+'\', \'BILL\')" id="printerSelectionUnset_BILL_'+devices_list[n].machineUID+'">UNSET</tag>'+
+                                  '<tag class="selectModeClose" onclick="closePrinterSelectionWindow(\''+devices_list[n].machineUID+'\', \'BILL\')" id="printerSelectionClose_BILL_'+devices_list[n].machineUID+'">CLOSE</tag>'+
+                               '</td>'+
+                            '</tr>';
+    n++;
+  }
+
+  document.getElementById("devicesListingContent").innerHTML = renderContent;
+
+}
+
+function hideDevicesSettingsWindow(){
+  document.getElementById("devicesListingContent").innerHTML = '';
+  document.getElementById("connectedDevicesSettingsWindow").style.display = 'none';
+}
+
+
+function closePrinterSelectionWindow(machineUID, printerType){
+  document.getElementById("printerSelection_"+printerType+"_"+machineUID).innerHTML = '';
+  document.getElementById("printerSelectionUnset_"+printerType+"_"+machineUID).style.display = 'none';
+  document.getElementById("printerSelectionClose_"+printerType+"_"+machineUID).style.display = 'none';
+}
+
+function unsetPrinterSelectionWindow(machineUID, action){
+
+  document.getElementById("printerSelection_"+action+"_"+machineUID).innerHTML = '';
+  document.getElementById("printerSelectionUnset_"+action+"_"+machineUID).style.display = 'none';
+  document.getElementById("printerSelectionClose_"+action+"_"+machineUID).style.display = 'none';
+
+
+    //Read from Server, apply changes, and save to LocalStorage
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES" 
+                  },
+      "fields"    : ["identifierTag", "value", "_rev"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_CONFIGURED_MACHINES'){
+
+              var machinesList = data.docs[0].value;
+
+              var n = 0;
+              while(machinesList[n]){
+                if(machinesList[n].machineUID == machineUID){
+
+                  if(action == 'VIEW'){
+                    machinesList[n].defaultPrinters.VIEW = "";
+                  }
+                  else if(action == 'BILL'){
+                    machinesList[n].defaultPrinters.BILL = "";
+                  }
+
+                  break;
+                }
+                n++;
+              }
+
+
+
+                  //Update
+                  var updateData = {
+                    "_rev": data.docs[0]._rev,
+                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES",
+                    "value": machinesList
+                  }
+
+                  $.ajax({
+                    type: 'PUT',
+                    url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_CONFIGURED_MACHINES/',
+                    data: JSON.stringify(updateData),
+                    contentType: "application/json",
+                    dataType: 'json',
+                    timeout: 10000,
+                    success: function(data) {
+
+                        var shortlisted_devices = [];
+                        var n = 0;
+                        while(machinesList[n]){
+                          if(machinesList[n].type && machinesList[n].type == 'TAPS_PORTABLE_DEVICE'){
+                            shortlisted_devices.push(machinesList[n]);
+                          }
+
+                          if(n == machinesList.length - 1){ //Last iteration
+                            window.localStorage.registeredDevicesData = JSON.stringify(shortlisted_devices);
+                          }
+
+                          n++;
+                        }
+
+                        openDevicesWindow();
+                        
+                    },
+                    error: function(data) {
+                      showToast('System Error: Update failed.', '#e74c3c');
+                    }
+
+                  });  
+
+
+
+          }
+        }
+      },
+      error: function(data) {
+        showToast('Warning: Configured Machines data not found.', '#e67e22');     
+      }
+    });  
+
+}
+
+
+function assignDevicePrinter(machineUID, printerType, currentPrinterName){
+
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_CONFIGURED_PRINTERS" 
+                  },
+      "fields"    : ["identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_CONFIGURED_PRINTERS'){
+
+            var printersMasterList = data.docs[0].value;
+
+            var machineName = window.localStorage.accelerate_licence_machineUID ? window.localStorage.accelerate_licence_machineUID : '';
+            if(!machineName || machineName == ''){
+                machineName = 'Any';
+            }
+
+            var printersList = [];
+            var view_printers = [];
+            var bill_printers = [];
+
+            for(var i = 0; i < printersMasterList.length; i++){
+              if(printersMasterList[i].systemName == machineName){
+                printers_list = printersMasterList[i].data;
+                break;
+              }
+            }
+
+            if(printers_list.length == 0){
+              showToast('Warning: No printers configured.', '#e67e22');  
+              return '';
+            }
+
+            var n = 0;
+            while(printers_list[n]){
+              for(var a = 0; a < printers_list[n].actions.length; a++){
+                
+                if(printers_list[n].actions[a] == "VIEW"){
+                  view_printers.push(printers_list[n]);
+                }
+                
+                if(printers_list[n].actions[a] == "BILL"){
+                  bill_printers.push(printers_list[n]);
+                }
+
+              }
+
+              n++;
+            }
+
+
+            switch(printerType){
+              case "VIEW":{
+                if(view_printers.length == 0){
+                  showToast('Warning: No printers configured for printing Views.', '#e67e22'); 
+                  return '';
+                }
+                else{
+                  selectDevicePrinter(machineUID, 'VIEW', view_printers, currentPrinterName);
+                }
+
+                break;
+              }
+              case "BILL":{
+                if(bill_printers.length == 0){
+                  showToast('Warning: No printers configured for printing Bills.', '#e67e22'); 
+                  return '';
+                }
+                else{
+                  selectDevicePrinter(machineUID, 'BILL', bill_printers, currentPrinterName);
+                }
+
+                break;
+              }
+            }
+            
+          }
+          else{
+            showToast('Not Found Error: Configured Printers data not found.', '#e74c3c');
+          }
+        }
+        else{
+          showToast('Not Found Error: Configured Printers data not found.', '#e74c3c');
+        }
+        
+      },
+      error: function(data) {
+        showToast('System Error: Unable to read Configured Printers data.', '#e74c3c');
+      }
+
+    });    
+}
+
+function selectDevicePrinter(machineUID, printingType, printers_list, currentPrinterName){
+
+  var buttonsRender = '';
+  var n = 0;
+  while(printers_list[n]){
+    buttonsRender += ''+
+               '<button class="billModeListedButton easySelectTool_chooseBillingMode selectedMode" onclick="savePrinterAction(\''+machineUID+'\', \''+printers_list[n].name+'\', \''+printingType+'\')">'+
+                  printers_list[n].name+'<span class="modeSelectionBrief">'+printers_list[n].type+'</span>'+
+                  '<tag class="modeSelectionIcon">'+(printers_list[n].name == currentPrinterName && currentPrinterName != '' ? '<i class="fa fa-check"></i>' : '')+'</tag>'+
+               '</button>';    
+    n++;
+  }
+
+
+
+  var selection_template = ''+
+   '<div id="billingModesModalHome" class="modal billModalSelect" style="display: block;">'+
+      '<div class="modal-dialog" style="width: 100%; margin: 0">'+
+         '<div class="modal-content" id="billingModesModalHomeContent">'+ buttonsRender +
+         '</div>'+
+      '</div>'+
+   '</div>';  
+
+
+
+  document.getElementById("printerSelection_"+printingType+"_"+machineUID).innerHTML = selection_template;
+
+  document.getElementById("printerSelectionUnset_"+printingType+"_"+machineUID).style.display = 'block';
+  document.getElementById("printerSelectionClose_"+printingType+"_"+machineUID).style.display = 'block';
+}
+
+
+function savePrinterAction(machineUID, printer_name, action){
+  
+    closePrinterSelectionWindow(machineUID, action);
+
+    //Read from Server, apply changes, and save to LocalStorage
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES" 
+                  },
+      "fields"    : ["identifierTag", "value", "_rev"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_CONFIGURED_MACHINES'){
+
+              var machinesList = data.docs[0].value;
+
+              var n = 0;
+              while(machinesList[n]){
+                if(machinesList[n].machineUID == machineUID){
+
+                  if(action == 'VIEW'){
+                    machinesList[n].defaultPrinters.VIEW = printer_name;
+                  }
+                  else if(action == 'BILL'){
+                    machinesList[n].defaultPrinters.BILL = printer_name;
+                  }
+
+                  break;
+                }
+                n++;
+              }
+
+
+
+                  //Update
+                  var updateData = {
+                    "_rev": data.docs[0]._rev,
+                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES",
+                    "value": machinesList
+                  }
+
+                  $.ajax({
+                    type: 'PUT',
+                    url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_CONFIGURED_MACHINES/',
+                    data: JSON.stringify(updateData),
+                    contentType: "application/json",
+                    dataType: 'json',
+                    timeout: 10000,
+                    success: function(data) {
+
+                        var shortlisted_devices = [];
+                        var n = 0;
+                        while(machinesList[n]){
+                          if(machinesList[n].type && machinesList[n].type == 'TAPS_PORTABLE_DEVICE'){
+                            shortlisted_devices.push(machinesList[n]);
+                          }
+
+                          if(n == machinesList.length - 1){ //Last iteration
+                            window.localStorage.registeredDevicesData = JSON.stringify(shortlisted_devices);
+                          }
+
+                          n++;
+                        }
+
+                        openDevicesWindow();
+                        
+                    },
+                    error: function(data) {
+                      showToast('System Error: Update failed.', '#e74c3c');
+                    }
+
+                  });  
+
+
+
+          }
+        }
+      },
+      error: function(data) {
+        showToast('Warning: Configured Machines data not found.', '#e67e22');     
+      }
+    });  
+
+}
+
+
+
 function checkClientConnection(){
 
 
@@ -146,8 +524,10 @@ function checkClientConnection(){
                   //Success Callbacks
                   testLocalServerConnection();
                   applySystemOptionSettings();
+                  applyBillLayout();
                   applyKOTRelays();
                   applyConfiguredPrinters();
+                  loadRegisteredDevices();
 
 
                   break;
@@ -285,6 +665,54 @@ function hideLoading(){
 }
 
 
+/* Load Registered Devices */
+function loadRegisteredDevices(){
+
+    //Read from Server, apply changes, and save to LocalStorage
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES" 
+                  },
+      "fields"    : ["identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_CONFIGURED_MACHINES'){
+
+              var machinesList = data.docs[0].value;
+              var shortlisted_devices = [];
+
+              window.localStorage.registeredDevicesData = '';
+
+              var n = 0;
+              while(machinesList[n]){
+                if(machinesList[n].type && machinesList[n].type == 'TAPS_PORTABLE_DEVICE'){
+                  shortlisted_devices.push(machinesList[n]);
+                }
+
+                if(n == machinesList.length - 1){ //Last iteration
+                  window.localStorage.registeredDevicesData = JSON.stringify(shortlisted_devices);
+                }
+
+                n++;
+              }
+
+          }
+        }
+      },
+      error: function(data) {
+        showToast('Warning: Configured Machines data not found.', '#e67e22');     
+      }
+    });    
+}
 
 
 
@@ -505,6 +933,88 @@ function applySystemOptionSettings(){
 
 
 
+/* Apply Bill Layout */
+function applyBillLayout(){
+
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_BILL_LAYOUT" 
+                  },
+      "fields"    : ["identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_BILL_LAYOUT'){
+
+              var layoutData = data.docs[0].value;
+
+              var n = 0;
+              while(layoutData[n]){
+                
+                switch(layoutData[n].name){
+                  case "data_custom_header_image":{
+                    window.localStorage.bill_custom_header_image = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_top_right_name":{
+                    window.localStorage.bill_custom_top_right_name = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_top_right_value":{
+                    window.localStorage.bill_custom_top_right_value = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_bottom_pay_heading":{
+                    window.localStorage.bill_custom_bottom_pay_heading = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_bottom_pay_brief":{
+                    window.localStorage.bill_custom_bottom_pay_brief = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_footer_comments":{
+                    window.localStorage.bill_custom_footer_comments = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_footer_address":{
+                    window.localStorage.bill_custom_footer_address = layoutData[n].value;
+                    break;
+                  }
+                  case "data_custom_footer_contact":{
+                    window.localStorage.bill_custom_footer_contact = layoutData[n].value;
+                    break;
+                  }
+                }
+
+                n++;
+              }
+
+          }
+          else{
+            showToast('Not Found Error: Billing Layout data not found. Please contact Accelerate Support.', '#e74c3c');
+          }
+        }
+        else{
+          showToast('Not Found Error: Billing Layout data not found. Please contact Accelerate Support.', '#e74c3c');
+        }
+        
+      },
+      error: function(data) {
+        showToast('System Error: Billing Layout data not found. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+
+}
 
 /* Apply KOT Relays */
 function applyKOTRelays(){

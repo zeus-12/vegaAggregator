@@ -17,9 +17,10 @@
       <tag class="buttonSettings" style="right: 70px" onclick="operationPause()">Running</tag>
     </tag>
     <tag class="buttonSettings" onclick="openSettingsWindow()">Settings</tag>
+    <tag class="buttonSettings" onclick="openDevicesWindow()" style="right: 135px;">Connected Devices</tag>
     
-    <center><img src="assets/images/gathering_orders.gif" style="width: 100%; max-width: 800px;"></center>
-    <h1 class="titleMain blink_me">Aggregating Orders</h1>
+    <center><img src="assets/images/gathering_orders.gif" style="width: 100%; max-width: 800px;" id="mainBGImage"></center>
+    <h1 class="titleMain blink_me" id="statusTitle">Accepting Orders</h1>
     <p class="pendingOrder" id="pendingOrderMessage"></p>
 
 
@@ -74,6 +75,48 @@
 
 
 
+    <!-- SERVER URL SETTINGS -->
+    <div id="connectedDevicesSettingsWindow" class="modal" style="z-index: 10000;">
+         <div class="settingsWindow">
+            <h1 class="settingsTitle">Connected Devices<tag onclick="hideDevicesSettingsWindow()" class="printerWindowClose">X</tag></h1>
+            <div style="padding: 5px 15px; display: block; max-height: 470px; overflow: scroll;">
+
+                <div class="table-responsive">
+                      <table class="table">
+                         <col width="40%"></col>
+                         <col width="30%"></col>
+                         <col width="30%"></col>
+                         <thead style="background: #f39c12;">
+                            <tr>
+                               <th style="text-align: left; border: none; color: #FFF;">Device</th>
+                               <th style="text-align: center; border: none; color: #FFF;">View Printer</th>
+                               <th style="text-align: center; border: none; color: #FFF;">Bill Printer</th>
+                            </tr>
+                         </thead>
+                         <tbody id="devicesListingContent">
+
+                         </tbody>
+                      </table>
+                </div>  
+
+            </div>
+         </div>
+    </div>
+
+
+    <!-- ERRORS LISTING -->
+    <div class="errorListingWindow">
+      
+      <div class="errorListingBlock" id="errorListingWindowModal" style="display: none">
+        <h2 class="errorListingTitle">Error Log<tag class="errorListWindowClose" onclick="hideErrorListing()">X</tag></h2>
+        <tag id="errorListingWindowRenderContent"></tag>
+      </div>
+      <div class="errorListingButton" id="errorListingWindowCounter" onclick="renderErrorsLog()" style="display: none">0</div>
+    </div>
+
+
+
+
     <!-- SERVER CONNECTION FAILURE : SCREEN LOCK -->
     <div id="serverErrorLock" style="display: none">
         <div id="wrapper">
@@ -120,6 +163,27 @@
 
 
 
+        <!-- PRINTING PROGRESS MODAL -->
+        <div id="generalPrintingProgressModal" class="modal" style="z-index: 2600 !important; background: none !important;">
+             <div class="modal-dialog" style="width: 100%">
+                <!-- Modal content-->
+                <div class="modal-content" style="position: fixed; left: 60px; bottom: 10px; background: none">
+                   <section id="printerProgress">
+                      <header>
+
+                        <img src="assets/images/printing_progress.gif" style="width: 240px; border-radius: 5px">
+                        <tag id="printingProgressIcon">
+                            <img src="assets/images/loading_oval.svg" class="printerLoadingIcon">
+                        </tag>
+
+                        <span class="blink_me loadingText" id="generalPrintingProgressText">Printing in Progress</span>
+                      </header>
+                   </section>
+                </div>
+             </div>
+          </div>
+
+
 
         <!-- LOADING MODAL -->
         <div id="generalLoadingModal" class="modal" style="z-index: 2600 !important;">
@@ -141,6 +205,8 @@
         <!-- INFO BAR - TOAST -->
         <div id="infobar"></div>  
 
+        <tag id="dummyQRCodeHolder" style="display: none"></tag>
+
 
 
 <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
@@ -148,10 +214,11 @@
 <script src="assets/js/jquery/jquery.min.js"></script>
 <script src="assets/js/moment.min.js"></script>
 <script src="assets/js/jquery/jquery-ui.min.js"></script>
+<script src="assets/js/customqr.js"></script>
 
 <script src="assets/js/communicator.js"></script>
 <script src="assets/js/layout.js"></script>
-<script src="assets/js/punching.js"></script>
+<script src="assets/js/processor.js"></script>
 
   
 
