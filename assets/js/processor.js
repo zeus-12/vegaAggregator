@@ -746,7 +746,7 @@ function initialiseProcessing(){
                             orderMetaInfo.mode = selectedBillingMode.name;
                             orderMetaInfo.modeType = selectedBillingMode.type;
                             orderMetaInfo.reference = orderData.orderDetails.reference; //swiggy order id
-                            orderMetaInfo.isOnline = true;
+                            orderMetaInfo.isOnline = false;
 
                           var today = moment().format('DD-MM-YYYY');
                           var time = moment().format('HHmm');
