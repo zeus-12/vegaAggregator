@@ -1,4 +1,9 @@
 let PAUSE_FLAG = false;
+let DATA_BILLING_PARAMETERS = '';
+let DATA_BILLING_MODES = '';
+let DATA_ORDER_SOURCES = '';
+let MENU_DATA_SYSTEM_ORIGINAL = [];
+let MENU_DATA_OTHER_MENU_MAPPINGS = [];
 
 function operationPause(){
     document.getElementById("operationButtons").innerHTML = '<tag class="buttonSettings" style="right: 70px; color: red; font-weight: bold" onclick="operationStart()">Paused</tag>';
@@ -21,12 +26,228 @@ function operationStart(){
     initialiseProcessing();
 }
 
+
+
+function preloadBillingData(){
+
+  fetchModes();
+
+  function fetchModes(){
+
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_BILLING_MODES" 
+                  },
+      "fields"    : ["identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_BILLING_MODES'){
+              DATA_BILLING_MODES = data.docs[0].value;
+              fetchSources();
+          }
+          else{
+            showToast('Not Found Error: Billing Modes data not found. Please contact Accelerate Support.', '#e74c3c');
+          }
+        }
+        else{
+          showToast('Not Found Error: Billing Modes data not found. Please contact Accelerate Support.', '#e74c3c');
+        } 
+      },
+      error: function(data) {
+        showToast('System Error: Unable to read Billing Modes data. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+
+  }
+
+
+
+  function fetchSources(){
+    
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_ORDER_SOURCES" 
+                  },
+      "fields"    : ["identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_ORDER_SOURCES'){
+              DATA_ORDER_SOURCES = data.docs[0].value;
+              fetchParameters();
+          }
+          else{
+            showToast('Not Found Error: Order Sources data not found. Please contact Accelerate Support.', '#e74c3c');
+          }
+        }
+        else{
+          showToast('Not Found Error: Order Sources data not found. Please contact Accelerate Support.', '#e74c3c');
+        }
+        
+      },
+      error: function(data) {
+        showToast('System Error: Unable to read Order Sources data. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+  }
+
+
+  function fetchParameters(){
+    
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_BILLING_PARAMETERS" 
+                  },
+      "fields"    : ["identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_BILLING_PARAMETERS'){
+              DATA_BILLING_PARAMETERS = data.docs[0].value;
+              preloadSystemMenu();
+          }
+          else{
+            showToast('Not Found Error: Billing Parameters data not found. Please contact Accelerate Support.', '#e74c3c');
+          }
+        }
+        else{
+          showToast('Not Found Error: Billing Parameters data not found. Please contact Accelerate Support.', '#e74c3c');
+        }
+        
+      },
+      error: function(data) {
+        showToast('System Error: Unable to read Billing Parameters data. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+  }
+
+  function preloadSystemMenu(){
+
+      var requestData = {
+        "selector"  :{ 
+                      "identifierTag": "ACCELERATE_MASTER_MENU" 
+                    },
+        "fields"    : ["_rev", "identifierTag", "value"]
+      }
+
+      $.ajax({
+        type: 'POST',
+        url: COMMON_LOCAL_SERVER_IP + '/accelerate_settings/_find',
+        data: JSON.stringify(requestData),
+        contentType: "application/json",
+        dataType: 'json',
+        timeout: 10000,
+        success: function(data) {
+          if(data.docs.length > 0){
+            if(data.docs[0].identifierTag == 'ACCELERATE_MASTER_MENU'){
+
+                var mastermenu = data.docs[0].value;
+                var list = [];
+          
+                for (var i=0; i<mastermenu.length; i++){
+                  for(var j=0; j<mastermenu[i].items.length; j++){
+
+                    list[mastermenu[i].items[j].code] = mastermenu[i].items[j];
+                    list[mastermenu[i].items[j].code].category = mastermenu[i].category;
+
+                    if(i == mastermenu.length - 1 && j == mastermenu[i].items.length - 1){
+                      MENU_DATA_SYSTEM_ORIGINAL = list;
+                      populateOtherMenuMappings();
+                    }
+                  }         
+                }
+
+            }
+            else{
+              showToast('Not Found Error: Menu data not found. Please contact Accelerate Support.', '#e74c3c');
+              populateOtherMenuMappings();
+            }
+          }
+          else{
+            showToast('Not Found Error: Menu data not found. Please contact Accelerate Support.', '#e74c3c');
+            populateOtherMenuMappings();
+          }
+          
+        },
+        error: function(data) {
+          showToast('System Error: Unable to read Menu data. Please contact Accelerate Support.', '#e74c3c');
+          populateOtherMenuMappings();
+        }
+
+      });   
+  }
+
+
+  function populateOtherMenuMappings(){
+
+    $.ajax({
+      type: 'GET',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_other_menu_mappings/MENU_SWIGGY/',
+      timeout: 10000,
+      success: function(data) {
+        if(data._id != ""){
+
+            var otherMenu = data;
+            MENU_DATA_OTHER_MENU_MAPPINGS[data.orderSource] = data.value;
+            
+            proceedToInitialisation();
+
+        }
+        else{
+          proceedToInitialisation();
+        }
+      },
+      error: function(data) {
+        proceedToInitialisation();
+      }
+
+    });   
+  }
+
+
+  function proceedToInitialisation(){
+    //return '';
+    initialiseProcessing();
+  }
+
+}
+
+
+
+
 /* 
   ERROR LOGGING
 */
 
 function addToErrorLog(time, category, type, kot_id, optionalParametersObject){
-  console.log(time, category, type, kot_id, optionalParametersObject)
 
   /*
     category --> REQUEST or ORDER
@@ -36,43 +257,14 @@ function addToErrorLog(time, category, type, kot_id, optionalParametersObject){
 
   var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
 
-  //Check if already added.
-  var n = 0;
-  while(log[n]){
-    if(category == "REQUEST"){
-      if(log[n].parameters.action == optionalParametersObject.action && log[n].kotId == kot_id){
-        return '';
-      }
-    }
-    else if(category == "ORDER"){
-      if(log[n].category == "ORDER" && log[n].type == "KOT_NOT_FOUND"){
-        if(log[n].kotId == kot_id){
-          return '';
-        }
-      }
-      else if (log[n].category == "ORDER" && log[n].type == "SYSTEM_KOT_ERROR"){
-        return '';
-      }
-    }
-    else if(category == "PRINT"){
-      console.log(time, category, type, kot_id, optionalParametersObject)
-      if(log[n].parameters.action == optionalParametersObject.action && log[n].kotId == kot_id){
-        return '';
-      }
-    }
-    
-    n++;
-  }
-
-
   log.push({
+    "uid": moment().format('MMDYYYYhhmmss'),
     "time": time,
     "category": category,
     "type": type,
     "kotId": kot_id,
     "parameters": optionalParametersObject
   });
-
 
   window.localStorage.errorLog = JSON.stringify(log);
   renderErrorsLogCount();
@@ -97,7 +289,6 @@ function renderErrorsLogCount(){
 renderErrorsLogCount();
 
 
-
 function renderErrorsLog(){
   var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
   if(log.length < 1){
@@ -113,32 +304,32 @@ function renderErrorsLog(){
       
       if(log[n].category == 'ORDER'){
         if(log[n].type == 'SYSTEM_KOT_ERROR'){
-          renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' <span class="errorWarning">System has been failing to Punch Orders from mobile devices. <i class="fa fa-warning"></i></span></time><span class="systemError blink_me">SYSTEM ERROR</span> Fix KOT Index and try again. Contact Accelerate Support if problem persists. <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="restartProcessing()" class="errorListingFixButton">Try Now</tag></tag>';
+          renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' <span class="errorWarning">System has been failing to Punch Orders from mobile devices. <i class="fa fa-warning"></i></span></time><span class="systemError blink_me">SYSTEM ERROR</span> Fix KOT Index and try again. Contact Accelerate Support if problem persists. <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="restartProcessing()" class="errorListingFixButton">Try Now</tag></tag>' + renderContent;
         }
         else{
-          renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Failed to edit the <b>Running Order</b> on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="removeOrderRequest(\''+log[n].kotId+'\')" class="errorListingFixButton">Remove</tag></tag>';
+          renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Failed to edit the <b>Running Order</b> on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
         }
       }
       else if(log[n].category == 'REQUEST'){
         
         switch(log[n].parameters.action){
           case "PRINT_VIEW":{
-            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Printing <b>View</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreActionRequest(\''+log[n].parameters._id+'\')" class="errorListingFixButton">Ignore</tag></tag>';
+            renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Printing <b>View</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             break;
           }
           case "PRINT_KOT":{
-            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Printing <b>Duplicate KOT</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreActionRequest(\''+log[n].parameters._id+'\')" class="errorListingFixButton">Ignore</tag></tag>';
+            renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Printing <b>Duplicate KOT</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             break;
           }
           case "PRINT_BILL":{
             if(log[n].type == 'SYSTEM_BILL_ERROR'){
-              renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time><span class="systemError blink_me">SYSTEM ERROR</span> Generating <b>Bill</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="reissueActionRequest(\''+log[n].parameters._id+'\')" class="errorListingTryButton">Try Now</tag></tag>';
+              renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time><span class="systemError blink_me">SYSTEM ERROR</span> Generating <b>Bill</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             }
             else if(log[n].type == 'BILL_GENERATION_FAILED'){  
-              renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Generating <b>Bill</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="reissueActionRequest(\''+log[n].parameters._id+'\')" class="errorListingTryButton">Try Now</tag></tag>';
+              renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Generating <b>Bill</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             }
             else{  
-              renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Generating <b>Bill</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreActionRequest(\''+log[n].parameters._id+'\')" class="errorListingFixButton">Ignore</tag></tag>';
+              renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Generating <b>Bill</b> failed on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             }
             break;
           }
@@ -149,19 +340,19 @@ function renderErrorsLog(){
 
         switch(log[n].parameters.action){
           case "KOT_NEW":{
-            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Duplicate request to <b>Print KOT</b> on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="forceDeletePrintRequest(\''+log[n].parameters.requestID+'\')" class="errorListingFixButton">Remove</tag></tag>';
+            renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Duplicate request to <b>Print KOT</b> '+(log[n].parameters.modeType == 'DINE' ? ' on Table #'+log[n].parameters.table : ' of '+log[n].parameters.modeType+' order')+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             break;
           }
           case "KOT_EDITING":{
-            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Duplicate request to <b>Print Edited KOT</b> on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="forceDeletePrintRequest(\''+log[n].parameters.requestID+'\')" class="errorListingFixButton">Remove</tag></tag>';
+            renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Duplicate request to <b>Print Edited KOT</b> '+(log[n].parameters.modeType == 'DINE' ? ' on Table #'+log[n].parameters.table : ' of '+log[n].parameters.modeType+' order')+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             break;
           }
           case "KOT_DUPLICATE":{
-            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Multiple requests to <b>Print Duplicate KOT</b> on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="forceDeletePrintRequest(\''+log[n].parameters.requestID+'\')" class="errorListingFixButton">Remove</tag></tag>';
+            renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Multiple requests to <b>Print Duplicate KOT</b> '+(log[n].parameters.modeType == 'DINE' ? ' on Table #'+log[n].parameters.table : ' of '+log[n].parameters.modeType+' order')+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             break;
           }
           case "KOT_CANCEL":{
-            renderContent += '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Duplicate request to <b>Print Cancellation KOT</b> on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="forceDeletePrintRequest(\''+log[n].parameters.requestID+'\')" class="errorListingFixButton">Remove</tag></tag>';
+            renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Duplicate request to <b>Print Cancellation KOT</b> '+(log[n].parameters.modeType == 'DINE' ? ' on Table #'+log[n].parameters.table : ' of '+log[n].parameters.modeType+' order')+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
             break;
           }
         }
@@ -203,135 +394,34 @@ function restartProcessing(){
               initialiseProcessing();
 }
 
-function reissueActionRequest(request_id){
-          $.ajax({
-            type: 'GET',
-            url: COMMON_LOCAL_SERVER_IP+'/accelerate_action_requests/'+request_id,
-            timeout: 10000,
-            success: function(data) {
+
+function ignoreErrorLogEntry(request_id){
+
+    var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
               
-              var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
-              
-              var n = 0;
-              while(log[n]){
+    var n = 0;
+    while(log[n]){
 
-                if(log[n].parameters._id == request_id){
-                  log.splice(n,1);
-                  break;
-                }
+      if(log[n].uid == request_id){
+        log.splice(n,1);
+        break;
+      }
 
-                n++;
-              }
+      n++;
+    }
 
-              window.localStorage.errorLog = JSON.stringify(log);
-              renderErrorsLogCount();
-            },
-            error: function(data){
-                showToast('Unable to find the request on the server. Please try again.', '#e74c3c');
-            }
-
-          });      
+    window.localStorage.errorLog = JSON.stringify(log);
+    renderErrorsLogCount();
 }
 
 
-function ignoreActionRequest(request_id){
+/* 
+  ERROR DUE TO WHICH THE SYSTEM IS FAILING
+*/
 
-          $.ajax({
-            type: 'GET',
-            url: COMMON_LOCAL_SERVER_IP+'/accelerate_action_requests/'+request_id,
-            timeout: 10000,
-            success: function(data) {
-              
-              var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
-              
-              var n = 0;
-              while(log[n]){
-
-                if(log[n].parameters._id == request_id){
-                  log.splice(n,1);
-                  break;
-                }
-
-                n++;
-              }
-
-              window.localStorage.errorLog = JSON.stringify(log);
-
-              removeAlreadyProccessedActionRequest(data._id, data._rev, 'RENDER_ERROR_LOG');
-            },
-            error: function(data){
-                showToast('Unable to find the request on the server. Please try again.', '#e74c3c');
-            }
-
-          });     
+function throwSystemBlockingError(error){
+  alert(error)
 }
-
-
-function removeOrderRequest(kot_id){
-
-          $.ajax({
-            type: 'GET',
-            url: COMMON_LOCAL_SERVER_IP+'/accelerate_taps_orders/'+kot_id,
-            timeout: 10000,
-            success: function(data) {
-              
-              var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
-              
-              var n = 0;
-              while(log[n]){
-
-                if(log[n].kotId == kot_id && log[n].category == "ORDER"){
-                  log.splice(n,1);
-                  break;
-                }
-
-                n++;
-              }
-
-              window.localStorage.errorLog = JSON.stringify(log);
-
-              removeAlreadyPrintedTapOrder(data._id, data._rev, 'RENDER_ERROR_LOG');
-            },
-            error: function(data){
-              showToast('Unable to find the KOT on the server. Please try again.', '#e74c3c');
-            }
-
-          });   
-
-}
-
-function forceDeletePrintRequest(print_request_id){
-
-          $.ajax({
-            type: 'GET',
-            url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot_print_requests/'+print_request_id,
-            timeout: 10000,
-            success: function(data) {
-              
-              var log = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
-              
-              var n = 0;
-              while(log[n]){
-
-                if(log[n].parameters.action == data.printRequest.action && log[n].kotId == data.printRequest.KOT){
-                  log.splice(n,1);
-                  break;
-                }
-
-                n++;
-              }
-
-              window.localStorage.errorLog = JSON.stringify(log);
-
-              removeKOTPrintRequestForce(data._id, data._rev, 'RENDER_ERROR_LOG');
-            },
-            error: function(data){
-              showToast('Unable to find the KOT on the server. Please try again.', '#e74c3c');
-            }
-
-          });   
-}
-
 
 
 
@@ -339,17 +429,14 @@ function forceDeletePrintRequest(print_request_id){
   MAIN PROCESSING FUNCTION
 */
 
-
 function initialiseProcessing(){
 
         if(PAUSE_FLAG){
             return '';
         }
 
-
         //Ignore List (to skip these already noted errors)
         var ignoreList = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
-
 
         checkForRequests(0);
 
@@ -371,30 +458,9 @@ function initialiseProcessing(){
                 checkForOrders(0);
               }
               else{
+                        
                         var requestData = data.rows[index].value;
               
-                        //Check if this is added into the ignoreList
-                        var e = 0;
-                        while(ignoreList[e]){
-                          if(ignoreList[e].kotId == requestData.KOT && ignoreList[e].parameters.action == requestData.action){
-                            
-                            if(data.rows.length > index + 1){ //more requests pending..
-                              //iterate same step 1 (no cool off needed)
-                              checkForRequests(index + 1);
-                              return '';
-                            }
-                            else{
-                              //go to next step 2 (no cool off needed)
-                              checkForOrders(0);
-                              return '';
-                            }
-                            
-                          }
-                          e++;
-                        }
-
-
-
                         //fetch KOT
                         var kot_request_data = requestData.KOT;
 
@@ -418,16 +484,24 @@ function initialiseProcessing(){
                                   }
                                   case "PRINT_KOT":{
                                     printDuplicateTapsKOT(kotData, requestData);
+                                    showToast('Duplicate KOT #'+kotData.KOTNumber+' generated Successfully', '#27ae60');
+                                    
+                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
+                                    
                                     break;
                                   }
                                   case "PRINT_BILL":{ 
                                     confirmBillGeneration(kotData, requestData);
+                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
                                     
                                     //go starting again, after some cool off.
                                     setTimeout(function(){ initialiseProcessing(); }, 5000);
                                     break;
                                   }
                                   default:{
+
+                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
+
                                     //go starting again, after some cool off.
                                     setTimeout(function(){ initialiseProcessing(); }, 5000);
                                     break;
@@ -467,6 +541,7 @@ function initialiseProcessing(){
 
                                 //Add to Error Log
                                 addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'KOT_NOT_FOUND', requestData.KOT, requestData);
+                                removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
 
                                 //go to next step 2 without cool off.
                                 checkForOrders(0);
@@ -476,7 +551,7 @@ function initialiseProcessing(){
               }
             },
             error: function(data){
-              showToast('System Error: Unable to fetch print requests. Please contact Accelerate Support if problem persists.', '#e74c3c');
+              showToast('System Error: Unable to fetch action requests. Please contact Accelerate Support if problem persists.', '#e74c3c');
               
               //go to next step 2 without cool off.  
               checkForOrders(0);
@@ -507,40 +582,308 @@ function initialiseProcessing(){
                 checkForPrints(0);
               }
               else{
-                    //Update Message
-                    document.getElementById("pendingOrderMessage").innerHTML = data.total_rows+' Pending Order'+(data.total_rows > 1 ? 's': '');
+                
+                //Update Message
+                document.getElementById("pendingOrderMessage").innerHTML = '<b>'+data.total_rows+'</b> Pending Order'+(data.total_rows > 1 ? 's': '');
               
-                    var orderData = data.rows[index].doc;
+                var orderData = data.rows[index].doc;
+
+                if(orderData.tapsSource){ //Order from Others Sources eg. Swiggy.
+
+                    var billingModesData = DATA_BILLING_MODES;
+                    var billingParametersData = DATA_BILLING_PARAMETERS;
+                    var orderSourcesData = DATA_ORDER_SOURCES;
+                  
+                    var order_source = orderData.tapsSource.source;
+                    var order_mode_type = orderData.tapsSource.type;
+                    var selected_billing_mode_name = '';
+
+                    var super_memory_id = orderData._id;
+                    var super_memory_rev = orderData._rev;
 
 
-                    //Check if this is added into the ignoreList
-                    var e = 0;
-                    while(ignoreList[e]){
-                      if(ignoreList[e].kotId == orderData._id && ignoreList[e].category == "ORDER"){
+                    var c = 0;
+                    while(orderSourcesData[c]){
 
-                            //show warning symbol
-                            document.getElementById("pendingOrderMessage").innerHTML = data.total_rows+' Pending Order'+(data.total_rows > 1 ? 's': '')+' <i onclick="renderErrorsLog()" class="fa fa-warning" style="color: #ff0000; cursor: pointer;"></i>';
+                      if(orderSourcesData[c].code == order_source){
+                        if(order_mode_type == 'PARCEL'){
+                          selected_billing_mode_name = orderSourcesData[c].defaultTakeaway; 
+                        }
+                        else if(order_mode_type == 'DELIVERY'){
+                          selected_billing_mode_name = orderSourcesData[c].defaultDelivery; 
+                        }
 
-                            if(data.rows.length > index + 1){ //more orders pending..
-                              //iterate the same step 2 without any cool off
-                              checkForOrders(index + 1);
-                              return '';
-                            }
-                            else{
-
-                              //go to next round 3 without any cool off.
-                              checkForPrints(0);
-
-                              return '';
-                            }
-
+                        findBillingMode();
+                        break;
                       }
-                      
-                      e++;
+
+                      if(c == orderSourcesData.length - 1){
+                        throwSystemBlockingError('INVALID ORDER SOURCE! Swiggy Order Failed.');
+                        return '';
+                      }
+
+                      c++;
+                    }
+
+                    var selectedBillingMode = '';
+                    
+                    function findBillingMode(){
+
+                      var m = 0;
+                      while(billingModesData[m]){
+                        if(billingModesData[m].name == selected_billing_mode_name){
+                          selectedBillingMode = billingModesData[m];
+                          standardiseCart();
+                          break;
+                        }
+
+                        if(m == billingModesData.length - 1){ //last iteration
+                          standardiseCart(); 
+                        }
+
+                        m++;
+                      }
                     }
 
 
 
+                    //Standardise Cart w.r.t system menu
+                    function standardiseCart(){
+                      var incoming_cart = orderData.cart;
+                      standardiseItem(0);
+
+                      function standardiseItem(index){
+
+                        var item_name = incoming_cart[index].name;
+                        var standardised_item = '';
+
+                        var otherMenuData = MENU_DATA_OTHER_MENU_MAPPINGS[order_source];
+                        var systemMenu = MENU_DATA_SYSTEM_ORIGINAL;
+
+                        var n = 0;
+                        while(otherMenuData[n]){
+
+
+
+                          if(otherMenuData[n].name == item_name){ //item map found
+                            
+                              standardised_item = systemMenu[otherMenuData[n].systemCode];
+
+                              if(standardised_item.isCustom){
+                                standardised_item.variant = otherMenuData[n].systemVariant;
+                              }
+
+                              standardised_item.name = incoming_cart[index].name;
+                              standardised_item.qty = incoming_cart[index].quantity;
+                              standardised_item.price = incoming_cart[index].price;
+                              standardised_item.cartIndex = index + 1;
+
+                              incoming_cart[index] = standardised_item; //update 
+                              
+                              if(incoming_cart[index+1]){
+                                standardiseItem(index+1);
+                              }
+                              else{ //done, go to next step
+                                createOrder(incoming_cart);
+                              }
+
+                            break;
+                          }
+
+
+
+                          if(n == otherMenuData.length - 1){ //last iteration, no mapping found.
+                            
+                              standardised_item = {
+                                "cartIndex": index + 1,
+                                "name": incoming_cart[index].name,
+                                "category": "MANUAL_UNKNOWN",
+                                "price": incoming_cart[index].price,
+                                "isCustom": false,
+                                "code": 1,
+                                "qty": incoming_cart[index].quantity,
+                                "cookingTime": 0
+                              }
+
+                              incoming_cart[index] = standardised_item; //update 
+
+
+                              if(incoming_cart[index+1]){
+                                standardiseItem(index+1);
+                              }
+                              else{ //done, go to next step
+                                createOrder(incoming_cart);
+                              }
+
+                            break;
+                          }
+
+
+
+                          n++;
+                        } //while
+
+
+                      }
+
+                    }
+
+
+                    function createOrder(standardised_cart){
+
+                      if(selectedBillingMode == ''){
+                        throwSystemBlockingError('Swiggy Order Failed.');
+                        return '';
+                      }
+
+                    
+                        //Proceed to create the order
+                    
+                          var orderMetaInfo = {};
+                            orderMetaInfo.mode = selectedBillingMode.name;
+                            orderMetaInfo.modeType = selectedBillingMode.type;
+                            orderMetaInfo.reference = orderData.orderDetails.reference; //swiggy order id
+                            orderMetaInfo.isOnline = true;
+
+                          var today = moment().format('DD-MM-YYYY');
+                          var time = moment().format('HHmm');
+
+                          var obj = {}; 
+
+                          obj._id = super_memory_id; /* TWEAK: to remove tap order after printing*/
+                          obj._rev = super_memory_rev;
+
+                          obj.KOTNumber = "";
+                          obj.orderDetails = orderMetaInfo;
+                          obj.table = orderData.table;
+
+                          obj.customerName = orderData.customerName;
+                          obj.customerMobile = orderData.customerMobile; 
+                          obj.guestCount = 0;
+                          obj.machineName = 'Auto Generated';
+                          
+                          obj.sessionName = order_source;
+
+                          obj.stewardName = '';
+                          obj.stewardCode = '';
+
+                          obj.date = today;
+                          obj.timePunch = time;
+                          obj.timeKOT = "";
+                          obj.timeBill = "";
+                          obj.timeSettle = "";
+
+                          var cart_products = standardised_cart;
+                          obj.cart = standardised_cart;
+                          obj.specialRemarks = orderData.specialRemarks;
+                          obj.allergyInfo = [];
+
+
+                            /*Process Figures*/
+                            var subTotal = 0;
+                            var packagedSubTotal = 0;
+
+                            var minimum_cooking_time = 0;
+
+                            var n = 0;
+                            while(cart_products[n]){
+
+                                /* min cooking time */
+                                if(cart_products[n].cookingTime && cart_products[n].cookingTime > 0){
+                                    if(minimum_cooking_time <= cart_products[n].cookingTime){
+                                        minimum_cooking_time = cart_products[n].cookingTime;
+                                    }
+                                }
+
+
+                                subTotal = subTotal + cart_products[n].qty * cart_products[n].price;
+
+                                if(cart_products[n].isPackaged){
+                                    packagedSubTotal = packagedSubTotal + cart_products[n].qty * cart_products[n].price;
+                                }
+
+                                n++;
+                            }
+
+
+
+                            var tempExtrasList = selectedBillingMode.extras;
+                            var selectedModeExtras = [];
+
+                            var a = 0;
+                            var b = 0;
+                            while(tempExtrasList[a]){
+                                b = 0;
+                                while(billingParametersData[b]){     
+                                    if(tempExtrasList[a].name == billingParametersData[b].name){  
+                                        billingParametersData[a].value = parseFloat(tempExtrasList[b].value);              
+                                        selectedModeExtras.push(billingParametersData[a]);
+                                    }
+                                    
+                                    b++;
+                                }
+                                a++;
+                            }
+
+
+
+                          /*Calculate Taxes and Other Charges*/ 
+
+                          //Note: Skip tax and other extras (with isCompulsary no) on packaged food Pepsi ect. (marked with 'isPackaged' = true)
+
+                          var otherCharges = [];        
+                          var k = 0;
+
+                          if(selectedModeExtras.length > 0){
+                            for(k = 0; k < selectedModeExtras.length; k++){
+
+                                var tempExtraTotal = 0;
+
+                                if(selectedModeExtras[k].value != 0){
+                                    if(selectedModeExtras[k].excludePackagedFoods){
+                                            if(selectedModeExtras[k].unit == 'PERCENTAGE'){
+                                                tempExtraTotal = (selectedModeExtras[k].value * (subTotal-packagedSubTotal))/100;
+                                            }
+                                            else if(selectedModeExtras[k].unit == 'FIXED'){
+                                                tempExtraTotal = selectedModeExtras[k].value;
+                                            }                       
+                                    }
+                                    else{
+                                            if(selectedModeExtras[k].unit == 'PERCENTAGE'){
+                                                tempExtraTotal = selectedModeExtras[k].value * subTotal/100;
+                                            }
+                                            else if(selectedModeExtras[k].unit == 'FIXED'){
+                                                tempExtraTotal = selectedModeExtras[k].value;
+                                            }                               
+                                    }
+
+
+                                }
+
+                                tempExtraTotal = Math.round(tempExtraTotal * 100) / 100;
+
+                                otherCharges.push({
+                                    "name": selectedModeExtras[k].name,
+                                    "value": selectedModeExtras[k].value,
+                                    "unit": selectedModeExtras[k].unit,
+                                    "amount": tempExtraTotal,
+                                    "isPackagedExcluded": selectedModeExtras[k].excludePackagedFoods
+                                })
+                            }
+                          }
+
+
+                          obj.extras = otherCharges;
+                          obj.discount = {};
+                          obj.customExtras = {};
+
+                          printFreshKOT(obj);
+                          showToast('The <b>'+order_source+'</b> Order generated Successfully!');
+
+                    } //create order
+              
+                } // swiggy, zomato orders..
+                else{ //Order from Mobile Devices
 
                     if(orderData.KOTNumber != ''){ //Editing Order case..
 
@@ -567,8 +910,8 @@ function initialiseProcessing(){
                               showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
                               
                               //start again
-                              initialiseProcessing();
-
+                              setTimeout(function(){ initialiseProcessing(); }, 3000);
+                              removeTapsOrderRequest(data._id, data._rev);
                             }
                           },
                           error: function(data) {
@@ -585,10 +928,10 @@ function initialiseProcessing(){
                             }
 
                             addToErrorLog(moment().format('hh:mm a'), 'ORDER', 'KOT_NOT_FOUND', kot_request_data, errorObj);
+                            removeTapsOrderRequest(data._id, data._rev);
 
                             //start again
-                            initialiseProcessing();
-
+                            setTimeout(function(){ initialiseProcessing(); }, 3000);
                           }
                         });
                     }
@@ -596,6 +939,8 @@ function initialiseProcessing(){
                         printFreshKOT(orderData); //Fresh Order case..
                     }
                     
+                }
+
               }
             },
             error: function(data){
@@ -624,51 +969,45 @@ function initialiseProcessing(){
             success: function(data) {
 
               if(data.rows.length == 0){
+                //Update Message
+                document.getElementById("pendingPrintsMessage").innerHTML = 'No Pending KOTs';
+
                 //Relax! and start again! 
                 setTimeout(function(){ initialiseProcessing(); }, 5000);
               }
               else{
+
+                        //Update Message
+                        document.getElementById("pendingPrintsMessage").innerHTML = '<b>'+data.total_rows+'</b> Pending KOT'+(data.total_rows > 1 ? 's': '');
+
                         var requestData = data.rows[index].value;
-              
-                        //Check if this is added into the ignoreList
-                        var e = 0;
-                        while(ignoreList[e]){
-                          if(ignoreList[e].kotId == requestData.printRequest.KOT && ignoreList[e].parameters.action == requestData.printRequest.action){
-                            
-                            if(data.rows.length > index + 1){ //more print requests pending..
-                              //iterate same step 3 (no cool off needed)
-                              checkForPrints(index + 1);
-                              return '';
-                            }
-                            else{
-                              //go to starting again
-                              setTimeout(function(){ initialiseProcessing(); }, 5000);
-                              return '';
-                            }
-                            
-                          }
-                          e++;
-                        }
 
-
+                        requestData.printRequest.modeType = requestData.orderDetails.modeType;
+                        
                         switch(requestData.printRequest.action){
                           case "KOT_NEW":{
-                            printKOTRequestNew(requestData)
+                            printKOTRequestNew(requestData);
+                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
                             break;
                           }
                           case "KOT_EDITING":{
-                            printKOTRequestEdited(requestData, requestData.printRequest.comparison)
+                            printKOTRequestEdited(requestData, requestData.printRequest.comparison);
+                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
                             break;
                           }
                           case "KOT_DUPLICATE":{
                             printKOTRequestDuplicate(requestData);
+                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
                             break;
                           }
                           case "KOT_CANCEL":{
                             printKOTRequestCancel(requestData);
+                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
                             break;
                           }
                           default:{
+                            
+                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
 
                             //go to starting again, after some cool off.
                             setTimeout(function(){ initialiseProcessing(); }, 5000);
@@ -696,7 +1035,7 @@ function initialiseProcessing(){
 
 
 
-initialiseProcessing();
+preloadBillingData(); // this would later call initalise function
 refreshRecentOrdersStream();
 
 
@@ -955,7 +1294,6 @@ function printKOTRequestNew(obj){
                                 }, 3000);
                             } else {
                                 finishPrintingAnimation();
-                                removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
                                 //Process Next Print 
                                 setTimeout(function(){ initialiseProcessing(); }, 3000);                                   
@@ -966,7 +1304,6 @@ function printKOTRequestNew(obj){
                                 startRelayPrinting(index + 1);
                             } else {
                                 finishPrintingAnimation();
-                                removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
                                 //Process Next Print 
                                 setTimeout(function(){ initialiseProcessing(); }, 3000);                              
@@ -984,7 +1321,6 @@ function printKOTRequestNew(obj){
 
         if (defaultKOTPrinter == '') {
             sendToPrinter(obj, 'KOT');
-            removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
             //Process Next Print 
             setTimeout(function(){ initialiseProcessing(); }, 3000);   
@@ -1000,7 +1336,6 @@ function printKOTRequestNew(obj){
                         if (allConfiguredPrintersList[g].list[a].name == defaultKOTPrinter) {
                             selected_printer = allConfiguredPrintersList[g].list[a];
                             sendToPrinter(obj, 'KOT', selected_printer);
-                            removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
                             //Process Next Print 
                             setTimeout(function(){ initialiseProcessing(); }, 3000);                               
@@ -1013,7 +1348,6 @@ function printKOTRequestNew(obj){
                 if (g == allConfiguredPrintersList.length - 1) {
                     if (selected_printer == '') { //No printer found, print on default!
                         sendToPrinter(obj, 'KOT');
-                        removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
                         //Process Next Print 
                         setTimeout(function(){ initialiseProcessing(); }, 3000);                           
@@ -1252,8 +1586,7 @@ function printKOTRequestEdited(kot, compareObject){
                                 }, 3000);
                             } else {
                                 finishPrintingAnimation();
-                                removeKOTPrintRequest(kot._id, kot._rev, kot.printRequest);
-
+                                
                                 //Process Next Print 
                                 setTimeout(function(){ initialiseProcessing(); }, 3000);
 
@@ -1265,7 +1598,6 @@ function printKOTRequestEdited(kot, compareObject){
                                 startRelayPrinting(index + 1);
                             } else {
                                 finishPrintingAnimation();
-                                removeKOTPrintRequest(kot._id, kot._rev, kot.printRequest);
 
                                 //Process Next Print 
                                 setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1284,7 +1616,6 @@ function printKOTRequestEdited(kot, compareObject){
 
         if (defaultKOTPrinter == '') {
             sendKOTChangesToPrinter(kot, compareObject);
-            removeKOTPrintRequest(kot._id, kot._rev, kot.printRequest);
 
             //Process Next Print 
             setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1300,7 +1631,6 @@ function printKOTRequestEdited(kot, compareObject){
                         if (allConfiguredPrintersList[g].list[a].name == defaultKOTPrinter) {
                             selected_printer = allConfiguredPrintersList[g].list[a];
                             sendKOTChangesToPrinter(kot, compareObject, selected_printer);
-                            removeKOTPrintRequest(kot._id, kot._rev, kot.printRequest);
 
                             //Process Next Print 
                             setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1313,7 +1643,6 @@ function printKOTRequestEdited(kot, compareObject){
                 if (g == allConfiguredPrintersList.length - 1) {
                     if (selected_printer == '') { //No printer found, print on default!
                         sendKOTChangesToPrinter(kot, compareObject);
-                        removeKOTPrintRequest(kot._id, kot._rev, kot.printRequest);
 
                         //Process Next Print 
                         setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1587,7 +1916,6 @@ function printKOTRequestDuplicate(data, optionalSource){
                                 }, 3000);
                             } else {
                                 finishPrintingAnimation();
-                                removeKOTPrintRequest(data._id, data._rev, data.printRequest);
 
                                 //Process Next Print 
                                 setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1598,8 +1926,7 @@ function printKOTRequestDuplicate(data, optionalSource){
                                 startRelayPrinting(index + 1);
                             } else {
                                 finishPrintingAnimation();
-                                removeKOTPrintRequest(data._id, data._rev, data.printRequest);
-
+                                
                                 //Process Next Print 
                                 setTimeout(function(){ initialiseProcessing(); }, 3000);
                             }
@@ -1615,7 +1942,6 @@ function printKOTRequestDuplicate(data, optionalSource){
 
         if (defaultKOTPrinter == '') {
             sendToPrinter(obj, 'DUPLICATE_KOT');
-            removeKOTPrintRequest(data._id, data._rev, data.printRequest);
 
             //Process Next Print 
             setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1631,7 +1957,6 @@ function printKOTRequestDuplicate(data, optionalSource){
                         if (allConfiguredPrintersList[g].list[a].name == defaultKOTPrinter) {
                             selected_printer = allConfiguredPrintersList[g].list[a];
                             sendToPrinter(obj, 'DUPLICATE_KOT', selected_printer);
-                            removeKOTPrintRequest(data._id, data._rev, data.printRequest);
 
                             //Process Next Print 
                             setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1645,7 +1970,6 @@ function printKOTRequestDuplicate(data, optionalSource){
                 if (g == allConfiguredPrintersList.length - 1) {
                     if (selected_printer == '') { //No printer found, print on default!
                         sendToPrinter(obj, 'DUPLICATE_KOT');
-                        removeKOTPrintRequest(data._id, data._rev, data.printRequest);
 
                         //Process Next Print 
                         setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1916,8 +2240,7 @@ function printKOTRequestCancel(kot, optionalPageRef){
                                 }, 3000);
                             } else {
                                 finishPrintingAnimation();
-                                removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
-
+                                
                                 //Process Next Print 
                                 setTimeout(function(){ initialiseProcessing(); }, 3000);
                             }
@@ -1927,7 +2250,6 @@ function printKOTRequestCancel(kot, optionalPageRef){
                                 startRelayPrinting(index + 1);
                             } else {
                                 finishPrintingAnimation();
-                                removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
                                 //Process Next Print 
                                 setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1944,7 +2266,6 @@ function printKOTRequestCancel(kot, optionalPageRef){
 
         if (defaultKOTPrinter == '') {
             sendToPrinter(obj, 'CANCELLED_KOT');
-            removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
             //Process Next Print 
             setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1960,7 +2281,6 @@ function printKOTRequestCancel(kot, optionalPageRef){
                         if (allConfiguredPrintersList[g].list[a].name == defaultKOTPrinter) {
                             selected_printer = allConfiguredPrintersList[g].list[a];
                             sendToPrinter(obj, 'CANCELLED_KOT', selected_printer);
-                            removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
                             //Process Next Print 
                             setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -1974,7 +2294,6 @@ function printKOTRequestCancel(kot, optionalPageRef){
                 if (g == allConfiguredPrintersList.length - 1) {
                     if (selected_printer == '') { //No printer found, print on default!
                         sendToPrinter(obj, 'CANCELLED_KOT');
-                        removeKOTPrintRequest(obj._id, obj._rev, obj.printRequest);
 
                         //Process Next Print 
                         setTimeout(function(){ initialiseProcessing(); }, 3000);
@@ -2278,7 +2597,7 @@ function printEditedKOT(originalData, new_kot){
                     success: function(data) {
                        
                           sendKOTChangesToPrinterPreProcess(kot, compareObject);
-                          removeAlreadyPrintedTapOrder(super_memory_id, super_memory_rev);
+                          removeTapsOrderRequest(super_memory_id, super_memory_rev);
 
                           showToast('Changed KOT #'+kot.KOTNumber+' generated Successfully', '#27ae60');
                       
@@ -2630,7 +2949,7 @@ function refreshRecentOrdersStream(){
 }
 
 
-function removeAlreadyPrintedTapOrder(id, revID, optionalRequest){
+function removeTapsOrderRequest(id, revID, optionalRequest){
 
         $.ajax({
           type: 'DELETE',
@@ -2644,7 +2963,7 @@ function removeAlreadyPrintedTapOrder(id, revID, optionalRequest){
             }              
           },
           error: function(data) {
-            showToast('Server Warning: Unable to modify Order KOT. Please contact Accelerate Support.', '#e67e22');
+            showToast('Server Warning: Unable to modify Taps Order. Please contact Accelerate Support.', '#e67e22');
           }
         });         
 }
@@ -2669,7 +2988,7 @@ function removeAlreadyProccessedActionRequest(id, revID, optionalRequest){
         });         
 }
 
-function removeKOTPrintRequest(id, revID, paramsObj, optionalRequest){
+function removeKOTPrintRequest(id, revID, paramsObj){
 
         $.ajax({
           type: 'DELETE',
@@ -2677,43 +2996,18 @@ function removeKOTPrintRequest(id, revID, paramsObj, optionalRequest){
           contentType: "application/json",
           dataType: 'json',
           timeout: 10000,
-          success: function(data) {     
-            if(optionalRequest == 'RENDER_ERROR_LOG'){
-              renderErrorsLogCount();
-            }              
+          success: function(data) {
+
           },
           error: function(data) {
             showToast('Server Warning: Unable to modify Print Request. Please contact Accelerate Support.', '#e67e22');
             
             //Add to Error Log
-            var tempObj = paramsObj;
-            tempObj.requestID = id;
-            tempObj.table = 
-
-            addToErrorLog(moment().format('hh:mm a'), 'PRINT', 'REQUEST_DELETE_FAILED', paramsObj.KOT, tempObj);
-          
+            addToErrorLog(moment().format('hh:mm a'), 'PRINT', 'REQUEST_DELETE_FAILED', paramsObj.KOT, paramsObj);
           }
         });         
 }
 
-function removeKOTPrintRequestForce(id, revID, optionalRequest){
-
-        $.ajax({
-          type: 'DELETE',
-          url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot_print_requests/'+id+'?rev='+revID,
-          contentType: "application/json",
-          dataType: 'json',
-          timeout: 10000,
-          success: function(data) {     
-            if(optionalRequest == 'RENDER_ERROR_LOG'){
-              renderErrorsLogCount();
-            }              
-          },
-          error: function(data) {
-            showToast('Server Warning: Unable to modify Print Request. Please contact Accelerate Support.', '#e67e22');
-          }
-        });         
-}
 
 
 function addToTableMapping(tableID, kotID, assignedTo){
@@ -2847,8 +3141,9 @@ function printFreshKOT(new_kot){
                             showToast('KOT #'+num+' generated Successfully', '#27ae60');
 
                             //Add to table maping
-                            addToTableMapping(obj.table, kot, obj.stewardName);
-                          
+                            if(obj.orderDetails.modeType == 'DINE'){
+                              addToTableMapping(obj.table, kot, obj.stewardName);
+                            }
 
                             //Render order stream
                             var order_stream = window.localStorage.orderStream && window.localStorage.orderStream != '' ? JSON.parse(window.localStorage.orderStream) : [];
@@ -2877,7 +3172,7 @@ function printFreshKOT(new_kot){
 
                             refreshRecentOrdersStream();
                             initialiseKOTPrinting();
-                            removeAlreadyPrintedTapOrder(super_memory_id, super_memory_rev);
+                            removeTapsOrderRequest(super_memory_id, super_memory_rev);
 
                           }
                         },
@@ -3303,7 +3598,6 @@ function hidePrintingAnimation(){
 /* Duplicate KOT (Taps Order) */
 function printDuplicateTapsKOT(data, requestData){
 
-
                     var obj = data;
                     var original_order_object_cart = obj.cart;
                     
@@ -3574,7 +3868,6 @@ function printDuplicateTapsKOT(data, requestData){
                                 }
                                 else{
                                   finishPrintingAnimation();
-                                  removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
                                     
                                   //go starting again, after some cool off.
                                   setTimeout(function(){ initialiseProcessing(); }, 5000);
@@ -3588,7 +3881,6 @@ function printDuplicateTapsKOT(data, requestData){
                                 }
                                 else{
                                   finishPrintingAnimation();
-                                  removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
                                     
                                   //go starting again, after some cool off.
                                   setTimeout(function(){ initialiseProcessing(); }, 5000);
@@ -3608,7 +3900,6 @@ function printDuplicateTapsKOT(data, requestData){
                       
                       if(defaultKOTPrinter == ''){
                         sendToPrinter(obj, 'DUPLICATE_KOT');
-                        removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
                                     
                         //go starting again, after some cool off.
                         setTimeout(function(){ initialiseProcessing(); }, 5000);
@@ -3626,7 +3917,6 @@ function printDuplicateTapsKOT(data, requestData){
                                   if(allConfiguredPrintersList[g].list[a].name == defaultKOTPrinter){
                                     selected_printer = allConfiguredPrintersList[g].list[a];
                                     sendToPrinter(obj, 'DUPLICATE_KOT', selected_printer);
-                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
                                     
                                     //go starting again, after some cool off.
                                     setTimeout(function(){ initialiseProcessing(); }, 5000);
@@ -3640,7 +3930,6 @@ function printDuplicateTapsKOT(data, requestData){
                               if(g == allConfiguredPrintersList.length - 1){
                                 if(selected_printer == ''){ //No printer found, print on default!
                                   sendToPrinter(obj, 'DUPLICATE_KOT');
-                                  removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
                                     
                                   //go starting again, after some cool off.
                                   setTimeout(function(){ initialiseProcessing(); }, 5000);
@@ -3695,7 +3984,6 @@ function confirmBillGeneration(kotData, actionRequestObj){
         
         //Add to Error Log
         addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'SYSTEM_BILL_ERROR', actionRequestObj.KOT, actionRequestObj);      
-
       }
     });
 }
@@ -3847,9 +4135,6 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
                         //DELETE THE KOT
                         deleteKOTFromServer(memory_id, memory_rev);
 
-                        //DELETE ACTION REQUEST
-                        removeAlreadyProccessedActionRequest(actionRequestObj._id, actionRequestObj._rev);
-
                         //PRINTING THE BILL
                         sendToPrinter(newBillFile, 'BILL');
                         billTableMapping(kotfile.table, billNumber, kotfile.payableAmount, 2);
@@ -3876,7 +4161,7 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
                               showToast('System Error: Unable to update Billing Index. Next Bill Number might be faulty. Please contact Accelerate Support.', '#e74c3c');
                             
                               //Add to Error Log
-                              addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'SYSTEM_BILL_ERROR', actionRequestObj.KOT, actionRequestObj);      
+                              addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'SYSTEM_BILL_ERROR', actionRequestObj.KOT, actionRequestObj);   
                             }
 
                         });  
@@ -3894,7 +4179,7 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
                 }  
 
                 //Add to Error Log
-                addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'BILL_GENERATION_FAILED', actionRequestObj.KOT, actionRequestObj);           
+                addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'BILL_GENERATION_FAILED', actionRequestObj.KOT, actionRequestObj);
               }
             });  
             //End - post KOT to Server
