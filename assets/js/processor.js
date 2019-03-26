@@ -618,7 +618,7 @@ function initialiseProcessing(){
                       }
 
                       if(c == orderSourcesData.length - 1){
-                        throwSystemBlockingError('INVALID ORDER SOURCE! Swiggy Order Failed.');
+                        throwSystemBlockingError('INVALID ORDER SOURCE! Swiggy has been Order FAILED.');
                         return '';
                       }
 
@@ -651,6 +651,7 @@ function initialiseProcessing(){
                     function standardiseCart(){
                       var incoming_cart = orderData.cart;
                       standardiseItem(0);
+                      var custom_item_id = 1;
 
                       function standardiseItem(index){
 
@@ -700,10 +701,12 @@ function initialiseProcessing(){
                                 "category": "MANUAL_UNKNOWN",
                                 "price": incoming_cart[index].price,
                                 "isCustom": false,
-                                "code": 1,
+                                "code": custom_item_id,
                                 "qty": incoming_cart[index].quantity,
                                 "cookingTime": 0
                               }
+
+                              custom_item_id++;
 
                               incoming_cart[index] = standardised_item; //update 
 
