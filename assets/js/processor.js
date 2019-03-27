@@ -443,7 +443,7 @@ function initialiseProcessing(){
         //Round 1: Check for Requests
         function checkForRequests(index){
 
-          console.log('Checking for Requests...');
+          //console.log('Checking for Requests...');
 
           $.ajax({
             type: 'GET',
@@ -565,7 +565,7 @@ function initialiseProcessing(){
         //Round 2: Check for Orders
         function checkForOrders(index){
 
-          console.log('Checking for Orders...');
+          //console.log('Checking for Orders...');
 
           $.ajax({
             type: 'GET',
@@ -650,8 +650,9 @@ function initialiseProcessing(){
                     //Standardise Cart w.r.t system menu
                     function standardiseCart(){
                       var incoming_cart = orderData.cart;
-                      standardiseItem(0);
                       var custom_item_id = 1;
+
+                      standardiseItem(0);
 
                       function standardiseItem(index){
 
@@ -880,7 +881,7 @@ function initialiseProcessing(){
                           obj.discount = {};
                           obj.customExtras = {};
 
-                          printFreshKOT(obj);
+                          printFreshKOT(obj, 'REQUEST_AUTO_BILL_GENERATION');
                           showToast('The <b>'+order_source+'</b> Order generated Successfully!');
 
                     } //create order
@@ -961,7 +962,7 @@ function initialiseProcessing(){
         //Round 3: Check for Prints (running KOTs punched from Non-mobile devices)
         function checkForPrints(index){
 
-          console.log('Checking for Prints...')
+          //console.log('Checking for Prints...')
 
           $.ajax({
             type: 'GET',
@@ -3091,7 +3092,7 @@ function addToTableMapping(tableID, kotID, assignedTo){
 
 
 
-function printFreshKOT(new_kot){
+function printFreshKOT(new_kot, optionalActionRequest){
 
            var obj = new_kot;
 
@@ -3142,6 +3143,47 @@ function printFreshKOT(new_kot){
                           if(data.ok){
 
                             showToast('KOT #'+num+' generated Successfully', '#27ae60');
+
+                            if(optionalActionRequest == 'REQUEST_AUTO_BILL_GENERATION'){
+
+                                //AUTO BILL GENERATION (for Swiggy Orders)
+                                var actionObject = {
+                                    "_id": "PRINT_BILL_"+obj._id,
+                                    "KOT": obj._id,
+                                    "action": "PRINT_BILL",
+                                    "table": obj.table,
+                                    "staffName": "Unknown",
+                                    "staffCode": "Unknown",
+                                    "machine": "Automatic",
+                                    "time": moment().format('HHmm'),
+                                    "date": moment().format('DD-MM-YYYY')
+                                }
+
+                                postActionRequest(actionObject);
+
+
+                                function postActionRequest(actionObject){
+                                    //Post to local Server
+                                    $.ajax({
+                                      type: 'POST',
+                                      url: COMMON_LOCAL_SERVER_IP+'/accelerate_action_requests/',
+                                      data: JSON.stringify(actionObject),
+                                      contentType: "application/json",
+                                      dataType: 'json',
+                                      timeout: 10000,
+                                      success: function(data) {
+                                        if(data.ok){
+
+                                        }
+
+                                      },
+                                      error: function(data) {
+
+                                      }
+                                    });
+                                }
+                            }
+
 
                             //Add to table maping
                             if(obj.orderDetails.modeType == 'DINE'){
@@ -4140,8 +4182,10 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
 
                         //PRINTING THE BILL
                         sendToPrinter(newBillFile, 'BILL');
-                        billTableMapping(kotfile.table, billNumber, kotfile.payableAmount, 2);
 
+                        if(kotfile.orderDetails.modeType == 'DINE'){
+                          billTableMapping(kotfile.table, billNumber, kotfile.payableAmount, 2);
+                        }
 
                         //Update bill number on server
                         var updateData = {
