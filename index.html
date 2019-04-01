@@ -18,6 +18,7 @@
     </tag>
     <tag class="buttonSettings" onclick="openSettingsWindow()">Settings</tag>
     <tag class="buttonSettings" onclick="openDevicesWindow()" style="right: 135px;">Connected Devices</tag>
+    <tag class="buttonSettings" onclick="openApprovedFunctionsWindow()" style="right: 260px;">Approved Services</tag>
     
     <center><img src="assets/images/gathering_orders.gif" style="width: 100%; max-width: 800px;" id="mainBGImage"></center>
     <h1 class="titleMain blink_me" id="statusTitle">Accepting Orders</h1>
@@ -35,22 +36,43 @@
 
 
 
+
+
+
     <!-- SERVER URL SETTINGS -->
     <div id="serverConnectionURLDisplayModal" class="modal" style="z-index: 10000;">
          <div class="modal-dialog" style="top: 20%">
             <!-- Modal content-->
             <div class="modal-content">
                <div class="modal-header defaultModalColoredHeader" style="background: #f3960e">
-                  <button  onclick="hideSettingsWindow()" style="float: right; border: none; background: none; outline: none; color: #FFF;" class="btn clearButton">X</button>
-                  <h4 class="modal-title" style="color: #FFF"><i class="fa fa-desktop" style="margin-right: 8px"></i>Server Settings</h4>
+                  <button  onclick="viewServerURLHide()" style="float: right; border: none; background: none; outline: none; color: #FFF;" class="btn clearButton">X</button>
+                  <h4 class="modal-title" style="color: #FFF; padding: 4px 0 0 0;"><i class="fa fa-desktop" style="margin-right: 8px;"></i>Server Credentials</h4>
                </div>
                <div class="modal-body" style="max-height: 420px; overflow-y: auto !important; overflow-x: none !important; padding: 30px 20px;">
 
                      <div class="row">
                         <div class="col-lg-12">
                            <div class="form-group">
-                              <label class="myLabel">Server IP</label>
-                              <input type="text" value="" placeholder="Server URL" style="border: none; border-bottom: 1px solid #ddd; padding-left: 0" class="form-control tip" id="add_custom_server_url"/>
+                              <label style="font-size: 12px; text-transform: uppercase;">Server IP Address</label>
+                              <input type="text" placeholder="Server IP" style="border: none; border-bottom: 1px solid #ddd; padding-left: 0" class="form-control tip" id="add_custom_server_ip"/>
+                           </div>
+                        </div>
+                        <div class="col-lg-12">
+                           <div class="form-group">
+                              <label style="font-size: 12px; text-transform: uppercase;">Server Port</label>
+                              <input type="number" placeholder="Server Port" style="border: none; border-bottom: 1px solid #ddd; padding-left: 0" class="form-control tip" id="add_custom_server_port"/>
+                           </div>
+                        </div>
+                        <div class="col-lg-12">
+                           <div class="form-group">
+                              <label style="font-size: 12px; text-transform: uppercase;">User Name</label>
+                              <input type="text" placeholder="Username" style="border: none; border-bottom: 1px solid #ddd; padding-left: 0" class="form-control tip" id="add_custom_server_username"/>
+                           </div>
+                        </div>
+                        <div class="col-lg-12">
+                           <div class="form-group">
+                              <label style="font-size: 12px; text-transform: uppercase;">Password</label>
+                              <input type="password" placeholder="Password" style="border: none; border-bottom: 1px solid #ddd; padding-left: 0" class="form-control tip" id="add_custom_server_password"/>
                            </div>
                         </div>
                      </div>
@@ -67,7 +89,40 @@
 
                </div>
                <div class="modal-footer" style="padding: 0">
-                  <button style="width: 100%; border: none; border-radius: 0; height: 45px; outline: none !important;" class="btn btn-warning" onclick="setServerConnectionDetails()">Save</button>
+                  <button style="width: 100%; border: none; border-radius: 0; height: 45px; outline: none !important; font-size: 16px" class="btn btn-warning" onclick="setServerConnectionDetails()">Save Credentials</button>
+               </div>
+            </div>
+         </div>
+    </div>
+
+
+
+    <!-- SERVER URL SETTINGS -->
+    <div id="" class="modal" style="z-index: 10000;">
+         <div class="modal-dialog" style="top: 20%">
+            <!-- Modal content-->
+            <div class="modal-content">
+               <div class="modal-header defaultModalColoredHeader" style="background: #f3960e">
+                  <button  onclick="()" style="float: right; border: none; background: none; outline: none; color: #FFF;" class="btn clearButton">X</button>
+                  <h4 class="modal-title" style="color: #FFF"><i class="fa fa-desktop" style="margin-right: 8px"></i>Server Settings</h4>
+               </div>
+               <div class="modal-body" style="max-height: 420px; overflow-y: auto !important; overflow-x: none !important; padding: 30px 20px;">
+
+                     <div class="row">
+                        <div class="col-lg-12">
+                           <div class="form-group">
+                              <label class="myLabel">Server IP</label>
+                              <input type="text" value="" placeholder="Server URL" style="border: none; border-bottom: 1px solid #ddd; padding-left: 0" class="form-control tip" id="add_custom_server_url"/>
+                           </div>
+                        </div>
+                     </div>
+
+
+
+
+               </div>
+               <div class="modal-footer" style="padding: 0">
+                  <button style="width: 100%; border: none; border-radius: 0; height: 45px; outline: none !important;" class="btn btn-warning" onclick="()">Save</button>
                </div>
             </div>
          </div>
@@ -102,6 +157,28 @@
             </div>
          </div>
     </div>
+
+
+    <!-- APPROVED SERVICES -->
+    <div id="approvedServicesWindow" class="modal" style="z-index: 10000;">
+         <div class="settingsWindow" style="min-height: unset !important; height: 220px !important;">
+            <h1 class="settingsTitle">Approved Services<tag onclick="hideApprovedFunctionsWindow()" class="printerWindowClose">X</tag></h1>
+            <div style="padding: 5px 15px; display: block;">
+                
+                <div class="table-responsive">
+                      <table class="table">
+                         <col width="65%"></col>
+                         <col width="35%"></col>
+                         <tbody id="approvedServicesContent">
+
+                         </tbody>
+                      </table>
+                </div>  
+
+            </div>
+         </div>
+    </div>
+
 
 
     <!-- ERRORS LISTING -->
@@ -219,9 +296,6 @@
 <script src="assets/js/communicator.js"></script>
 <script src="assets/js/layout.js"></script>
 <script src="assets/js/processor.js"></script>
-<script src="assets/js/tools.js"></script>
-
-  
 
   </body>
 </html>
