@@ -1,5 +1,33 @@
+/*
+  SERVER DETAILS
+*/
 
-let COMMON_LOCAL_SERVER_IP = 'http://admin:admin@127.0.0.1:5984/';
+var default_server_url_common = 'http://admin:admin@127.0.0.1:5984/';
+
+var serverURL = window.localStorage.serverConnectionURL && window.localStorage.serverConnectionURL != '' ? JSON.parse(decodeURI(window.localStorage.serverConnectionURL)) : '';
+
+var saved_server_url_manual = '';
+
+  if(serverURL.ip != '' && serverURL.portNumber != ''){
+    if(serverURL.username != '' && serverURL.password != ''){
+      saved_server_url_manual = 'http://'+serverURL.username+':'+serverURL.password+'@'+serverURL.ip+':'+serverURL.portNumber+'/';
+    }
+    else{
+      saved_server_url_manual = 'http://'+serverURL.ip+':'+serverURL.portNumber+'/';
+    }
+  }
+  else{
+    saved_server_url_manual = '';
+  }
+
+
+let COMMON_LOCAL_SERVER_IP = saved_server_url_manual != '' ? saved_server_url_manual : default_server_url_common;
+
+
+
+
+
+
 
 
 let $ = jQuery.noConflict();
@@ -36,64 +64,164 @@ function showToast(message, color){
 
 
 
+/*
+  SERVER CREDENTIALS
+*/
 
 function openSettingsWindow(){
-  
+
   document.getElementById("serverConnectionURLDisplayModal").style.display = 'block';
 
-  var default_url = 'http://admin:admin@127.0.0.1:5984/';
-  var saved_url = window.localStorage.serverConnectionURL ? window.localStorage.serverConnectionURL : ''; 
+  var default_ip = '127.0.0.1';
+  var default_port = '5984';
+  var default_username = 'admin';
+  var default_password = 'admin';
+
+  var saved_url = window.localStorage.serverConnectionURL && window.localStorage.serverConnectionURL != '' ? JSON.parse(decodeURI(window.localStorage.serverConnectionURL)) : '';
   var saved_client = window.localStorage.dataAggregatorClient ? window.localStorage.dataAggregatorClient : '';
 
 
   if(saved_url == ''){
-    $('#add_custom_server_url').val(default_url);
+    $('#add_custom_server_ip').val(default_ip);
+    $('#add_custom_server_port').val(default_port);
+    $('#add_custom_server_username').val(default_username);
+    $('#add_custom_server_password').val(default_password);
   }
   else{
-    $('#add_custom_server_url').val(saved_url);
+    $('#add_custom_server_ip').val(saved_url.ip);
+    $('#add_custom_server_port').val(saved_url.portNumber);
+    $('#add_custom_server_username').val(saved_url.username);
+    $('#add_custom_server_password').val(saved_url.password);
   }
 
   $('#add_custom_slave_client_id').val(saved_client);
-
 }
 
-function hideSettingsWindow(){
+function viewServerURLHide(){
   document.getElementById("serverConnectionURLDisplayModal").style.display = 'none';
 }
 
+
 function setServerConnectionDetails(){
 
-  var url = $('#add_custom_server_url').val();
-  url = url.replace(/\s/g,'');
+  var userURL = {
+    'ip' : $('#add_custom_server_ip').val(),
+    'portNumber' : $('#add_custom_server_port').val(),
+    'username': $('#add_custom_server_username').val(),
+    'password': $('#add_custom_server_password').val()
+  };
 
-  var machine_id = $('#add_custom_slave_client_id').val();
-  machine_id = machine_id.replace(/\s/g,'');
+  userURL.ip = (userURL.ip).replace(/\s/g,'');
+  userURL.portNumber = (userURL.portNumber).replace(/\s/g,'');
+  userURL.username = (userURL.username).replace(/\s/g,'');
+  userURL.password = (userURL.password).replace(/\s/g,'');
 
   var default_url = 'http://admin:admin@127.0.0.1:5984/';
 
-  if(url == ''){
-    showToast('Error: Add a Server URL', '#e74c3c');
-    return '';
+  if(userURL.ip != '' && userURL.portNumber != ''){
+    
+    window.localStorage.serverConnectionURL = encodeURI(JSON.stringify(userURL));
+    
+    if(userURL.username != '' && userURL.password != ''){
+      COMMON_LOCAL_SERVER_IP = 'http://'+userURL.username+':'+userURL.password+'@'+userURL.ip+':'+userURL.portNumber+'/';
+    }
+    else{
+      COMMON_LOCAL_SERVER_IP = 'http://'+userURL.ip+':'+userURL.portNumber+'/';
+    }
+  }
+  else{
+    COMMON_LOCAL_SERVER_IP = default_url;
+    showToast('Error: Add valid Server Credentials', '#e74c3c');
   }
 
+
+  //Slave Machine
+  var machine_id = $('#add_custom_slave_client_id').val();
+  machine_id = machine_id.replace(/\s/g,'');
+  
   if(machine_id == ''){
     showToast('Error: Add the machine ID of the Slave Client', '#e74c3c');
     return '';
   }
-
-  if(url != '' && machine_id != ''){
-    window.localStorage.serverConnectionURL = url;
-    window.localStorage.dataAggregatorClient = machine_id;
-
-    COMMON_LOCAL_SERVER_IP = url;
-
-    hideSettingsWindow();
-
-    checkClientConnection();
-  }
   
+  window.localStorage.dataAggregatorClient = machine_id;
+
+  viewServerURLHide();
+  checkClientConnection();
+
 }
 
+
+/*
+  APPROVED FUNCTIONS
+*/
+
+
+function openApprovedFunctionsWindow(){
+  
+  var approval_taps = window.localStorage.approvedActionsData_tapsOrders && window.localStorage.approvedActionsData_tapsOrders != "" ? window.localStorage.approvedActionsData_tapsOrders : 0;
+  var approval_actions = window.localStorage.approvedActionsData_actionRequests && window.localStorage.approvedActionsData_actionRequests != "" ? window.localStorage.approvedActionsData_actionRequests : 0;
+  var approval_printRequests = window.localStorage.approvedActionsData_printRequests && window.localStorage.approvedActionsData_printRequests != "" ? window.localStorage.approvedActionsData_printRequests : 0;
+
+  document.getElementById("approvedServicesWindow").style.display = 'block';
+
+  //render content
+  var renderContent =       '<tr role="row">'+
+                               '<td style="border: none; color: #f39c12; font-family: \'Roboto\'; font-size: 18px; font-weight: 300;"><i class="fa fa-circle-o" style="margin-right: 10px;"></i>Server based KOT Printing</td>'+
+                               '<td style="border: none; text-align: center; position: relative">'+(approval_printRequests == 1 ? '<button onclick="unsetApprovedService(\'PRINT_REQUESTS\')" class="btn btn-success btn-sm"><i class="fa fa-check"></i> Approved</button>' : '<button onclick="approveService(\'PRINT_REQUESTS\')" class="btn btn-default btn-sm" style="font-style: italic">Not Approved</button>')+'</td>'+
+                            '</tr>'+
+                            '<tr role="row">'+
+                               '<td style="color: #f39c12; font-family: \'Roboto\'; font-size: 18px; font-weight: 300;"><i class="fa fa-circle-o" style="margin-right: 10px;"></i>Accept Taps Orders</td>'+
+                               '<td style="text-align: center; position: relative">'+(approval_taps == 1 ? '<button onclick="unsetApprovedService(\'TAPS_ORDERS\')" class="btn btn-success btn-sm"><i class="fa fa-check"></i> Approved</button>' : '<button onclick="approveService(\'TAPS_ORDERS\')" class="btn btn-default btn-sm" style="font-style: italic">Not Approved</button>')+'</td>'+
+                            '</tr>'+
+                            '<tr role="row">'+
+                               '<td style="color: #f39c12; font-family: \'Roboto\'; font-size: 18px; font-weight: 300;"><i class="fa fa-circle-o" style="margin-right: 10px;"></i>Accept Taps Action Requests</td>'+
+                               '<td style="text-align: center; position: relative">'+(approval_actions == 1 ? '<button onclick="unsetApprovedService(\'ACTION_REQUESTS\')" class="btn btn-success btn-sm"><i class="fa fa-check"></i> Approved</button>' : '<button onclick="approveService(\'ACTION_REQUESTS\')" class="btn btn-default btn-sm" style="font-style: italic">Not Approved</button>')+'</td>'+
+                            '</tr>';
+
+  document.getElementById("approvedServicesContent").innerHTML = renderContent;
+
+}
+
+function hideApprovedFunctionsWindow(){
+  document.getElementById("approvedServicesContent").innerHTML = '';
+  document.getElementById("approvedServicesWindow").style.display = 'none';
+}
+
+function unsetApprovedService(request){
+  if(request == 'PRINT_REQUESTS'){
+    window.localStorage.approvedActionsData_printRequests = 0;
+  }
+  else if(request == 'TAPS_ORDERS'){
+    window.localStorage.approvedActionsData_tapsOrders = 0;
+  }
+  else if(request == 'ACTION_REQUESTS'){
+    window.localStorage.approvedActionsData_actionRequests = 0;
+  }
+
+  openApprovedFunctionsWindow();
+  fetchApprovedServices();
+}
+
+function approveService(request){
+  if(request == 'PRINT_REQUESTS'){
+    window.localStorage.approvedActionsData_printRequests = 1;
+  }
+  else if(request == 'TAPS_ORDERS'){
+    window.localStorage.approvedActionsData_tapsOrders = 1;
+  }
+  else if(request == 'ACTION_REQUESTS'){
+    window.localStorage.approvedActionsData_actionRequests = 1;
+  }
+
+  openApprovedFunctionsWindow();
+  fetchApprovedServices();
+}
+
+
+/*
+  CONNECTED DEVICES
+*/
 
 
 function openDevicesWindow(){
@@ -476,7 +604,6 @@ function savePrinterAction(machineUID, printer_name, action){
 
 function checkClientConnection(){
 
-
     var dataAggregatorClient = window.localStorage.dataAggregatorClient ? window.localStorage.dataAggregatorClient : '';
 
     if(dataAggregatorClient == ''){
@@ -484,6 +611,8 @@ function checkClientConnection(){
         showToast('Error: Please check the Slave Client ID', '#8e44ad');
       return '';
     }
+
+    showLoading(10000, 'Configuring the System'); 
 
     //Read from Server, apply changes, and save to LocalStorage
     var requestData = {
@@ -501,6 +630,9 @@ function checkClientConnection(){
       dataType: 'json',
       timeout: 10000,
       success: function(data) {
+
+        hideLoading();
+
         if(data.docs.length > 0){
           if(data.docs[0].identifierTag == 'ACCELERATE_CONFIGURED_MACHINES'){
 
@@ -529,6 +661,8 @@ function checkClientConnection(){
                   applyConfiguredPrinters();
                   loadRegisteredDevices();
 
+                  //STARTING POINT: this would later call initalise function
+                  preloadBillingData(); 
 
                   break;
                 }
@@ -556,6 +690,7 @@ function checkClientConnection(){
         }
       },
       error: function(data) {
+        hideLoading();
         document.getElementById("serverErrorLock").style.display = 'block';
         return '';          
       }
@@ -564,10 +699,6 @@ function checkClientConnection(){
 }
 
 checkClientConnection();
-
-
-
-
 
 
 
@@ -650,7 +781,7 @@ function showLoading(time, text){
 
     startCount--;
     document.getElementById("generalLoaderCount").innerHTML = startCount;
-    console.log('Am Secretly running...')
+    //console.log('Am Secretly running...')
   }, 1000); 
 
 }

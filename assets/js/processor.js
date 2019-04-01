@@ -5,6 +5,21 @@ let DATA_ORDER_SOURCES = '';
 let MENU_DATA_SYSTEM_ORIGINAL = [];
 let MENU_DATA_OTHER_MENU_MAPPINGS = [];
 
+
+let SERVICE_APPROVED_ORDERS = 0;
+let SERVICE_APPROVED_PRINTS = 0;
+let SERVICE_APPROVED_ACTIONS = 0;
+
+
+function fetchApprovedServices(){
+  SERVICE_APPROVED_ORDERS = window.localStorage.approvedActionsData_tapsOrders && window.localStorage.approvedActionsData_tapsOrders != "" ? window.localStorage.approvedActionsData_tapsOrders : 0;
+  SERVICE_APPROVED_ACTIONS = window.localStorage.approvedActionsData_actionRequests && window.localStorage.approvedActionsData_actionRequests != "" ? window.localStorage.approvedActionsData_actionRequests : 0;
+  SERVICE_APPROVED_PRINTS = window.localStorage.approvedActionsData_printRequests && window.localStorage.approvedActionsData_printRequests != "" ? window.localStorage.approvedActionsData_printRequests : 0;
+}
+
+fetchApprovedServices();
+
+
 function operationPause(){
     document.getElementById("operationButtons").innerHTML = '<tag class="buttonSettings" style="right: 70px; color: red; font-weight: bold" onclick="operationStart()">Paused</tag>';
     
@@ -174,16 +189,13 @@ function preloadBillingData(){
           
                 for (var i=0; i<mastermenu.length; i++){
                   for(var j=0; j<mastermenu[i].items.length; j++){
-
                     list[mastermenu[i].items[j].code] = mastermenu[i].items[j];
                     list[mastermenu[i].items[j].code].category = mastermenu[i].category;
-
-                    if(i == mastermenu.length - 1 && j == mastermenu[i].items.length - 1){
-                      MENU_DATA_SYSTEM_ORIGINAL = list;
-                      populateOtherMenuMappings();
-                    }
                   }         
                 }
+
+                MENU_DATA_SYSTEM_ORIGINAL = list;
+                populateOtherMenuMappings();
 
             }
             else{
@@ -304,7 +316,7 @@ function renderErrorsLog(){
       
       if(log[n].category == 'ORDER'){
         if(log[n].type == 'SYSTEM_KOT_ERROR'){
-          renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' <span class="errorWarning">System has been failing to Punch Orders from mobile devices. <i class="fa fa-warning"></i></span></time><span class="systemError blink_me">SYSTEM ERROR</span> Fix KOT Index and try again. Contact Accelerate Support if problem persists. <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="restartProcessing()" class="errorListingFixButton">Try Now</tag></tag>' + renderContent;
+          renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' <span class="errorWarning">System has been failing to Punch Orders from mobile devices. <i class="fa fa-warning"></i></span></time><span class="systemError blink_me">SYSTEM ERROR</span> Apple Quick Fix #1 and try again. Contact Accelerate Support if problem persists. <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="restartProcessing()" class="errorListingFixButton">Try Now</tag></tag>' + renderContent;
         }
         else{
           renderContent = '<tag class="errorListingItem"><time class="errorListingTime">'+log[n].time+' on '+(log[n].parameters.machine != "" ? log[n].parameters.machine : 'Unknown Device')+'</time>Failed to edit the <b>Running Order</b> on Table #'+log[n].parameters.table+' <tag class="errorListingOwner">by '+log[n].parameters.staffName+'</tag><tag onclick="ignoreErrorLogEntry(\''+log[n].uid+'\')" class="errorListingFixButton">Ignore</tag></tag>' + renderContent;
@@ -443,6 +455,11 @@ function initialiseProcessing(){
         //Round 1: Check for Requests
         function checkForRequests(index){
 
+          if(SERVICE_APPROVED_ACTIONS == 0){
+            checkForOrders(0);
+            return "";
+          }
+
           //console.log('Checking for Requests...');
 
           $.ajax({
@@ -565,6 +582,11 @@ function initialiseProcessing(){
         //Round 2: Check for Orders
         function checkForOrders(index){
 
+          if(SERVICE_APPROVED_ORDERS == 0){
+            checkForPrints(0);
+            return "";
+          }
+
           //console.log('Checking for Orders...');
 
           $.ajax({
@@ -665,20 +687,37 @@ function initialiseProcessing(){
                         var n = 0;
                         while(otherMenuData[n]){
 
-
-
                           if(otherMenuData[n].name == item_name){ //item map found
-                            
-                              standardised_item = systemMenu[otherMenuData[n].systemCode];
 
-                              if(standardised_item.isCustom){
-                                standardised_item.variant = otherMenuData[n].systemVariant;
+                              if(systemMenu[otherMenuData[n].systemCode]){
+                              
+                                standardised_item = systemMenu[otherMenuData[n].systemCode];
+
+                                if(standardised_item.isCustom){
+                                  standardised_item.variant = otherMenuData[n].systemVariant;
+                                }
+
+                                standardised_item.name = incoming_cart[index].name;
+                                standardised_item.qty = incoming_cart[index].quantity;
+                                standardised_item.price = incoming_cart[index].price;
+                                standardised_item.cartIndex = index + 1;
                               }
+                              else{ // item map found. while, the mapped item code does not exist in system menu.
+                                
+                                standardised_item = {
+                                  "cartIndex": index + 1,
+                                  "name": incoming_cart[index].name,
+                                  "category": "MANUAL_UNKNOWN",
+                                  "price": incoming_cart[index].price,
+                                  "isCustom": false,
+                                  "code": custom_item_id,
+                                  "qty": incoming_cart[index].quantity,
+                                  "cookingTime": 0
+                                }
 
-                              standardised_item.name = incoming_cart[index].name;
-                              standardised_item.qty = incoming_cart[index].quantity;
-                              standardised_item.price = incoming_cart[index].price;
-                              standardised_item.cartIndex = index + 1;
+                                custom_item_id++;                              
+
+                              }
 
                               incoming_cart[index] = standardised_item; //update 
                               
@@ -689,7 +728,7 @@ function initialiseProcessing(){
                                 createOrder(incoming_cart);
                               }
 
-                            break;
+                              break;
                           }
 
 
@@ -719,7 +758,8 @@ function initialiseProcessing(){
                                 createOrder(incoming_cart);
                               }
 
-                            break;
+                              
+                              break;
                           }
 
 
@@ -962,6 +1002,11 @@ function initialiseProcessing(){
         //Round 3: Check for Prints (running KOTs punched from Non-mobile devices)
         function checkForPrints(index){
 
+          if(SERVICE_APPROVED_PRINTS == 0){
+            setTimeout(function(){ initialiseProcessing(); }, 5000);
+            return "";
+          }
+
           //console.log('Checking for Prints...')
 
           $.ajax({
@@ -1037,9 +1082,6 @@ function initialiseProcessing(){
 }
 
 
-
-
-preloadBillingData(); // this would later call initalise function
 refreshRecentOrdersStream();
 
 
