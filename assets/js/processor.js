@@ -679,28 +679,61 @@ function initialiseProcessing(){
                       function standardiseItem(index){
 
                         var item_name = incoming_cart[index].name;
+                        console.log('Searching for ... '+item_name)
                         var standardised_item = '';
 
                         var otherMenuData = MENU_DATA_OTHER_MENU_MAPPINGS[order_source];
                         var systemMenu = MENU_DATA_SYSTEM_ORIGINAL;
 
                         var n = 0;
-                        while(otherMenuData[n]){
+                        var isFinishedProcessing = false;
+
+                        while(otherMenuData[n] && !isFinishedProcessing){
 
                           if(otherMenuData[n].name == item_name){ //item map found
 
                               if(systemMenu[otherMenuData[n].systemCode]){
                               
-                                standardised_item = systemMenu[otherMenuData[n].systemCode];
+                                var system_equivalent_item = systemMenu[otherMenuData[n].systemCode];
 
-                                if(standardised_item.isCustom){
-                                  standardised_item.variant = otherMenuData[n].systemVariant;
+                                if(system_equivalent_item.isCustom && otherMenuData[n].systemVariant != ""){  
+
+                                  var system_equivalent_price = 0;
+
+                                  for(var j = 0; j < system_equivalent_item.customOptions.length; j++){
+                                    if(system_equivalent_item.customOptions[j].customName == otherMenuData[n].systemVariant){
+                                      system_equivalent_price = system_equivalent_item.customOptions[j].customPrice;
+                                      break;
+                                    }
+                                  }
+
+                                  standardised_item = {
+                                    "cartIndex": index + 1,
+                                    "name": system_equivalent_item.name,
+                                    "category": system_equivalent_item.category,
+                                    "price": system_equivalent_price,
+                                    "isCustom": true,
+                                    "variant": otherMenuData[n].systemVariant,
+                                    "code": system_equivalent_item.code,
+                                    "qty": incoming_cart[index].quantity,
+                                    "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
+                                    "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
+                                  }
+                                }
+                                else{
+                                  standardised_item = {
+                                    "cartIndex": index + 1,
+                                    "name": system_equivalent_item.name,
+                                    "category": system_equivalent_item.category,
+                                    "price": system_equivalent_item.price,
+                                    "isCustom": false,
+                                    "code": system_equivalent_item.code,
+                                    "qty": incoming_cart[index].quantity,
+                                    "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
+                                    "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
+                                  }
                                 }
 
-                                standardised_item.name = incoming_cart[index].name;
-                                standardised_item.qty = incoming_cart[index].quantity;
-                                standardised_item.price = incoming_cart[index].price;
-                                standardised_item.cartIndex = index + 1;
                               }
                               else{ // item map found. while, the mapped item code does not exist in system menu.
                                 
@@ -727,6 +760,8 @@ function initialiseProcessing(){
                               else{ //done, go to next step
                                 createOrder(incoming_cart);
                               }
+
+                              isFinishedProcessing = true;
 
                               break;
                           }
@@ -758,6 +793,7 @@ function initialiseProcessing(){
                                 createOrder(incoming_cart);
                               }
 
+                              isFinishedProcessing = true;
                               
                               break;
                           }
@@ -808,7 +844,7 @@ function initialiseProcessing(){
                           
                           obj.sessionName = order_source;
 
-                          obj.stewardName = '';
+                          obj.stewardName = orderData.stewardName;
                           obj.stewardCode = '';
 
                           obj.date = today;
@@ -4425,4 +4461,214 @@ function deleteKOTFromServer(id, revID){
       }
     }); 
 }
+
+
+
+
+
+
+/*
+
+  VALIDATIONS
+
+*/
+
+/*
+  1.  Check if the other menu mappings (say Swiggy) are correctly done.
+  
+      Should ensure each item mapped against, the Swiggy name is mapped on to a valid item code
+      in the system menu, and match with the system name.
+
+      Also ensure systemVariant mentioned in the menu mapping is valid too.
+*/
+
+
+function runDataValidations(){
+
+  var systemMenu = '';
+  var mappedMenu = '';
+
+
+  preloadSystemMenu();
+
+  function preloadSystemMenu(){
+
+      var requestData = {
+        "selector"  :{ 
+                      "identifierTag": "ACCELERATE_MASTER_MENU" 
+                    },
+        "fields"    : ["_rev", "identifierTag", "value"]
+      }
+
+      $.ajax({
+        type: 'POST',
+        url: COMMON_LOCAL_SERVER_IP + '/accelerate_settings/_find',
+        data: JSON.stringify(requestData),
+        contentType: "application/json",
+        dataType: 'json',
+        timeout: 10000,
+        success: function(data) {
+          if(data.docs.length > 0){
+            if(data.docs[0].identifierTag == 'ACCELERATE_MASTER_MENU'){
+
+                var mastermenu = data.docs[0].value;
+                var list = [];
+          
+                for (var i=0; i<mastermenu.length; i++){
+                  for(var j=0; j<mastermenu[i].items.length; j++){
+                    list[mastermenu[i].items[j].code] = mastermenu[i].items[j];
+                    list[mastermenu[i].items[j].code].category = mastermenu[i].category;
+                  }         
+                }
+
+                systemMenu = list;
+                preloadMenuMappings();
+
+            }
+            else{
+              showToast('Not Found Error: Menu data not found. Please contact Accelerate Support.', '#e74c3c');
+              preloadMenuMappings();
+            }
+          }
+          else{
+            showToast('Not Found Error: Menu data not found. Please contact Accelerate Support.', '#e74c3c');
+            preloadMenuMappings();
+          }
+          
+        },
+        error: function(data) {
+          showToast('System Error: Unable to read Menu data. Please contact Accelerate Support.', '#e74c3c');
+          preloadMenuMappings();
+        }
+
+      });   
+  }
+
+
+  function preloadMenuMappings(){
+
+    $.ajax({
+      type: 'GET',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_other_menu_mappings/MENU_SWIGGY/',
+      timeout: 10000,
+      success: function(data) {
+        if(data._id != ""){
+
+            var otherMenu = data;
+            mappedMenu = data.value;
+
+            proceedToValidation();
+
+        }
+        else{
+          proceedToValidation();
+        }
+      },
+      error: function(data) {
+        proceedToValidation();
+      }
+
+    });   
+
+  }
+
+
+  function proceedToValidation(){
+
+    var otherMenuData = mappedMenu;
+    var renderContent = '';
+
+    for(var n = 0; n < otherMenuData.length; n++){
+
+      var systemItem = getSystemEquivalentItem(otherMenuData[n].systemCode, otherMenuData[n].systemVariant);
+        
+      if(systemItem == "NOT_FOUND"){
+
+        if(otherMenuData[n].systemCode == ""){
+        
+          renderContent += '<tr role="row">'+
+                            '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+(n+1)+'</td>'+
+                            '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].name+'</td>'+
+                            '<td style="background: red; color: #FFF"><b>Not Mapped</b></td>'+
+                            '<td style="background: red; color: #FFF"></td>'+
+                          '</tr>';
+        }
+        else{
+          renderContent += '<tr role="row">'+
+                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+(n+1)+'</td>'+
+                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].name+'</td>'+
+                          '<td style="background: red; color: #FFF"><b>Incorrect Mapping</b></td>'+
+                          '<td style="background: red; color: #FFF"><b>'+otherMenuData[n].systemCode+'</b></td>'+
+                        '</tr>';
+        }
+      }
+      else{
+
+        var equivalent_variant = "";
+
+        if(systemItem.isCustom && otherMenuData[n].systemVariant != ""){
+          for(var i = 0; i < systemItem.customOptions.length; i++){
+            if(systemItem.customOptions[i].customName == otherMenuData[n].systemVariant){
+              equivalent_variant = systemItem.customOptions[i].customName;
+              break;
+            }
+          }
+
+          if(equivalent_variant == ""){
+            equivalent_variant = "VARIANT_MISMATCH";
+          }
+
+        }
+
+        renderContent += '<tr role="row">'+
+                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+(n+1)+'</td>'+
+                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].name+'</td>'+
+                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+systemItem.name + (equivalent_variant != "" ? (equivalent_variant == "VARIANT_MISMATCH" ? ' <tag style="color: #FFF; background: red; font-weight: bold; padding: 0 4px; border-radius: 4px; font-size: 11px; display: inline-block;">INVALID VARIANT</tag>' : ' <tag style="color: #00c0ef">('+equivalent_variant+')</tag>') : '')+'</td>'+
+                          '<td style="font-weight: bold;'+(n%2 == 0 ? 'background: #f4f4f4;' : '')+'">'+systemItem.code+'</td>'+
+                        '</tr>';
+
+      }
+    } 
+
+    if(renderContent == ""){
+      renderContent = '<p style="margin: 30px 0 0 0; text-align: center; color: #ccc;">Oops! Validator did not return any results.</p>';
+    }
+    else{
+      renderContent = '<tr>'+ 
+                        '<td style="color: #FFF; background: #f39c12; font-weight: bold">#</td>'+
+                        '<td style="color: #FFF; background: #f39c12; font-weight: bold">Swiggy Menu</td>'+
+                        '<td style="color: #FFF; background: #f39c12; font-weight: bold">System Menu</td>'+
+                        '<td style="color: #FFF; background: #f39c12; font-weight: bold">Code</td>'+
+                      '</tr>'+ renderContent;
+    }
+
+
+    document.getElementById("validationResultsWindow").style.display = 'block';
+    document.getElementById("validationResultsContent").innerHTML = renderContent;
+  }
+
+
+  function getSystemEquivalentItem(code, variant){
+
+    var systemDefaultItem = '';
+
+    if(systemMenu[code]){
+      systemDefaultItem = systemMenu[code];
+    }
+    else{
+      systemDefaultItem = "NOT_FOUND";
+    }
+
+
+    return systemDefaultItem;
+  }
+
+}
+
+
+function hideValidationResultsWindow(){
+  document.getElementById("validationResultsWindow").style.display = 'none';
+}
+
+
 
