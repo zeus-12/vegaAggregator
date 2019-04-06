@@ -679,7 +679,7 @@ function initialiseProcessing(){
                       function standardiseItem(index){
 
                         var item_name = incoming_cart[index].name;
-                        console.log('Searching for ... '+item_name)
+                        
                         var standardised_item = '';
 
                         var otherMenuData = MENU_DATA_OTHER_MENU_MAPPINGS[order_source];
@@ -696,31 +696,53 @@ function initialiseProcessing(){
                               
                                 var system_equivalent_item = systemMenu[otherMenuData[n].systemCode];
 
-                                if(system_equivalent_item.isCustom && otherMenuData[n].systemVariant != ""){  
+                                if(system_equivalent_item.isCustom){  
 
                                   var system_equivalent_price = 0;
+                                  var isEquivalentVariantFound = false;
 
                                   for(var j = 0; j < system_equivalent_item.customOptions.length; j++){
                                     if(system_equivalent_item.customOptions[j].customName == otherMenuData[n].systemVariant){
                                       system_equivalent_price = system_equivalent_item.customOptions[j].customPrice;
+                                      isEquivalentVariantFound = true;
                                       break;
                                     }
                                   }
 
-                                  standardised_item = {
-                                    "cartIndex": index + 1,
-                                    "name": system_equivalent_item.name,
-                                    "category": system_equivalent_item.category,
-                                    "price": system_equivalent_price,
-                                    "isCustom": true,
-                                    "variant": otherMenuData[n].systemVariant,
-                                    "code": system_equivalent_item.code,
-                                    "qty": incoming_cart[index].quantity,
-                                    "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
-                                    "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
+                                  if(isEquivalentVariantFound){
+                                      
+                                      standardised_item = {
+                                        "cartIndex": index + 1,
+                                        "name": system_equivalent_item.name,
+                                        "category": system_equivalent_item.category,
+                                        "price": system_equivalent_price,
+                                        "isCustom": true,
+                                        "variant": otherMenuData[n].systemVariant,
+                                        "code": system_equivalent_item.code,
+                                        "qty": incoming_cart[index].quantity,
+                                        "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
+                                        "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
+                                      }
+
+                                  }
+                                  else{
+                                      
+                                      standardised_item = {
+                                        "cartIndex": index + 1,
+                                        "name": incoming_cart[index].name,
+                                        "category": system_equivalent_item.category,
+                                        "price": incoming_cart[index].price,
+                                        "isCustom": false,
+                                        "code": system_equivalent_item.code,
+                                        "qty": incoming_cart[index].quantity,
+                                        "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
+                                        "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
+                                      }
+                                      
                                   }
                                 }
                                 else{
+                                  
                                   standardised_item = {
                                     "cartIndex": index + 1,
                                     "name": system_equivalent_item.name,
@@ -732,6 +754,7 @@ function initialiseProcessing(){
                                     "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
                                     "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
                                   }
+
                                 }
 
                               }
@@ -4617,7 +4640,9 @@ function runDataValidations(){
           if(equivalent_variant == ""){
             equivalent_variant = "VARIANT_MISMATCH";
           }
-
+        }
+        else if(systemItem.isCustom && otherMenuData[n].systemVariant == ""){
+          equivalent_variant = "VARIANT_MISMATCH";
         }
 
         renderContent += '<tr role="row">'+
