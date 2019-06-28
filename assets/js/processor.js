@@ -2,7 +2,7 @@ let PAUSE_FLAG = false;
 let DATA_BILLING_PARAMETERS = '';
 let DATA_BILLING_MODES = '';
 let DATA_ORDER_SOURCES = '';
-let DATA_DEFAULT_PRINTERS = '';
+let DATA_REGISTERED_DEVICES = '';
 let MENU_DATA_SYSTEM_ORIGINAL = [];
 let MENU_DATA_OTHER_MENU_MAPPINGS = [];
 
@@ -146,7 +146,9 @@ function preloadBillingData(){
       success: function(data) {
         if(data.docs.length > 0){
           if(data.docs[0].identifierTag == 'ACCELERATE_REGISTERED_DEVICES'){
-              DATA_DEFAULT_PRINTERS = data.docs[0].value;
+              
+              DATA_REGISTERED_DEVICES = data.docs[0].value;
+
               fetchParameters();
           }
           else{
@@ -480,25 +482,51 @@ function throwSystemBlockingError(error){
 
 function findDefaultPrinter(deviceCode, type){
 
+  var allConfiguredPrintersList = window.localStorage.configuredPrintersData ? JSON.parse(window.localStorage.configuredPrintersData) : [];
+
+
   if(deviceCode == ''){
     return '';
   }
 
   if(type == 'VIEW'){
-    for(var i = 0; i < DATA_DEFAULT_PRINTERS.length; i++){
-      if(DATA_DEFAULT_PRINTERS[i].deviceUID == deviceCode){
-        if(DATA_DEFAULT_PRINTERS[i].defaultPrinters.VIEW != ""){
-          return DATA_DEFAULT_PRINTERS[i].defaultPrinters.VIEW;
+    for(var i = 0; i < DATA_REGISTERED_DEVICES.length; i++){
+      if(DATA_REGISTERED_DEVICES[i].deviceUID == deviceCode){
+        if(DATA_REGISTERED_DEVICES[i].defaultPrinters.VIEW != ""){
+
+            var g = 0;
+            while (allConfiguredPrintersList[g]) {
+              for (var a = 0; a < allConfiguredPrintersList[g].list.length; a++) {
+                  if (allConfiguredPrintersList[g].list[a].name == DATA_REGISTERED_DEVICES[i].defaultPrinters.VIEW) {
+                      return allConfiguredPrintersList[g].list[a];
+                      break;
+                  }
+              }
+                            
+              g++;
+            }
         }
         break;
       }
     }
   }
   else if(type == 'BILL'){
-    for(var i = 0; i < DATA_DEFAULT_PRINTERS.length; i++){
-      if(DATA_DEFAULT_PRINTERS[i].deviceUID == deviceCode){
-        if(DATA_DEFAULT_PRINTERS[i].defaultPrinters.BILL != ""){
-          return DATA_DEFAULT_PRINTERS[i].defaultPrinters.BILL;
+    for(var i = 0; i < DATA_REGISTERED_DEVICES.length; i++){
+      if(DATA_REGISTERED_DEVICES[i].deviceUID == deviceCode){
+        if(DATA_REGISTERED_DEVICES[i].defaultPrinters.BILL != ""){
+
+            var g = 0;
+            while (allConfiguredPrintersList[g]) {
+              for (var a = 0; a < allConfiguredPrintersList[g].list.length; a++) {
+                  if (allConfiguredPrintersList[g].list[a].name == DATA_REGISTERED_DEVICES[i].defaultPrinters.BILL) {
+                      return allConfiguredPrintersList[g].list[a];
+                      break;
+                  }
+              }
+                            
+              g++;
+            }          
+            
         }
         break;
       }
