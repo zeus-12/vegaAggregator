@@ -2,6 +2,7 @@ let PAUSE_FLAG = false;
 let DATA_BILLING_PARAMETERS = '';
 let DATA_BILLING_MODES = '';
 let DATA_ORDER_SOURCES = '';
+let DATA_DEFAULT_PRINTERS = '';
 let MENU_DATA_SYSTEM_ORIGINAL = [];
 let MENU_DATA_OTHER_MENU_MAPPINGS = [];
 
@@ -107,7 +108,7 @@ function preloadBillingData(){
         if(data.docs.length > 0){
           if(data.docs[0].identifierTag == 'ACCELERATE_ORDER_SOURCES'){
               DATA_ORDER_SOURCES = data.docs[0].value;
-              fetchParameters();
+              fetchDefaultPrinters();
           }
           else{
             showToast('Not Found Error: Order Sources data not found. Please contact Accelerate Support.', '#e74c3c');
@@ -124,6 +125,47 @@ function preloadBillingData(){
 
     });
   }
+
+
+  function fetchDefaultPrinters(){
+    
+    var requestData = {
+      "selector"  :{ 
+                    "identifierTag": "ACCELERATE_REGISTERED_DEVICES" 
+                  },
+      "fields"    : ["identifierTag", "value"]
+    }
+
+    $.ajax({
+      type: 'POST',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
+      data: JSON.stringify(requestData),
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function(data) {
+        if(data.docs.length > 0){
+          if(data.docs[0].identifierTag == 'ACCELERATE_REGISTERED_DEVICES'){
+              DATA_DEFAULT_PRINTERS = data.docs[0].value;
+              fetchParameters();
+          }
+          else{
+            showToast('Not Found Error: Registered Devices data not found. Please contact Accelerate Support.', '#e74c3c');
+          }
+        }
+        else{
+          showToast('Not Found Error: Registered Devices data not found. Please contact Accelerate Support.', '#e74c3c');
+        }
+        
+      },
+      error: function(data) {
+        showToast('System Error: Unable to read Registered Devices data. Please contact Accelerate Support.', '#e74c3c');
+      }
+
+    });
+  }
+
+
 
 
   function fetchParameters(){
@@ -436,6 +478,37 @@ function throwSystemBlockingError(error){
 }
 
 
+function findDefaultPrinter(deviceCode, type){
+
+  if(deviceCode == ''){
+    return '';
+  }
+
+  if(type == 'VIEW'){
+    for(var i = 0; i < DATA_DEFAULT_PRINTERS.length; i++){
+      if(DATA_DEFAULT_PRINTERS[i].deviceUID == deviceCode){
+        if(DATA_DEFAULT_PRINTERS[i].defaultPrinters.VIEW != ""){
+          return DATA_DEFAULT_PRINTERS[i].defaultPrinters.VIEW;
+        }
+        break;
+      }
+    }
+  }
+  else if(type == 'BILL'){
+    for(var i = 0; i < DATA_DEFAULT_PRINTERS.length; i++){
+      if(DATA_DEFAULT_PRINTERS[i].deviceUID == deviceCode){
+        if(DATA_DEFAULT_PRINTERS[i].defaultPrinters.BILL != ""){
+          return DATA_DEFAULT_PRINTERS[i].defaultPrinters.BILL;
+        }
+        break;
+      }
+    }
+  }
+
+  return "";
+}
+
+
 
 /*
   MAIN PROCESSING FUNCTION
@@ -491,7 +564,16 @@ function initialiseProcessing(){
                                 
                                 switch(requestData.action){
                                   case "PRINT_VIEW":{
-                                    sendToPrinter(kotData, 'VIEW');
+
+                                    var set_view_printer = findDefaultPrinter(kotData.machineName, 'VIEW');
+
+                                    if(set_view_printer != ''){
+                                      sendToPrinter(kotData, 'VIEW', set_view_printer);
+                                    }
+                                    else{
+                                      sendToPrinter(kotData, 'VIEW');
+                                    }
+                                    
                                     showToast('Items View of #'+kotData.KOTNumber+' generated Successfully', '#27ae60');
                                     
                                     removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
