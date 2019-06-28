@@ -480,8 +480,6 @@ function throwSystemBlockingError(error){
 
 function findDefaultPrinter(deviceCode, type){
 
-console.log(deviceCode, type)
-
   if(deviceCode == ''){
     return '';
   }
@@ -567,7 +565,7 @@ function initialiseProcessing(){
                                 switch(requestData.action){
                                   case "PRINT_VIEW":{
 
-                                    var set_view_printer = findDefaultPrinter(kotData.machineName, 'VIEW');
+                                    var set_view_printer = findDefaultPrinter(requestData.machine, 'VIEW');
 
                                     if(set_view_printer != ''){
                                       sendToPrinter(kotData, 'VIEW', set_view_printer);
@@ -4385,8 +4383,7 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
 
 
                         //PRINTING THE BILL
-                        var set_bill_printer = findDefaultPrinter(newBillFile.machineName, 'BILL');
-                        console.log(set_bill_printer)
+                        var set_bill_printer = findDefaultPrinter(actionRequestObj.machine, 'BILL');
 
 
                         if(set_bill_printer != ''){
