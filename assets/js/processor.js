@@ -443,6 +443,7 @@ function throwSystemBlockingError(error){
 
 function initialiseProcessing(){
 
+
         if(PAUSE_FLAG){
             return '';
         }
@@ -582,7 +583,12 @@ function initialiseProcessing(){
         //Round 2: Check for Orders
         function checkForOrders(index){
 
+
           if(SERVICE_APPROVED_ORDERS == 0){
+
+            //Update Message
+            document.getElementById("pendingOrderMessage").innerHTML = '<tag style="color: #ce8d27"><i class="fa fa-warning" style="color: #ce8d27"></i> Orders Disabled</tag>';
+
             checkForPrints(0);
             return "";
           }
@@ -1062,11 +1068,13 @@ function initialiseProcessing(){
         function checkForPrints(index){
 
           if(SERVICE_APPROVED_PRINTS == 0){
+
+            //Update Message
+            document.getElementById("pendingPrintsMessage").innerHTML = '<tag style="color: #ce8d27"><i class="fa fa-warning" style="color: #ce8d27"></i> KOTs Disabled</tag>';
+
             setTimeout(function(){ initialiseProcessing(); }, 5000);
             return "";
           }
-
-          //console.log('Checking for Prints...')
 
           $.ajax({
             type: 'GET',
@@ -1155,6 +1163,8 @@ function printKOTRequestNew(obj){
     var default_set_KOT_printer = window.localStorage.systemOptionsSettings_defaultKOTPrinter ? window.localStorage.systemOptionsSettings_defaultKOTPrinter : '';
     var default_set_KOT_printer_data = null;
     var only_KOT_printer = null;
+
+    var original_order_object_cart = obj.cart;
 
 
     findDefaultKOTPrinter();
@@ -3033,20 +3043,20 @@ function refreshRecentOrdersStream(){
     if(order_stream.length == 1){
         document.getElementById("recentOrdersList").innerHTML = ''+
               '<tag class="recentOrderHead">RECENT ORDERS</tag>'+
-              '<p class="lastOrder1"><b>'+order_stream[0].KOTNumber+'</b> on <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
+              '<p class="lastOrder1"><b>'+order_stream[0].KOTNumber+'</b> '+ (order_stream[0].orderType == 'DINE' ? ('on Table <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag>') : ('with #<b>'+order_stream[0].table+'</b> on <b class="stewardName">'+order_stream[0].orderModeName+'</b>') )+ ' <tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
     }
     else if(order_stream.length == 2){
         document.getElementById("recentOrdersList").innerHTML = ''+
               '<tag class="recentOrderHead">RECENT ORDERS</tag>'+
-              '<p class="lastOrder1"><b>'+order_stream[1].KOTNumber+'</b> on <b>'+order_stream[1].table+'</b> by <tag class="stewardName">'+(order_stream[1].steward != '' ? order_stream[1].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[1].time+'</tag></p>'+
-              '<p class="lastOrder2"><b>'+order_stream[0].KOTNumber+'</b> on <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
+              '<p class="lastOrder1"><b>'+order_stream[1].KOTNumber+'</b> '+ (order_stream[1].orderType == 'DINE' ? ('on Table <b>'+order_stream[1].table+'</b> by <tag class="stewardName">'+(order_stream[1].steward != '' ? order_stream[1].steward : 'Unknown')+'</tag>') : ('with #<b>'+order_stream[1].table+'</b> on <b class="stewardName">'+order_stream[1].orderModeName+'</b>') )+ ' <tag class="orderTime"> at '+order_stream[1].time+'</tag></p>'+
+              '<p class="lastOrder2"><b>'+order_stream[0].KOTNumber+'</b> '+ (order_stream[0].orderType == 'DINE' ? ('on Table <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag>') : ('with #<b>'+order_stream[0].table+'</b> on <b class="stewardName">'+order_stream[0].orderModeName+'</b>') )+ ' <tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
     }
     else if(order_stream.length == 3){
         document.getElementById("recentOrdersList").innerHTML = ''+
               '<tag class="recentOrderHead">RECENT ORDERS</tag>'+
-              '<p class="lastOrder1"><b>'+order_stream[2].KOTNumber+'</b> on <b>'+order_stream[2].table+'</b> by <tag class="stewardName">'+(order_stream[2].steward != '' ? order_stream[2].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[2].time+'</tag></p>'+
-              '<p class="lastOrder2"><b>'+order_stream[1].KOTNumber+'</b> on <b>'+order_stream[1].table+'</b> by <tag class="stewardName">'+(order_stream[1].steward != '' ? order_stream[1].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[1].time+'</tag></p>'+
-              '<p class="lastOrder3"><b>'+order_stream[0].KOTNumber+'</b> on <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag><tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
+              '<p class="lastOrder1"><b>'+order_stream[2].KOTNumber+'</b> '+ (order_stream[2].orderType == 'DINE' ? ('on Table <b>'+order_stream[2].table+'</b> by <tag class="stewardName">'+(order_stream[2].steward != '' ? order_stream[2].steward : 'Unknown')+'</tag>') : ('with #<b>'+order_stream[2].table+'</b> on <b class="stewardName">'+order_stream[2].orderModeName+'</b>') )+ ' <tag class="orderTime"> at '+order_stream[2].time+'</tag></p>'+
+              '<p class="lastOrder2"><b>'+order_stream[1].KOTNumber+'</b> '+ (order_stream[1].orderType == 'DINE' ? ('on Table <b>'+order_stream[1].table+'</b> by <tag class="stewardName">'+(order_stream[1].steward != '' ? order_stream[1].steward : 'Unknown')+'</tag>') : ('with #<b>'+order_stream[1].table+'</b> on <b class="stewardName">'+order_stream[1].orderModeName+'</b>') )+ ' <tag class="orderTime"> at '+order_stream[1].time+'</tag></p>'+
+              '<p class="lastOrder3"><b>'+order_stream[0].KOTNumber+'</b> '+ (order_stream[0].orderType == 'DINE' ? ('on Table <b>'+order_stream[0].table+'</b> by <tag class="stewardName">'+(order_stream[0].steward != '' ? order_stream[0].steward : 'Unknown')+'</tag>') : ('with #<b>'+order_stream[0].table+'</b> on <b class="stewardName">'+order_stream[0].orderModeName+'</b>') )+ ' <tag class="orderTime"> at '+order_stream[0].time+'</tag></p>';
     }
     else{
         document.getElementById("recentOrdersList").innerHTML = '';
@@ -3202,6 +3212,9 @@ function printFreshKOT(new_kot, optionalActionRequest){
 
            delete obj._rev;
 
+           var original_order_object_cart = obj.cart;
+
+        
           //Acquire a new KOT Number
           $.ajax({
             type: 'GET',
@@ -3230,7 +3243,7 @@ function printFreshKOT(new_kot, optionalActionRequest){
                     
 
                       var remember_obj = '';
-                      var original_order_object_cart = obj.cart;
+                      
 
                       //Post to local Server
                       $.ajax({
@@ -3297,6 +3310,8 @@ function printFreshKOT(new_kot, optionalActionRequest){
                             if(order_stream.length < 3){
                                 order_stream.push({
                                     "KOTNumber" : new_kot.KOTNumber,
+                                    "orderType" : new_kot.orderDetails.modeType,
+                                    "orderModeName" : new_kot.orderDetails.mode,
                                     "table": new_kot.table,
                                     "steward": new_kot.stewardName,
                                     "time": new_kot.timeKOT != '' ? moment(new_kot.timeKOT, 'HHmm').format('hh:mm a') : moment(new_kot.timePunch, 'HHmm').format('hh:mm A')
@@ -3306,6 +3321,8 @@ function printFreshKOT(new_kot, optionalActionRequest){
                             else{
                                 order_stream.push({
                                     "KOTNumber" : new_kot.KOTNumber,
+                                    "orderType" : new_kot.orderDetails.modeType,
+                                    "orderModeName" : new_kot.orderDetails.mode,
                                     "table": new_kot.table,
                                     "steward": new_kot.stewardName,
                                     "time": new_kot.timeKOT != '' ?  moment(new_kot.timeKOT, 'HHmm').format('hh:mm a') : moment(new_kot.timePunch, 'HHmm').format('hh:mm A')

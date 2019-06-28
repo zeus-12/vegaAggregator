@@ -242,16 +242,16 @@ function openDevicesWindow(){
   while(devices_list[n]){
 
     renderContent +=        '<tr role="row">'+
-                               '<td><b style="color: #32404c; font-family:\'Oswald\'; font-size: 18px;">'+(devices_list[n].machineCustomName != "" ? devices_list[n].machineCustomName : devices_list[n].machineUID)+'</b><tag style="color: #a0a0a0; display: block; font-size: 11px;">'+devices_list[n].machineUID+'</tag></td>'+
-                               '<td style="text-align: center; position: relative">'+(devices_list[n].defaultPrinters.VIEW && devices_list[n].defaultPrinters.VIEW != "" ? '<button onclick="assignDevicePrinter(\''+devices_list[n].machineUID+'\', \'VIEW\', \''+(devices_list[n].defaultPrinters.VIEW)+'\')" class="btn btn-success btn-sm"><i class="fa fa-print"></i> '+devices_list[n].defaultPrinters.VIEW+'</button>' : '<button onclick="assignDevicePrinter(\''+devices_list[n].machineUID+'\', \'VIEW\', \'\')" class="btn btn-default btn-sm" style="font-style: italic">Not Set</button>')+
-                                  '<div class="blue-box" style="width: 100%; position: relative; top: -30px;" id="printerSelection_VIEW_'+devices_list[n].machineUID+'"> </div>'+
-                                  '<tag class="selectModeUnset" onclick="unsetPrinterSelectionWindow(\''+devices_list[n].machineUID+'\', \'VIEW\')" id="printerSelectionUnset_VIEW_'+devices_list[n].machineUID+'">UNSET</tag>'+
-                                  '<tag class="selectModeClose" onclick="closePrinterSelectionWindow(\''+devices_list[n].machineUID+'\', \'VIEW\')" id="printerSelectionClose_VIEW_'+devices_list[n].machineUID+'">CLOSE</tag>'+
+                               '<td><b style="color: #32404c; font-family:\'Oswald\'; font-size: 18px;">'+(devices_list[n].device_name != "" ? devices_list[n].device_name : devices_list[n].deviceUID)+'</b><tag style="color: #a0a0a0; display: block; font-size: 11px;">'+devices_list[n].deviceUID+'</tag></td>'+
+                               '<td style="text-align: center; position: relative">'+(devices_list[n].defaultPrinters.VIEW && devices_list[n].defaultPrinters.VIEW != "" ? '<button onclick="assignDevicePrinter(\''+devices_list[n].deviceUID+'\', \'VIEW\', \''+(devices_list[n].defaultPrinters.VIEW)+'\')" class="btn btn-success btn-sm"><i class="fa fa-print"></i> '+devices_list[n].defaultPrinters.VIEW+'</button>' : '<button onclick="assignDevicePrinter(\''+devices_list[n].deviceUID+'\', \'VIEW\', \'\')" class="btn btn-default btn-sm" style="font-style: italic">Not Set</button>')+
+                                  '<div class="blue-box" style="width: 100%; position: relative; top: -30px;" id="printerSelection_VIEW_'+devices_list[n].deviceUID+'"> </div>'+
+                                  '<tag class="selectModeUnset" onclick="unsetPrinterSelectionWindow(\''+devices_list[n].deviceUID+'\', \'VIEW\')" id="printerSelectionUnset_VIEW_'+devices_list[n].deviceUID+'">UNSET</tag>'+
+                                  '<tag class="selectModeClose" onclick="closePrinterSelectionWindow(\''+devices_list[n].deviceUID+'\', \'VIEW\')" id="printerSelectionClose_VIEW_'+devices_list[n].deviceUID+'">CLOSE</tag>'+
                                '</td>'+
-                               '<td style="text-align: center; position: relative">'+(devices_list[n].defaultPrinters.BILL && devices_list[n].defaultPrinters.BILL != "" ? '<button onclick="assignDevicePrinter(\''+devices_list[n].machineUID+'\', \'BILL\', \''+(devices_list[n].defaultPrinters.BILL)+'\')" class="btn btn-success btn-sm"><i class="fa fa-print"></i> '+devices_list[n].defaultPrinters.BILL+'</button>' : '<button onclick="assignDevicePrinter(\''+devices_list[n].machineUID+'\', \'BILL\', \'\')" class="btn btn-default btn-sm" style="font-style: italic">Not Set</button>')+
-                                  '<div class="blue-box" style="width: 100%; position: relative; top: -30px;" id="printerSelection_BILL_'+devices_list[n].machineUID+'"> </div>'+
-                                  '<tag class="selectModeUnset" onclick="unsetPrinterSelectionWindow(\''+devices_list[n].machineUID+'\', \'BILL\')" id="printerSelectionUnset_BILL_'+devices_list[n].machineUID+'">UNSET</tag>'+
-                                  '<tag class="selectModeClose" onclick="closePrinterSelectionWindow(\''+devices_list[n].machineUID+'\', \'BILL\')" id="printerSelectionClose_BILL_'+devices_list[n].machineUID+'">CLOSE</tag>'+
+                               '<td style="text-align: center; position: relative">'+(devices_list[n].defaultPrinters.BILL && devices_list[n].defaultPrinters.BILL != "" ? '<button onclick="assignDevicePrinter(\''+devices_list[n].deviceUID+'\', \'BILL\', \''+(devices_list[n].defaultPrinters.BILL)+'\')" class="btn btn-success btn-sm"><i class="fa fa-print"></i> '+devices_list[n].defaultPrinters.BILL+'</button>' : '<button onclick="assignDevicePrinter(\''+devices_list[n].deviceUID+'\', \'BILL\', \'\')" class="btn btn-default btn-sm" style="font-style: italic">Not Set</button>')+
+                                  '<div class="blue-box" style="width: 100%; position: relative; top: -30px;" id="printerSelection_BILL_'+devices_list[n].deviceUID+'"> </div>'+
+                                  '<tag class="selectModeUnset" onclick="unsetPrinterSelectionWindow(\''+devices_list[n].deviceUID+'\', \'BILL\')" id="printerSelectionUnset_BILL_'+devices_list[n].deviceUID+'">UNSET</tag>'+
+                                  '<tag class="selectModeClose" onclick="closePrinterSelectionWindow(\''+devices_list[n].deviceUID+'\', \'BILL\')" id="printerSelectionClose_BILL_'+devices_list[n].deviceUID+'">CLOSE</tag>'+
                                '</td>'+
                             '</tr>';
     n++;
@@ -273,17 +273,17 @@ function closePrinterSelectionWindow(machineUID, printerType){
   document.getElementById("printerSelectionClose_"+printerType+"_"+machineUID).style.display = 'none';
 }
 
-function unsetPrinterSelectionWindow(machineUID, action){
+function unsetPrinterSelectionWindow(devUID, action){
 
-  document.getElementById("printerSelection_"+action+"_"+machineUID).innerHTML = '';
-  document.getElementById("printerSelectionUnset_"+action+"_"+machineUID).style.display = 'none';
-  document.getElementById("printerSelectionClose_"+action+"_"+machineUID).style.display = 'none';
+  document.getElementById("printerSelection_"+action+"_"+devUID).innerHTML = '';
+  document.getElementById("printerSelectionUnset_"+action+"_"+devUID).style.display = 'none';
+  document.getElementById("printerSelectionClose_"+action+"_"+devUID).style.display = 'none';
 
 
     //Read from Server, apply changes, and save to LocalStorage
     var requestData = {
       "selector"  :{ 
-                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES" 
+                    "identifierTag": "ACCELERATE_REGISTERED_DEVICES" 
                   },
       "fields"    : ["identifierTag", "value", "_rev"]
     }
@@ -297,19 +297,19 @@ function unsetPrinterSelectionWindow(machineUID, action){
       timeout: 10000,
       success: function(data) {
         if(data.docs.length > 0){
-          if(data.docs[0].identifierTag == 'ACCELERATE_CONFIGURED_MACHINES'){
+          if(data.docs[0].identifierTag == 'ACCELERATE_REGISTERED_DEVICES'){
 
-              var machinesList = data.docs[0].value;
+              var devicesList = data.docs[0].value;
 
               var n = 0;
-              while(machinesList[n]){
-                if(machinesList[n].machineUID == machineUID){
+              while(devicesList[n]){
+                if(devicesList[n].deviceUID == devUID){
 
                   if(action == 'VIEW'){
-                    machinesList[n].defaultPrinters.VIEW = "";
+                    devicesList[n].defaultPrinters.VIEW = "";
                   }
                   else if(action == 'BILL'){
-                    machinesList[n].defaultPrinters.BILL = "";
+                    devicesList[n].defaultPrinters.BILL = "";
                   }
 
                   break;
@@ -322,32 +322,20 @@ function unsetPrinterSelectionWindow(machineUID, action){
                   //Update
                   var updateData = {
                     "_rev": data.docs[0]._rev,
-                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES",
-                    "value": machinesList
+                    "identifierTag": "ACCELERATE_REGISTERED_DEVICES",
+                    "value": devicesList
                   }
 
                   $.ajax({
                     type: 'PUT',
-                    url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_CONFIGURED_MACHINES/',
+                    url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_REGISTERED_DEVICES/',
                     data: JSON.stringify(updateData),
                     contentType: "application/json",
                     dataType: 'json',
                     timeout: 10000,
                     success: function(data) {
 
-                        var shortlisted_devices = [];
-                        var n = 0;
-                        while(machinesList[n]){
-                          if(machinesList[n].type && machinesList[n].type == 'TAPS_PORTABLE_DEVICE'){
-                            shortlisted_devices.push(machinesList[n]);
-                          }
-
-                          if(n == machinesList.length - 1){ //Last iteration
-                            window.localStorage.registeredDevicesData = JSON.stringify(shortlisted_devices);
-                          }
-
-                          n++;
-                        }
+                        window.localStorage.registeredDevicesData = JSON.stringify(devicesList);
 
                         openDevicesWindow();
                         
@@ -364,7 +352,7 @@ function unsetPrinterSelectionWindow(machineUID, action){
         }
       },
       error: function(data) {
-        showToast('Warning: Configured Machines data not found.', '#e67e22');     
+        showToast('Warning: Registered Devices data not found.', '#e67e22');     
       }
     });  
 
@@ -506,14 +494,14 @@ function selectDevicePrinter(machineUID, printingType, printers_list, currentPri
 }
 
 
-function savePrinterAction(machineUID, printer_name, action){
+function savePrinterAction(devUID, printer_name, action){
   
-    closePrinterSelectionWindow(machineUID, action);
+    closePrinterSelectionWindow(devUID, action);
 
     //Read from Server, apply changes, and save to LocalStorage
     var requestData = {
       "selector"  :{ 
-                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES" 
+                    "identifierTag": "ACCELERATE_REGISTERED_DEVICES" 
                   },
       "fields"    : ["identifierTag", "value", "_rev"]
     }
@@ -527,19 +515,19 @@ function savePrinterAction(machineUID, printer_name, action){
       timeout: 10000,
       success: function(data) {
         if(data.docs.length > 0){
-          if(data.docs[0].identifierTag == 'ACCELERATE_CONFIGURED_MACHINES'){
+          if(data.docs[0].identifierTag == 'ACCELERATE_REGISTERED_DEVICES'){
 
-              var machinesList = data.docs[0].value;
+              var devicesList = data.docs[0].value;
 
               var n = 0;
-              while(machinesList[n]){
-                if(machinesList[n].machineUID == machineUID){
+              while(devicesList[n]){
+                if(devicesList[n].deviceUID == devUID){
 
                   if(action == 'VIEW'){
-                    machinesList[n].defaultPrinters.VIEW = printer_name;
+                    devicesList[n].defaultPrinters.VIEW = printer_name;
                   }
                   else if(action == 'BILL'){
-                    machinesList[n].defaultPrinters.BILL = printer_name;
+                    devicesList[n].defaultPrinters.BILL = printer_name;
                   }
 
                   break;
@@ -552,32 +540,20 @@ function savePrinterAction(machineUID, printer_name, action){
                   //Update
                   var updateData = {
                     "_rev": data.docs[0]._rev,
-                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES",
-                    "value": machinesList
+                    "identifierTag": "ACCELERATE_REGISTERED_DEVICES",
+                    "value": devicesList
                   }
 
                   $.ajax({
                     type: 'PUT',
-                    url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_CONFIGURED_MACHINES/',
+                    url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_REGISTERED_DEVICES/',
                     data: JSON.stringify(updateData),
                     contentType: "application/json",
                     dataType: 'json',
                     timeout: 10000,
                     success: function(data) {
 
-                        var shortlisted_devices = [];
-                        var n = 0;
-                        while(machinesList[n]){
-                          if(machinesList[n].type && machinesList[n].type == 'TAPS_PORTABLE_DEVICE'){
-                            shortlisted_devices.push(machinesList[n]);
-                          }
-
-                          if(n == machinesList.length - 1){ //Last iteration
-                            window.localStorage.registeredDevicesData = JSON.stringify(shortlisted_devices);
-                          }
-
-                          n++;
-                        }
+                        window.localStorage.registeredDevicesData = JSON.stringify(devicesList);
 
                         openDevicesWindow();
                         
@@ -594,7 +570,7 @@ function savePrinterAction(machineUID, printer_name, action){
         }
       },
       error: function(data) {
-        showToast('Warning: Configured Machines data not found.', '#e67e22');     
+        showToast('Warning: Registered Devices data not found.', '#e67e22');     
       }
     });  
 
@@ -802,7 +778,7 @@ function loadRegisteredDevices(){
     //Read from Server, apply changes, and save to LocalStorage
     var requestData = {
       "selector"  :{ 
-                    "identifierTag": "ACCELERATE_CONFIGURED_MACHINES" 
+                    "identifierTag": "ACCELERATE_REGISTERED_DEVICES" 
                   },
       "fields"    : ["identifierTag", "value"]
     }
@@ -816,31 +792,16 @@ function loadRegisteredDevices(){
       timeout: 10000,
       success: function(data) {
         if(data.docs.length > 0){
-          if(data.docs[0].identifierTag == 'ACCELERATE_CONFIGURED_MACHINES'){
+          if(data.docs[0].identifierTag == 'ACCELERATE_REGISTERED_DEVICES'){
 
-              var machinesList = data.docs[0].value;
-              var shortlisted_devices = [];
-
-              window.localStorage.registeredDevicesData = '';
-
-              var n = 0;
-              while(machinesList[n]){
-                if(machinesList[n].type && machinesList[n].type == 'TAPS_PORTABLE_DEVICE'){
-                  shortlisted_devices.push(machinesList[n]);
-                }
-
-                if(n == machinesList.length - 1){ //Last iteration
-                  window.localStorage.registeredDevicesData = JSON.stringify(shortlisted_devices);
-                }
-
-                n++;
-              }
+              var shortlisted_devices = data.docs[0].value;
+              window.localStorage.registeredDevicesData = JSON.stringify(shortlisted_devices);
 
           }
         }
       },
       error: function(data) {
-        showToast('Warning: Configured Machines data not found.', '#e67e22');     
+        showToast('Warning: Registered Devices data not found.', '#e67e22');     
       }
     });    
 }
