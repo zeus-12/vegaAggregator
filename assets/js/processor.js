@@ -4380,8 +4380,20 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
                         //DELETE THE KOT
                         deleteKOTFromServer(memory_id, memory_rev);
 
+
+
                         //PRINTING THE BILL
-                        sendToPrinter(newBillFile, 'BILL');
+                        var set_bill_printer = findDefaultPrinter(kotData.machineName, 'BILL');
+
+                        if(set_bill_printer != ''){
+                            sendToPrinter(newBillFile, 'BILL', set_bill_printer);
+                        }
+                        else{
+                            sendToPrinter(newBillFile, 'BILL');
+                        }
+
+
+                        
 
                         if(kotfile.orderDetails.modeType == 'DINE'){
                           billTableMapping(kotfile.table, billNumber, kotfile.payableAmount, 2);
