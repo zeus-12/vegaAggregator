@@ -4383,7 +4383,7 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
 
 
                         //PRINTING THE BILL
-                        var set_bill_printer = findDefaultPrinter(kotData.machineName, 'BILL');
+                        var set_bill_printer = findDefaultPrinter(kotfile.machineName, 'BILL');
 
                         if(set_bill_printer != ''){
                             sendToPrinter(newBillFile, 'BILL', set_bill_printer);
