@@ -480,6 +480,8 @@ function throwSystemBlockingError(error){
 
 function findDefaultPrinter(deviceCode, type){
 
+console.log(deviceCode, type)
+
   if(deviceCode == ''){
     return '';
   }
@@ -4383,7 +4385,9 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
 
 
                         //PRINTING THE BILL
-                        var set_bill_printer = findDefaultPrinter(kotfile.machineName, 'BILL');
+                        var set_bill_printer = findDefaultPrinter(newBillFile.machineName, 'BILL');
+                        console.log(set_bill_printer)
+
 
                         if(set_bill_printer != ''){
                             sendToPrinter(newBillFile, 'BILL', set_bill_printer);
