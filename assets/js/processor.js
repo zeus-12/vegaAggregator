@@ -2535,6 +2535,12 @@ function printKOTRequestCancel(kot, optionalPageRef){
 
 function printEditedKOT(originalData, new_kot){
 
+  var updatedGuestData = {
+    "guestCount" : new_kot.guestCount,
+    "customerName" : new_kot.customerName,
+    "customerMobile" : new_kot.customerMobile
+  }
+
   generateEditedKOT();
 
   var super_memory_id = new_kot._id;
@@ -2667,7 +2673,7 @@ function printEditedKOT(originalData, new_kot){
             "machine": originalData.machineName
           }
 
-          generateEditedKOTAfterProcess(originalData.KOTNumber, changed_cart_products, comparisonResult, hasRestrictedEdits, errorLogObj)
+          generateEditedKOTAfterProcess(originalData.KOTNumber, changed_cart_products, comparisonResult, hasRestrictedEdits, errorLogObj, updatedGuestData)
         } 
 
         j++;
@@ -2679,15 +2685,9 @@ function printEditedKOT(originalData, new_kot){
 
 
 
-  function generateEditedKOTAfterProcess(kotID, newCart, compareObject, hasRestrictedEdits, errorLogObj){
+  function generateEditedKOTAfterProcess(kotID, newCart, compareObject, hasRestrictedEdits, errorLogObj, updatedGuestData){
 
       var isUserAnAdmin = false;
-
-      if(compareObject.length == 0){
-        //Process Next KOT
-        setTimeout(function(){ initialiseProcessing(); }, 5000);
-        return ''
-      }
 
       //Set _id from Branch mentioned in Licence
       var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : ''; 
@@ -2711,6 +2711,10 @@ function printEditedKOT(originalData, new_kot){
             kot.timeKOT = moment().format('HHmm');
             kot.cart = newCart;
 
+            //Update guest data
+            kot.guestCount = updatedGuestData.guestCount;
+            kot.customerMobile = updatedGuestData.customerMobile;
+            kot.customerName = updatedGuestData.customerName;
 
 
             /* RECALCULATE New Figures*/
@@ -2821,7 +2825,14 @@ function printEditedKOT(originalData, new_kot){
                     timeout: 10000,
                     success: function(data) {
                        
-                          sendKOTChangesToPrinterPreProcess(kot, compareObject);
+                          if(compareObject.length != 0){
+                            sendKOTChangesToPrinterPreProcess(kot, compareObject);
+                          }
+                          else{
+                            //Process Next Order 
+                            setTimeout(function(){ initialiseProcessing(); }, 5000);
+                          }
+
                           removeTapsOrderRequest(super_memory_id, super_memory_rev);
 
                           showToast('Changed KOT #'+kot.KOTNumber+' generated Successfully', '#27ae60');
