@@ -22,7 +22,7 @@ function createWindow () {
   mainWindow = new BrowserWindow({
     width: 1150, 
     height: 760,
-    icon: path.join(__dirname, '/assets/icons/png/64x64.png'),
+    icon: path.join(__dirname, '/assets/icons/png/64.png'),
     title: app.getName()
   })
 
