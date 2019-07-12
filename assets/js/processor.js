@@ -1122,15 +1122,15 @@ function initialiseProcessing(){
                           url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+kot_request_data,
                           timeout: 10000,
                           success: function(oldKOTData) {
-                            if(data._id != ""){
+                            if(oldKOTData._id != ""){
                               printEditedKOT(oldKOTData, orderData);
                             }
                             else{
                               showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
                               
                               //start again
+                              removeTapsOrderRequest(orderData._id, orderData._rev);
                               setTimeout(function(){ initialiseProcessing(); }, 3000);
-                              removeTapsOrderRequest(data._id, data._rev);
                             }
                           },
                           error: function(data) {
@@ -1147,7 +1147,7 @@ function initialiseProcessing(){
                             }
 
                             addToErrorLog(moment().format('hh:mm a'), 'ORDER', 'KOT_NOT_FOUND', kot_request_data, errorObj);
-                            removeTapsOrderRequest(data._id, data._rev);
+                            removeTapsOrderRequest(orderData._id, orderData._rev);
 
                             //start again
                             setTimeout(function(){ initialiseProcessing(); }, 3000);
