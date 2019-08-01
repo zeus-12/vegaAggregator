@@ -806,7 +806,7 @@ function initialiseProcessing(){
 
                         while(otherMenuData[n] && !isFinishedProcessing){
 
-                          if(otherMenuData[n].name == item_name){ //item map found
+                          if(otherMenuData[n].mappedName == item_name){ //item map found
 
                               if(systemMenu[otherMenuData[n].systemCode]){
                               
@@ -4338,8 +4338,19 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
 
           //Calculate Sum to be paid
           var grandPayableBill = 0;
+
+          var totalCartAmount = 0;
+          var totalPackagedAmount = 0;
+
+
           var n = 0;
           while(kotfile.cart[n]){
+            totalCartAmount += kotfile.cart[n].price * kotfile.cart[n].qty;
+
+            if(kotfile.cart[n].isPackaged){
+              totalPackagedAmount += kotfile.cart[n].qty * kotfile.cart[n].price;
+            }
+
             grandPayableBill += kotfile.cart[n].price * kotfile.cart[n].qty;
             n++;
           }
@@ -4362,6 +4373,14 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
           //substract discounts if any
           if(!jQuery.isEmptyObject(kotfile.discount)){
             grandPayableBill -= kotfile.discount.amount;
+          
+            if(kotfile.discount.type == 'NOCOSTBILL'){ //Remove all the charges (Special Case)
+              grandPayableBill = 0;
+
+              kotfile.customExtras = {};
+              kotfile.extras = [];
+            }
+
           }  
 
           grandPayableBill = parseFloat(grandPayableBill).toFixed(2);   
@@ -4369,6 +4388,10 @@ function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionReq
 
           kotfile.payableAmount = grandPayableBillRounded;
           kotfile.calculatedRoundOff = Math.round((grandPayableBillRounded - grandPayableBill) * 100) / 100;
+
+          kotfile.grossCartAmount = totalCartAmount;
+          kotfile.grossPackagedAmount = totalPackagedAmount;
+
 
           kotfile.timeBill = getCurrentTime('TIME');
           
@@ -4762,7 +4785,7 @@ function runDataValidations(){
         
           renderContent += '<tr role="row">'+
                             '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+(n+1)+'</td>'+
-                            '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].name+'</td>'+
+                            '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].mappedName+'</td>'+
                             '<td style="background: red; color: #FFF"><b>Not Mapped</b></td>'+
                             '<td style="background: red; color: #FFF"></td>'+
                           '</tr>';
@@ -4770,7 +4793,7 @@ function runDataValidations(){
         else{
           renderContent += '<tr role="row">'+
                           '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+(n+1)+'</td>'+
-                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].name+'</td>'+
+                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].mappedName+'</td>'+
                           '<td style="background: red; color: #FFF"><b>Incorrect Mapping</b></td>'+
                           '<td style="background: red; color: #FFF"><b>'+otherMenuData[n].systemCode+'</b></td>'+
                         '</tr>';
@@ -4798,7 +4821,7 @@ function runDataValidations(){
 
         renderContent += '<tr role="row">'+
                           '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+(n+1)+'</td>'+
-                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].name+'</td>'+
+                          '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+otherMenuData[n].mappedName+'</td>'+
                           '<td '+(n%2 == 0 ? 'style="background: #f4f4f4;"' : '')+'>'+systemItem.name + (equivalent_variant != "" ? (equivalent_variant == "VARIANT_MISMATCH" ? ' <tag style="color: #FFF; background: red; font-weight: bold; padding: 0 4px; border-radius: 4px; font-size: 11px; display: inline-block;">INVALID VARIANT</tag>' : ' <tag style="color: #00c0ef">('+equivalent_variant+')</tag>') : '')+'</td>'+
                           '<td style="font-weight: bold;'+(n%2 == 0 ? 'background: #f4f4f4;' : '')+'">'+systemItem.code+'</td>'+
                         '</tr>';
