@@ -266,26 +266,56 @@ function preloadBillingData(){
 
     $.ajax({
       type: 'GET',
-      url: COMMON_LOCAL_SERVER_IP+'/accelerate_other_menu_mappings/MENU_SWIGGY/',
+      url: COMMON_LOCAL_SERVER_IP+'/accelerate_other_menu_mappings/_all_docs/',
       timeout: 10000,
       success: function(data) {
-        if(data._id != ""){
-
-            var otherMenu = data;
-            MENU_DATA_OTHER_MENU_MAPPINGS[data.orderSource] = data.value;
-            
+        if(data.rows.length == 0){
             proceedToInitialisation();
-
         }
         else{
-          proceedToInitialisation();
+            loadOtherMenu(data.rows, 0)
         }
       },
       error: function(data) {
         proceedToInitialisation();
       }
 
-    });   
+    }); 
+
+
+    function loadOtherMenu(menuSet, index){
+
+      if(menuSet[index]){
+        $.ajax({
+          type: 'GET',
+          url: COMMON_LOCAL_SERVER_IP+'/accelerate_other_menu_mappings/'+menuSet[index].id,
+          timeout: 10000,
+          success: function(data) {
+            if(data._id != ""){
+
+                var otherMenu = data;
+                MENU_DATA_OTHER_MENU_MAPPINGS[data.orderSource] = data.value;
+                
+                loadOtherMenu(menuSet, index + 1);
+
+            }
+            else{
+              loadOtherMenu(menuSet, index + 1);
+            }
+          },
+          error: function(data) {
+            loadOtherMenu(menuSet, index + 1);
+          }
+
+        }); 
+      }
+      else{
+        proceedToInitialisation(); 
+      }
+
+    }
+
+
   }
 
 
@@ -726,7 +756,7 @@ function initialiseProcessing(){
               
                 var orderData = data.rows[index].doc;
 
-                if(orderData.tapsSource){ //Order from Others Sources eg. Swiggy.
+                if(orderData.tapsSource){ //Order from Others Sources
 
                     var billingModesData = DATA_BILLING_MODES;
                     var billingParametersData = DATA_BILLING_PARAMETERS;
@@ -756,7 +786,7 @@ function initialiseProcessing(){
                       }
 
                       if(c == orderSourcesData.length - 1){
-                        throwSystemBlockingError('INVALID ORDER SOURCE! Swiggy has been Order FAILED.');
+                        throwSystemBlockingError('ORDER SOURCE NOT CONFIGURED: '+order_source+' order has been failed');
                         return '';
                       }
 
@@ -951,7 +981,7 @@ function initialiseProcessing(){
                     function createOrder(standardised_cart){
 
                       if(selectedBillingMode == ''){
-                        throwSystemBlockingError('Swiggy Order Failed.');
+                        throwSystemBlockingError('INVALID BILLING MODE: '+order_source+' order has been failed');
                         return '';
                       }
 
@@ -961,7 +991,7 @@ function initialiseProcessing(){
                           var orderMetaInfo = {};
                             orderMetaInfo.mode = selectedBillingMode.name;
                             orderMetaInfo.modeType = selectedBillingMode.type;
-                            orderMetaInfo.reference = orderData.orderDetails.reference; //swiggy order id
+                            orderMetaInfo.reference = orderData.orderDetails.reference; 
                             orderMetaInfo.isOnline = false;
 
                           var today = moment().format('DD-MM-YYYY');
@@ -3381,7 +3411,7 @@ function printFreshKOT(new_kot, optionalActionRequest){
 
                             if(optionalActionRequest == 'REQUEST_AUTO_BILL_GENERATION'){
 
-                                //AUTO BILL GENERATION (for Swiggy Orders)
+                                //AUTO BILL GENERATION (for swiggy, zomato orders)
                                 var actionObject = {
                                     "_id": "PRINT_BILL_"+obj._id,
                                     "KOT": obj._id,
