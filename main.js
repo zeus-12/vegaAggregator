@@ -7,6 +7,8 @@ const url = require('url')
 const { Menu } = require('electron')
 const { dialog } = require('electron')
 
+const express = require('./resources/acceleron-server/app'); //Server
+
 app.showExitPrompt = true
 
 const os = require('os')
@@ -18,6 +20,7 @@ let mainWindow
 let workerWindow //Printer Preview Window
 
 function createWindow () {
+
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1150, 
@@ -75,6 +78,9 @@ function createWindow () {
           })
       }
     })
+
+  //Start server
+  //express();
 
 
 }
