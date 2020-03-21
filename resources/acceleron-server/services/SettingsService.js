@@ -141,25 +141,27 @@ class SettingsService extends BaseService {
         function validateInput(settingsData, callback){
               switch(settings_id){
                     case 'ACCELERATE_COOKING_INGREDIENTS':{
+                        try{
+                             var valueList = settingsData.value;
+                             var isFound = false;
+                             for (var i=0; i<valueList.length; i++) {
+                               if (valueList[i] == entry_to_remove.ingredient_name){
+                                    valueList.splice(i,1);
+                                    isFound = true;
+                                    break;
+                               }
+                             }
 
-                         var valueList = settingsData.value;
+                             if(!isFound){
+                                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null)
+                             }
 
-                         var isFound = false;
-                         
-                         for (var i=0; i<valueList.length; i++) {
-                           if (valueList[i] == entry_to_remove.ingredient_name){
-                                valueList.splice(i,1);
-                                isFound = true;
-                                break;
-                           }
-                         }
-
-                         if(!isFound){
-                            return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null)
-                         }
-
-                         settingsData.value = valueList;
-                         return callback(null, settingsData);
+                             settingsData.value = valueList;
+                             return callback(null, settingsData);
+                        }
+                        catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                        }
                     }
               }
         }
