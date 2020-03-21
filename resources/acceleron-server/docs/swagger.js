@@ -47,7 +47,7 @@ var all = {
     },
     "definitions": {},
     "paths": {
-        "/settings/fetch/{id}": {
+        "/settings/{id}": {
             "get": {
                 "tags": ["settings"],
                 "summary": "To fetch the settings content",
@@ -67,12 +67,32 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/settings/new/{id}": {
+        "/settings/{id}/newentry": {
             "post": {
                 "tags": ["settings"],
                 "summary": "To add new entry in settings",
-                "description": "To add new entry to the settings content against its unique id",
+                "description": "To add new entry to the settings content against its unique id. New entry object to be passed in body.",
                 "operationId": "addNewItemToSettings",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Settings ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/settings/{id}/removeentry": {
+            "post": {
+                "tags": ["settings"],
+                "summary": "To remove entry from settings",
+                "description": "To add an entry from the settings content against its unique id. Entry object to be removed to be passed in body.",
+                "operationId": "removeEntryFromSettings",
                 "produces": ["application/json"],
                 "parameters": [
                     {
