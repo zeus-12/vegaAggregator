@@ -66,6 +66,26 @@ var all = {
                 "responses": responsesList,
                 "security": [{"access_key": []}]
             }
+        },
+        "/settings/new/{id}": {
+            "post": {
+                "tags": ["settings"],
+                "summary": "To add new entry in settings",
+                "description": "To add new entry to the settings content against its unique id",
+                "operationId": "addNewItemToSettings",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Settings ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
         }
     }
 };

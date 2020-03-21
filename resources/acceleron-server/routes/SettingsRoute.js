@@ -10,4 +10,13 @@ router.get('/fetch/:id', function (req, res, next) {
     });
 })
 
+router.post('/new/:id', function (req, res, next) {
+    return new SettingsController(req).addNewItemToSettings(function (err, data) {
+        if (err != null) {
+            return next(err);
+        }
+        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    });
+})
+
 module.exports = router;

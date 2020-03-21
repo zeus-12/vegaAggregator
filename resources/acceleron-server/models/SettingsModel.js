@@ -15,6 +15,12 @@ class SettingsModel extends BaseModel{
             return callback(err, data);
         });
     }
+
+    updateNewSettingsData(settings_id, new_update_data, callback) {
+        this.couch.put('/accelerate_settings/'+settings_id, new_update_data, function (err, data) {
+            return callback(err, data);
+        });
+    }
 }
 
 module.exports = SettingsModel;
