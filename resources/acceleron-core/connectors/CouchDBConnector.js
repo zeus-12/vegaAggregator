@@ -14,18 +14,25 @@ class CouchConnect{
 
 		const req = http.request(options, res => {
 		  res.on('data', data => {
-		  	let response = JSON.parse(data.toString());
-		  	if(response.error && response.error != ""){
-		  		return callback(new ErrorResponse(ResponseType.ERROR, response.error), null);
-		  	}
-		  	else{
-		  		return callback(null, response);
-		  	}
+		  	try {
+		        let response = JSON.parse(data.toString());
+		   
+			  	if(response.error && response.error != ""){
+			  		return callback(new ErrorResponse(ResponseType.ERROR, response.error), null);
+			  	}
+			  	else{
+			  		return callback(null, response);
+			  	}
+		    } 
+		    catch(e) {
+		    	return callback(new ErrorResponse(ResponseType.ERROR, "Invalid response from server"), null);
+		    }
+
 		  })
 		})
 
 		req.on('error', error => {
-		  return callback(new ErrorResponse(ResponseType.ERROR, "Connection failed"), null)
+		  return callback(new ErrorResponse(ResponseType.ERROR, "Failed to connect the server"), null)
 		})
 
 		req.end()

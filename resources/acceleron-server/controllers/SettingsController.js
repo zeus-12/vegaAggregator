@@ -32,13 +32,13 @@ class SettingsController extends BaseController {
                 'ACCELERATE_DISCOUNT_TYPES',
                 'ACCELERATE_KOT_INDEX',
                 'ACCELERATE_KOT_RELAYING',
-                'ACCELERATE_MASTER_MENU', ///--------------------------- SOLVE THE MENU ISSUE
+                'ACCELERATE_MASTER_MENU',
                 'ACCELERATE_PAYMENT_MODES',
                 'ACCELERATE_REGISTERED_DEVICES'
             ]
 
         if(!ALLOWED_SETTINGS.includes(settings_id)){
-          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "No such settings exists"))
+          return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, "No such settings exists"))
         }
 
         self.SettingsService.getSettingsById(settings_id, function (error, result) {

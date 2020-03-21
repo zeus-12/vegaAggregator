@@ -12,7 +12,7 @@ class SettingsModel extends BaseModel{
 
     getSettingsById(settings_id, callback) {
         this.couch.get('/accelerate_settings/'+settings_id, function (err, data) {
-            return callback(err, data.value);
+            return callback(err, data);
         });
     }
 }

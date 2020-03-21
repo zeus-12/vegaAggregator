@@ -18,11 +18,11 @@ class SettingsService extends BaseService {
             return callback(error, null)
         }
         else{
-            if(_.isEmpty(result)){
+            if(_.isEmpty(result) || _.isEmpty(result.value)){
                 return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
             }
             else{
-                return callback(null, result);
+                return callback(null, result.value);
             }
         }
       })

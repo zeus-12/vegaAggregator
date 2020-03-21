@@ -18,6 +18,8 @@ all._routes.BaseRouter = require('./routes/BaseRouter');
 all._controllers.BaseController = require('./controllers/BaseController');
 all._services.BaseService = require('./services/BaseService')
 
+all._auth.BaseAuth = require('./auth/BaseAuth');
+
 //all._models = require('./models');
 all._models.BaseModel = require('./models/BaseModel');
 
