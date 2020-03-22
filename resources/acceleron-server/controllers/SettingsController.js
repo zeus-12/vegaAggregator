@@ -32,14 +32,21 @@ class SettingsController extends BaseController {
                 'ACCELERATE_DISCOUNT_TYPES',
                 'ACCELERATE_KOT_INDEX',
                 'ACCELERATE_KOT_RELAYING',
-                'ACCELERATE_MASTER_MENU',
+                'ACCELERATE_MENU_CATALOG',
+                'ACCELERATE_MENU_CATEGORIES',
+                'ACCELERATE_ORDER_SOURCES',
                 'ACCELERATE_PAYMENT_MODES',
                 'ACCELERATE_REGISTERED_DEVICES',
-                'ACCELERATE_SAVED_COMMENTS'
+                'ACCELERATE_SAVED_COMMENTS',
+                'ACCELERATE_SAVED_ORDERS',
+                'ACCELERATE_STAFF_PROFILES',
+                'ACCELERATE_TABLE_SECTIONS',
+                'ACCELERATE_TEXT_TO_KITCHEN_LOG',
+                'ACCELERATE_TOKEN_INDEX'
             ]
 
         if(!ALLOWED_SETTINGS.includes(settings_id)){
-          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "No such settings exists"))
+          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not valid settings name"))
         }
 
         self.SettingsService.getSettingsById(settings_id, function (error, result) {
@@ -65,24 +72,27 @@ class SettingsController extends BaseController {
         let ALLOWED_SETTINGS = [
                 'ACCELERATE_BILLING_MODES',
                 'ACCELERATE_BILLING_PARAMETERS',
-                'ACCELERATE_BILL_INDEX',
-                'ACCELERATE_BILL_LAYOUT',
                 'ACCELERATE_CANCELLATION_REASONS',
                 'ACCELERATE_CONFIGURED_MACHINES',
                 'ACCELERATE_CONFIGURED_PRINTERS',
                 'ACCELERATE_COOKING_INGREDIENTS',
                 'ACCELERATE_DINE_SESSIONS',
                 'ACCELERATE_DISCOUNT_TYPES',
-                'ACCELERATE_KOT_INDEX',
-                'ACCELERATE_KOT_RELAYING',
-                'ACCELERATE_MASTER_MENU',
+                'ACCELERATE_MENU_CATALOG',
+                'ACCELERATE_MENU_CATEGORIES',
+                'ACCELERATE_ORDER_SOURCES',
                 'ACCELERATE_PAYMENT_MODES',
                 'ACCELERATE_REGISTERED_DEVICES',
-                'ACCELERATE_SAVED_COMMENTS'
+                'ACCELERATE_SAVED_COMMENTS',
+                'ACCELERATE_SAVED_ORDERS',
+                'ACCELERATE_STAFF_PROFILES',
+                'ACCELERATE_TABLE_SECTIONS',
+                'ACCELERATE_TEXT_TO_KITCHEN_LOG',
+                'ACCELERATE_TOKEN_INDEX'
             ]
 
         if(!ALLOWED_SETTINGS.includes(settings_id)){
-          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "No such settings exists"))
+          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not valid settings name"))
         }
 
         //Validate new_entry
@@ -136,24 +146,27 @@ class SettingsController extends BaseController {
         let ALLOWED_SETTINGS = [
                 'ACCELERATE_BILLING_MODES',
                 'ACCELERATE_BILLING_PARAMETERS',
-                'ACCELERATE_BILL_INDEX',
-                'ACCELERATE_BILL_LAYOUT',
                 'ACCELERATE_CANCELLATION_REASONS',
                 'ACCELERATE_CONFIGURED_MACHINES',
                 'ACCELERATE_CONFIGURED_PRINTERS',
                 'ACCELERATE_COOKING_INGREDIENTS',
                 'ACCELERATE_DINE_SESSIONS',
                 'ACCELERATE_DISCOUNT_TYPES',
-                'ACCELERATE_KOT_INDEX',
-                'ACCELERATE_KOT_RELAYING',
-                'ACCELERATE_MASTER_MENU',
+                'ACCELERATE_MENU_CATALOG',
+                'ACCELERATE_MENU_CATEGORIES',
+                'ACCELERATE_ORDER_SOURCES',
                 'ACCELERATE_PAYMENT_MODES',
                 'ACCELERATE_REGISTERED_DEVICES',
-                'ACCELERATE_SAVED_COMMENTS'
+                'ACCELERATE_SAVED_COMMENTS',
+                'ACCELERATE_SAVED_ORDERS',
+                'ACCELERATE_STAFF_PROFILES',
+                'ACCELERATE_TABLE_SECTIONS',
+                'ACCELERATE_TEXT_TO_KITCHEN_LOG',
+                'ACCELERATE_TOKEN_INDEX'
             ]
 
         if(!ALLOWED_SETTINGS.includes(settings_id)){
-          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "No such settings exists"))
+          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not valid settings name"))
         }
 
         //Validate new_entry
@@ -194,6 +207,84 @@ class SettingsController extends BaseController {
             }
         });
     }
+
+
+    filterItemFromSettingsList(callback){
+        let self = this;
+        var settings_id = self.request.params.id;
+        var filter_key = self.request.query.uniqueKey;
+
+        if (_.isEmpty(settings_id) || _.isEmpty(filter_key)) {
+            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+        }
+
+        /*
+            These types of settings has list of entries, and any of the entries can be
+            retrieved against a given unique identifier. 
+            For ex. Shortcut keys for a given machine
+        */
+
+        let ALLOWED_SETTINGS = [
+                'ACCELERATE_CONFIGURED_MACHINES',
+                'ACCELERATE_CONFIGURED_PRINTERS',
+                'ACCELERATE_SHORTCUT_KEYS',
+                'ACCELERATE_SYSTEM_OPTIONS',
+                'ACCELERATE_PERSONALISATIONS'
+            ]
+
+        if(!ALLOWED_SETTINGS.includes(settings_id)){
+          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not valid settings name"))
+        }
+
+        self.SettingsService.filterItemFromSettingsList(settings_id, filter_key, function (error, result) {
+            if(error){
+                return callback(error, null);
+            }
+            else{
+                return callback(null, result);
+            }
+        });
+    }
+
+    updateItemFromSettingsList(callback){
+        let self = this;
+        var settings_id = self.request.params.id;
+        var filter_key = self.request.query.uniqueKey;
+
+        if (_.isEmpty(settings_id) || _.isEmpty(filter_key)) {
+            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+        }
+
+        let entry_to_update = self.request.body;
+
+        /*
+            These types of settings has list of entries, and any of the entries can be
+            retrieved against a given unique identifier. 
+            For ex. Shortcut keys for a given machine
+        */
+
+        let ALLOWED_SETTINGS = [
+                'ACCELERATE_CONFIGURED_MACHINES',
+                'ACCELERATE_CONFIGURED_PRINTERS',
+                'ACCELERATE_SHORTCUT_KEYS',
+                'ACCELERATE_SYSTEM_OPTIONS',
+                'ACCELERATE_PERSONALISATIONS'
+            ]  
+
+        if(!ALLOWED_SETTINGS.includes(settings_id)){
+          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not valid settings name"))
+        }
+
+        self.SettingsService.updateItemFromSettingsList(settings_id, filter_key, entry_to_update, function (error, result) {
+            if(error){
+                return callback(error, null);
+            }
+            else{
+                return callback(null, result);
+            }
+        });
+    }
+
 }
 
 module.exports = SettingsController;

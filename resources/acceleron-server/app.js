@@ -52,10 +52,6 @@ app.use(function (req, res, next) {
 // setup request timeout
 app.use(function (req, res, next) {
     req.__oms_timeout = setTimeout(function (socket) {
-        logger.error("request timedout", {
-            url: req.originalUrl,
-            method: req.method
-        });
         next(new ErrorResponse(ResponseType.SERVER_TIMEDOUT));
     }, REQUEST_TIMEOUT);
     res.once("finish", function () {

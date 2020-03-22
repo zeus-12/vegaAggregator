@@ -106,6 +106,60 @@ var all = {
                 "responses": responsesList,
                 "security": [{"access_key": []}]
             }
+        },
+        "/settings/{id}/filter": {
+            "get": {
+                "tags": ["settings"],
+                "summary": "To filter from settings list",
+                "description": "To filter out a specific entry from the list of entries in the settings content. For eg: System options, Personalisations against given machine id",
+                "operationId": "filterItemFromSettingsList",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Settings ID",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uniqueKey",
+                        "in": "query",
+                        "description": "Unique Identifier Key",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/settings/{id}/updateentry": {
+            "post": {
+                "tags": ["settings"],
+                "summary": "To update item in settings list",
+                "description": "To update a specific entry from the list of entries in the settings content. For eg: System options, Personalisations against given machine id",
+                "operationId": "filterItemFromSettingsList",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Settings ID",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uniqueKey",
+                        "in": "query",
+                        "description": "Unique Identifier Key",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
         }
     }
 };
