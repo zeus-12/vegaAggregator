@@ -91,6 +91,25 @@ class SettingsController extends BaseController {
                 if(_.isEmpty(new_entry.new_ingredient_name)){
                     return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
                 }
+                break;
+            } 
+            case 'ACCELERATE_DINE_SESSIONS':{
+                if(_.isEmpty(new_entry.name) || _.isEmpty(new_entry.startTime) || _.isEmpty(new_entry.endTime)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break;
+            }
+            case 'ACCELERATE_CANCELLATION_REASONS':{
+                if(_.isEmpty(new_entry.new_reason_name)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break;
+            }
+            case 'ACCELERATE_SAVED_COMMENTS':{
+                if(_.isEmpty(new_entry.new_comment)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break;
             }
         }
 
@@ -143,6 +162,26 @@ class SettingsController extends BaseController {
                 if(_.isEmpty(entry_to_remove.ingredient_name)){
                     return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
                 }
+                break
+            }
+            case 'ACCELERATE_DINE_SESSIONS':{
+                if(_.isEmpty(entry_to_remove.session_name)){
+                    console.log(entry_to_remove)
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break;
+            }
+            case 'ACCELERATE_CANCELLATION_REASONS':{
+                if(_.isEmpty(entry_to_remove.reason_name)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break;
+            }
+            case 'ACCELERATE_SAVED_COMMENTS':{
+                if(_.isEmpty(entry_to_remove.saved_comment)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break;
             }
         }
 

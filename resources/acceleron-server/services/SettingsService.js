@@ -92,6 +92,73 @@ class SettingsService extends BaseService {
                          catch(er) {
                             return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
                          }
+                         break;
+                    }
+                    case 'ACCELERATE_DINE_SESSIONS':{
+                        try {
+                             var valueList = settingsData.value;
+                             
+                             for (var i=0; i<valueList.length; i++) {
+                               if (valueList[i].name == new_entry.name){
+                                  return callback(new ErrorResponse(ResponseType.CONFLICT, "Session Name already exists"), null)
+                               }
+                             }
+
+                             let newEntryFormatted = {
+                              'name' : new_entry.name,
+                              'startTime' : new_entry.startTime,
+                              'endTime' : new_entry.endTime
+                             }
+
+                             valueList.push(newEntryFormatted);
+                             settingsData.value = valueList;
+                             return callback(null, settingsData);
+                         }
+                         catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                         }
+                         break;
+                    }
+                    case 'ACCELERATE_CANCELLATION_REASONS':{
+                        try {
+                             var valueList = settingsData.value;
+                             
+                             for (var i=0; i<valueList.length; i++) {
+                               if (valueList[i] == new_entry.new_reason_name){
+                                  return callback(new ErrorResponse(ResponseType.CONFLICT, "Reason already exists"), null)
+                               }
+                             }
+
+                             valueList.push(new_entry.new_reason_name);
+                             settingsData.value = valueList;
+                             return callback(null, settingsData);
+                         }
+                         catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                         }
+                         break;
+                    }
+                    case 'ACCELERATE_SAVED_COMMENTS':{
+                        try {
+                             var valueList = settingsData.value;
+                             
+                             for (var i=0; i<valueList.length; i++) {
+                               if (valueList[i] == new_entry.new_comment){
+                                  return callback(new ErrorResponse(ResponseType.CONFLICT, "Comment already exists"), null)
+                               }
+                             }
+
+                             valueList.push(new_entry.new_comment);
+                             settingsData.value = valueList;
+                             return callback(null, settingsData);
+                         }
+                         catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                         }
+                         break;
+                    }
+                    default:{
+                      return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request), null);
                     }
               }
         }
@@ -162,6 +229,82 @@ class SettingsService extends BaseService {
                         catch(er) {
                             return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
                         }
+                        break;
+                    }
+                    case 'ACCELERATE_DINE_SESSIONS':{
+                        try{
+                             var valueList = settingsData.value;
+                             var isFound = false;
+                             for (var i=0; i<valueList.length; i++) {
+                               if (valueList[i].name == entry_to_remove.session_name){
+                                    valueList.splice(i,1);
+                                    isFound = true;
+                                    break;
+                               }
+                             }
+
+                             if(!isFound){
+                                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null)
+                             }
+
+                             settingsData.value = valueList;
+                             return callback(null, settingsData);
+                        }
+                        catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                        }
+                        break;
+                    }
+                    case 'ACCELERATE_CANCELLATION_REASONS':{
+                        try{
+                             var valueList = settingsData.value;
+                             var isFound = false;
+                             for (var i=0; i<valueList.length; i++) {
+                               if (valueList[i] == entry_to_remove.reason_name){
+                                    valueList.splice(i,1);
+                                    isFound = true;
+                                    break;
+                               }
+                             }
+
+                             if(!isFound){
+                                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null)
+                             }
+
+                             settingsData.value = valueList;
+                             return callback(null, settingsData);
+                        }
+                        catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                        }
+                        break;
+                    }
+                    case 'ACCELERATE_SAVED_COMMENTS':{
+                        try{
+                             var valueList = settingsData.value;
+                             var isFound = false;
+                             for (var i=0; i<valueList.length; i++) {
+                               if (valueList[i] == entry_to_remove.saved_comment){
+                                    valueList.splice(i,1);
+                                    isFound = true;
+                                    break;
+                               }
+                             }
+
+                             if(!isFound){
+                                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null)
+                             }
+
+                             settingsData.value = valueList;
+                             return callback(null, settingsData);
+                        }
+                        catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                        }
+                        break;
+                    }
+                    default:{
+                      return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request), null);
                     }
               }
         }
