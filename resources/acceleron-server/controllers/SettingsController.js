@@ -179,7 +179,6 @@ class SettingsController extends BaseController {
             }
             case 'ACCELERATE_DINE_SESSIONS':{
                 if(_.isEmpty(entry_to_remove.session_name)){
-                    console.log(entry_to_remove)
                     return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
                 }
                 break;
@@ -273,6 +272,31 @@ class SettingsController extends BaseController {
 
         if(!ALLOWED_SETTINGS.includes(settings_id)){
           return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not valid settings name"))
+        }
+
+        //Validate entry_to_update
+        switch(settings_id){
+            case 'ACCELERATE_SYSTEM_OPTIONS':{
+                if(_.isEmpty(entry_to_update.updateField)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break
+            }
+            case 'ACCELERATE_PERSONALISATIONS':{
+                if(_.isEmpty(entry_to_update.updateField)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break;
+            }
+            case 'ACCELERATE_SHORTCUT_KEYS':{
+                if(_.isEmpty(entry_to_update.updateField)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                if(!_.isEmpty(entry_to_update.selectedTriggerKey) && _.isEmpty(entry_to_update.selectedNormalKey)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Select one more key"))
+                }
+                break;
+            }
         }
 
         self.SettingsService.updateItemFromSettingsList(settings_id, filter_key, entry_to_update, function (error, result) {

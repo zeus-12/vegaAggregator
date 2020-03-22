@@ -394,7 +394,7 @@ class SettingsService extends BaseService {
         }
 
         function makeChanges(settingsData, callback){
-              switch(settings_id){
+              switch(settings_id){ 
                     case 'ACCELERATE_SYSTEM_OPTIONS':{
                         try {
                             var valueList = settingsData.value;
@@ -419,6 +419,90 @@ class SettingsService extends BaseService {
                             if(!isFound || !isUpdateFieldFound){
                               return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null)
                             }                        
+
+                            settingsData.value = valueList;
+                            return callback(null, settingsData);
+                         }
+                         catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                         }
+                         break;
+                    }
+                    case 'ACCELERATE_PERSONALISATIONS':{
+                        try {
+                            var valueList = settingsData.value;
+                            var isFound = false;
+                            var isUpdateFieldFound = false;
+                            for(var i = 0; i < valueList.length; i++){
+                              if(valueList[i].systemName == filter_key){
+                                
+                                for(var n = 0; n < valueList[i].data.length; n++){
+                                  if(valueList[i].data[n].name == entry_to_update.updateField){
+                                    valueList[i].data[n].value = entry_to_update.newValue;
+                                    isUpdateFieldFound = true;
+                                    break;
+                                  }
+                                }
+
+                                isFound = true;
+                                break;
+                              }
+                            }     
+
+                            if(!isFound || !isUpdateFieldFound){
+                              return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null)
+                            }                        
+
+                            settingsData.value = valueList;
+                            return callback(null, settingsData);
+                         }
+                         catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                         }
+                         break;
+                    }
+                    case 'ACCELERATE_SHORTCUT_KEYS':{
+                        try {
+                            var valueList = settingsData.value;
+                            var replaceIndex = -1;
+                            let selectedNormalKey = entry_to_update.selectedNormalKey;
+                            let selectedTriggerKey = entry_to_update.selectedTriggerKey;
+
+                            for(var n = 0; n < valueList.length; n++){
+                              if(valueList[n].systemName == filter_key){
+                                
+                                //Check for same shortcuts for multiple actions
+                                for (var i=0; i<valueList[n].data.length; i++){
+                                  var key_selected = (valueList[n].data[i].value).split('+'); 
+
+                                  if(selectedNormalKey == '' && selectedTriggerKey == ''){ 
+                                    //Call for unset shortcut
+                                  }
+                                  else{
+                                      if(selectedTriggerKey != ''){
+                                        if((key_selected[0] == selectedTriggerKey && key_selected[1] == selectedNormalKey) || (key_selected[1] == selectedTriggerKey && key_selected[0] == selectedNormalKey)){
+                                          return callback(new ErrorResponse(ResponseType.CONFLICT, "Shortcut key already exists, choose a different key"), null);
+                                        }
+                                      }
+                                      else{
+                                        if((key_selected[0] == selectedNormalKey) && key_selected.length == 1){
+                                          return callback(new ErrorResponse(ResponseType.CONFLICT, "Shortcut key already exists, choose a different key"), null);
+                                        }
+                                      }
+                                  }
+
+                                  //Find the index at which the key has to be set
+                                  if(valueList[n].data[i].name == entry_to_update.updateField){
+                                    replaceIndex = i;
+                                  }
+
+                                  if((i == valueList[n].data.length - 1) && replaceIndex > -1){ //last iteration and replace index is found
+                                    valueList[n].data[replaceIndex].value = selectedTriggerKey != '' ? selectedTriggerKey+'+'+selectedNormalKey : selectedNormalKey;
+                                  }
+                                }
+
+                              }
+                            }     
 
                             settingsData.value = valueList;
                             return callback(null, settingsData);
