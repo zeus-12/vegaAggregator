@@ -297,9 +297,40 @@ class SettingsController extends BaseController {
                 }
                 break;
             }
+            case 'ACCELERATE_CONFIGURED_MACHINES':{
+                if(_.isEmpty(entry_to_update.new_system_name)){
+                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                }
+                break
+            }
         }
 
         self.SettingsService.updateItemFromSettingsList(settings_id, filter_key, entry_to_update, function (error, result) {
+            if(error){
+                return callback(error, null);
+            }
+            else{
+                return callback(null, result);
+            }
+        });
+    }
+
+
+    applyQuickFix(callback){
+        let self = this;
+        var fix_key = self.request.query.fixKey;
+
+        if (_.isEmpty(fix_key)) {
+            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+        }
+
+        fix_key = fix_key.toUpperCase();
+        let ALLOWED_FIXES = ['KOT', 'BILL', 'TABLE'];
+        if(!ALLOWED_FIXES.includes(fix_key)){
+          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not valid fix key"))
+        }
+
+        self.SettingsService.applyQuickFix(fix_key, function (error, result) {
             if(error){
                 return callback(error, null);
             }

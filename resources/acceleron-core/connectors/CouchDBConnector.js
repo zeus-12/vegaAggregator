@@ -12,10 +12,14 @@ class CouchConnect{
 		  method: 'GET'
 		}
 
+		let finalOutput = '';
 		const req = http.request(options, res => {
-		  res.on('data', data => {
+		  res.on('data', chunk => {
+		  	finalOutput += chunk;
+		  })
+		  res.on('end', () => {
 		  	try {
-		        let response = JSON.parse(data.toString());
+		        let response = JSON.parse(finalOutput);
 		   
 			  	if(response.error && response.error != ""){
 			  		return callback(new ErrorResponse(ResponseType.ERROR, response.error), null);
@@ -27,8 +31,7 @@ class CouchConnect{
 		    catch(e) {
 		    	return callback(new ErrorResponse(ResponseType.ERROR, "Invalid response from server"), null);
 		    }
-
-		  })
+		  });
 		})
 
 		req.on('error', error => {
@@ -54,10 +57,14 @@ class CouchConnect{
 		  }
 		}
 
+		let finalOutput = '';
 		const req = http.request(options, res => {
-		  res.on('data', data => {
+		  res.on('data', chunk => {
+		  	finalOutput += chunk;
+		  })	
+		  res.on('end', () => {
 		  	try {
-		        let response = JSON.parse(data.toString());
+		        let response = JSON.parse(finalOutput);
 		   
 			  	if(response.error && response.error != ""){
 			  		return callback(new ErrorResponse(ResponseType.ERROR, response.error), null);

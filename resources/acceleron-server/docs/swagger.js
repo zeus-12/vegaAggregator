@@ -40,6 +40,10 @@ var all = {
         {
             "name": "settings",
             "description": "APIs relating to the System Settings, Contents and Personalisations",
+        },
+        {
+            "name": "table",
+            "description": "APIs to create the Tables and filter out them with certain conditions",
         }],
     "schemes": ["http"],
     "securityDefinitions": {
@@ -160,7 +164,141 @@ var all = {
                 "responses": responsesList,
                 "security": [{"access_key": []}]
             }
-        }
+        },
+        "/settings/applyquickfix": {
+            "get": {
+                "tags": ["settings"],
+                "summary": "To perform quick fix",
+                "description": "To perform quick fix actions on KOT/Bill index and table mappings",
+                "operationId": "applyQuickFix",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Settings ID",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "fixKey",
+                        "in": "query",
+                        "description": "Unique Identifier Key - KOT / BILL / TABLE",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/{id}": {
+            "get": {
+                "tags": ["table"],
+                "summary": "To get a table",
+                "description": "To get a table by its unique id",
+                "operationId": "getTableById",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Table ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/filter": {
+            "get": {
+                "tags": ["table"],
+                "summary": "To filter tables",
+                "description": "To filter out a specific set of table based on some conditions. For eg. Live Tables, Reserved Tables etc.",
+                "operationId": "fetchTablesByFilter",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "query",
+                        "description": "Filter Key - all, live, name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uniqueId",
+                        "in": "query",
+                        "description": "Identifier - Table Name / Table ID etc.",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/{id}/resettable": {
+            "get": {
+                "tags": ["table"],
+                "summary": "To reset a table",
+                "description": "To reset a table to its original form",
+                "operationId": "resetTable",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Table ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/kot/{id}": {
+            "get": {
+                "tags": ["kot"],
+                "summary": "To get a KOT",
+                "description": "To get a KOT by its unique id",
+                "operationId": "getKOTById",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "KOT ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/kot/filter": {
+            "get": {
+                "tags": ["kot"],
+                "summary": "To filter KOTs",
+                "description": "To filter out a specific set of KOTs based on some conditions. For eg. Dine or Non-dine.",
+                "operationId": "fetchKOTsByFilter",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "query",
+                        "description": "Filter Key - all, dine, nondine",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        }     
     }
 };
 

@@ -18,12 +18,11 @@ router.get('/apidocs.json', function (req, res, next) {
     res.status(200).json(swaggerDocument)
 });
 
-
 /* Basic Authentication */
 router.use(ACCELERONCORE._auth.BaseAuth);
 
-
 router.use('/settings', require('./SettingsRoute'));
-//router.use('/invoices', require('./InvoicesRoute'));
+router.use('/table', require('./TableRoute'));
+router.use('/kot', require('./KOTRoute'));
 
 module.exports = router;

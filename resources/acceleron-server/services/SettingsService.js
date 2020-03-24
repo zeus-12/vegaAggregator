@@ -2,6 +2,9 @@
 let BaseService = ACCELERONCORE._services.BaseService;
 let SettingsModel = require('../models/SettingsModel');
 
+let TableService = require('./TableService');
+let KOTService = require('./KOTService');
+
 var _ = require('underscore');
 var async = require('async');
 
@@ -10,6 +13,8 @@ class SettingsService extends BaseService {
         super(request);
         this.request = request;
         this.SettingsModel = new SettingsModel(request);
+        this.TableService = new TableService(request);
+        this.KOTService = new KOTService(request);
     }
 
     getSettingsById(settings_id, callback) {
@@ -51,7 +56,7 @@ class SettingsService extends BaseService {
                         return majorCallback(error, null)
                     }
                     else{
-                        return majorCallback(null, "Updated succeffully");
+                        return majorCallback(null, "Updated successfully");
                     }
                   })                
             }
@@ -182,7 +187,7 @@ class SettingsService extends BaseService {
                         return majorCallback(error, null)
                     }
                     else{
-                        return majorCallback(null, "Updated succeffully");
+                        return majorCallback(null, "Updated successfully");
                     }
                   })                
             }
@@ -330,11 +335,37 @@ class SettingsService extends BaseService {
                     switch(settings_id){
                       case 'ACCELERATE_SYSTEM_OPTIONS':{
                         try{
+                          var isFound = false;
                           for(var i = 0; i < settingsData.length; i++){
                             if(settingsData[i].systemName == filter_key){
+                              isFound = true;
                               return callback(null, settingsData[i].data);
                               break;
                             }
+                          }
+
+                          if(!isFound){
+                            return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null);
+                          }
+                        }
+                        catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                        }
+                        break;
+                      }
+                      case 'ACCELERATE_CONFIGURED_MACHINES':{
+                        try{
+                          var isFound = false;
+                          for(var i = 0; i < settingsData.length; i++){
+                            if(settingsData[i].licence == filter_key){
+                              isFound = true;
+                              return callback(null, settingsData[i]);
+                              break;
+                            }
+                          }
+
+                          if(!isFound){
+                            return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null);
                           }
                         }
                         catch(er) {
@@ -371,7 +402,7 @@ class SettingsService extends BaseService {
                         return majorCallback(error, null)
                     }
                     else{
-                        return majorCallback(null, "Updated succeffully");
+                        return majorCallback(null, "Updated successfully");
                     }
                   })                
             }
@@ -512,6 +543,30 @@ class SettingsService extends BaseService {
                          }
                          break;
                     }
+                    case 'ACCELERATE_CONFIGURED_MACHINES':{
+                        try {
+                            var valueList = settingsData.value;
+                            var isFound = false;
+                            for(var i = 0; i < valueList.length; i++){
+                              if(valueList[i].licence == filter_key){
+                                valueList[i].machineCustomName = entry_to_update.new_system_name;
+                                isFound = true;
+                                break;
+                              }
+                            }     
+
+                            if(!isFound){
+                              return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null)
+                            }                        
+
+                            settingsData.value = valueList;
+                            return callback(null, settingsData);
+                         }
+                         catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                         }
+                         break;
+                    }
                     default:{
                       return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request), null);
                     }
@@ -520,6 +575,187 @@ class SettingsService extends BaseService {
 
     }
 
+
+    applyQuickFix(fix_key, callback) {
+        let self = this;
+        if(fix_key == "KOT" || fix_key == "BILL"){
+            self.quickFixIndices(fix_key, function(error, result){
+                if(error) {
+                    return callback(error, null)
+                }
+                else{
+                    return callback(null, "Fixed successfully");
+                }
+            })                     
+        }
+        else{ //table mapping fix
+            self.quickFixTables(function(error, result){
+                if(error) {
+                    return callback(error, null)
+                }
+                else{
+                    return callback(null, "Fixed successfully");
+                }
+            })        
+        }
+    }
+
+
+    quickFixTables(majorCallback){
+        let self = this;
+
+        async.waterfall([
+          fetchAllLiveTables,
+          resetAllLiveTables,
+          fetchActiveDineOrders,
+          remapOrdersToTables
+        ], function(err, data) {
+            if(err){
+                return majorCallback(err, null)
+            }
+            else {
+                return majorCallback(null, "Fixed successfully");              
+            }
+        });
+
+        function fetchAllLiveTables(callback){
+            self.TableService.fetchTablesByFilter('live', '', function(error, result){
+                if(error) {
+                    return callback(error, null)
+                }
+                else{
+                    return callback(null, result);
+                }
+            })
+        }
+
+        function resetAllLiveTables(liveTablesData, finalCallback){
+
+            if(_.isEmpty(liveTablesData)){ //Incase no live tables
+              return finalCallback(null, "Reset successfully");
+            }
+
+            async.eachSeries(liveTablesData, function (liveTable, loopCallback) {
+                self.TableService.resetTable(liveTable._id, function(err, resetResponse){
+                    if(err){
+                        return loopCallback(null, "failed")
+                    }
+                    else{
+                        return loopCallback(null, "succeeded")
+                    }
+                })
+            }, function (err) {
+                if(err)
+                    finalCallback(err);
+
+                return finalCallback(null, "Reset successfully");
+            });
+        }   
+
+        function fetchActiveDineOrders(statusChange, callback){
+            self.KOTService.fetchKOTsByFilter('dine', function(error, result){
+                if(error) {
+                    return callback(error, null)
+                }
+                else{
+                    return callback(null, result);
+                }
+            })
+        } 
+
+        function remapOrdersToTables(liveOrdersData, finalCallback){
+            if(_.isEmpty(liveOrdersData)){ //No active dine orders
+              return finalCallback(null, "Reset successfully");
+            }
+
+            async.eachSeries(liveOrdersData, function (liveKOT, loopCallback) {
+                self.TableService.fetchTablesByFilter('name', liveKOT.table, function(err, tableData){
+                    if(err){
+                        return loopCallback(null, "failed")
+                    }
+                    else{
+                        tableData.assigned = liveKOT.stewardName;
+                        tableData.remarks = "";
+                        tableData.KOT = liveKOT.KOTNumber;
+                        tableData.status = 1;
+                        tableData.lastUpdate = liveKOT.timeKOT != "" ? liveKOT.timeKOT : liveKOT.timePunch;   
+                        tableData.guestName = liveKOT.customerName; 
+                        tableData.guestContact = liveKOT.customerMobile; 
+                        tableData.reservationMapping = ""; 
+                        tableData.guestCount = liveKOT.guestCount;
+
+                        self.TableService.updateTable(tableData._id, tableData, function(err, resetResponse){
+                            if(err){
+                                return loopCallback(null, "failed")
+                            }
+                            else{
+                                return loopCallback(null, "succeeded")
+                            }
+                        })
+                    }
+                })
+            }, function (err) {
+                if(err)
+                    finalCallback(err);
+
+                return finalCallback(null, "Reset successfully");
+            });
+        }    
+    }
+
+    quickFixIndices(fix_key, majorCallback){
+        let self = this;
+
+        async.waterfall([
+          fetchIndexData,
+          incrementIndex
+        ], function(err, new_update_data) {
+            if(err){
+                return majorCallback(err, null)
+            }
+            else {
+                let settings_id = 'ACCELERATE_'+fix_key+'_INDEX';
+                self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, result){
+                    if(error) {
+                        return majorCallback(error, null)
+                    }
+                    else{
+                        return majorCallback(null, "Updated successfully");
+                    }
+                })                
+            }
+        });
+
+        function fetchIndexData(callback){
+            let settings_id = 'ACCELERATE_'+fix_key+'_INDEX';
+            self.SettingsModel.getSettingsById(settings_id, function(error, result){
+                if(error) {
+                    return callback(error, null)
+                }
+                else{
+                    if(_.isEmpty(result)){
+                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
+                    }
+                    else{
+                        return callback(null, result);
+                    }
+                }
+            })
+        }
+
+        function incrementIndex(settingsData, callback){
+            try {
+                var indexValue = settingsData.value;
+                indexValue++;                
+                settingsData.value = indexValue;
+                return callback(null, settingsData);
+             }
+             catch(er) {
+                return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+             }              
+        }        
+    }
+    
 
 }
 
