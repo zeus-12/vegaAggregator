@@ -1,6 +1,7 @@
 "use strict";
 let BaseController = ACCELERONCORE._controllers.BaseController;
 let SettingsService = require('../services/SettingsService');
+let QuickFixesService = require('../services/QuickFixesService');
 
 var _ = require('underscore');
 
@@ -9,6 +10,7 @@ class SettingsController extends BaseController {
     constructor(request) {
         super(request);
         this.SettingsService = new SettingsService(request);
+        this.QuickFixesService = new QuickFixesService(request);
     }
 
     getSettingsById(callback) {
@@ -330,7 +332,7 @@ class SettingsController extends BaseController {
           return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not valid fix key"))
         }
 
-        self.SettingsService.applyQuickFix(fix_key, function (error, result) {
+        self.QuickFixesService.applyQuickFix(fix_key, function (error, result) {
             if(error){
                 return callback(error, null);
             }

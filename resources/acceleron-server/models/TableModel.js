@@ -27,6 +27,18 @@ class TableModel extends BaseModel{
             return callback(err, data);
         });
     }
+
+    createNewTable(tableData, callback){
+        this.couch.post('/accelerate_tables/', tableData, function (err, data) {
+            return callback(err, data);
+        });        
+    }
+
+    deleteTable(tableId, tableRev, callback){
+        this.couch.delete('/accelerate_tables/'+tableId+'?rev='+tableRev, function (err, data) {
+            return callback(err, data);
+        });        
+    }
 }
 
 module.exports = TableModel;

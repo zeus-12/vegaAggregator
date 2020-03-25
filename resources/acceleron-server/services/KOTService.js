@@ -2,6 +2,7 @@
 let BaseService = ACCELERONCORE._services.BaseService;
 let CommonModel = require('../models/CommonModel');
 let KOTModel = require('../models/KOTModel');
+let SettingsService = require('./SettingsService');
 
 var _ = require('underscore');
 var async = require('async');
@@ -12,6 +13,7 @@ class KOTService extends BaseService {
         this.request = request;
         this.CommonModel = new CommonModel(request);
         this.KOTModel = new KOTModel(request);
+        this.SettingsService = new SettingsService(request);
     }
 
     getKOTById(kot_id, callback) {

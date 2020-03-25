@@ -223,7 +223,7 @@ var all = {
                     {
                         "name": "key",
                         "in": "query",
-                        "description": "Filter Key - all, live, name",
+                        "description": "Filter Key - all, live, name, section",
                         "required": true,
                         "type": "string"
                     },
@@ -251,6 +251,86 @@ var all = {
                         "name": "id",
                         "in": "path",
                         "description": "Table ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/create": {
+            "post": {
+                "tags": ["table"],
+                "summary": "To create new table",
+                "description": "To create a table to with generic contents",
+                "operationId": "createNewTable",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "",
+                        "in": "body",
+                        "description": "Table Object",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/delete": {
+            "post": {
+                "tags": ["table"],
+                "summary": "To delete table",
+                "description": "To delete a table by given name",
+                "operationId": "deleteTableByName",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "delete_table_name",
+                        "in": "body",
+                        "description": "Name of table to delete",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        }, 
+        "/table/section/new": {
+            "post": {
+                "tags": ["table"],
+                "summary": "To create table section",
+                "description": "To create a new table section by given name",
+                "operationId": "addNewTableSection",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "section_name",
+                        "in": "body",
+                        "description": "Table section name",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/section/delete": {
+            "post": {
+                "tags": ["table"],
+                "summary": "To delete table section",
+                "description": "To delete the table section by given name",
+                "operationId": "deleteTableSection",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "delete_section_name",
+                        "in": "body",
+                        "description": "Table section name",
                         "required": true,
                         "type": "string"
                     }

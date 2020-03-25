@@ -11,5 +11,6 @@ ErrorType.no_matching_results = 'No matching results found'
 ErrorType.no_data_found = 'No data found'
 ErrorType.invalid_limit = 'Invalid limit';
 ErrorType.invalid_data_format = 'Invalid data format';
+ErrorType.entry_already_exists = 'Entry already exists';
 
 module.exports = ErrorType
