@@ -371,6 +371,28 @@ class SettingsService extends BaseService {
 
                     let settingsData = result.value;
                     switch(settings_id){
+                      case 'ACCELERATE_STAFF_PROFILES':{
+                        try{
+                          var isFound = false;
+                          for(var i = 0; i < settingsData.length; i++){
+                            if(settingsData[i].code == filter_key){
+                              isFound = true;
+                              let returnResponse = settingsData[i];
+                              delete returnResponse['password'];
+                              return callback(null, returnResponse);
+                              break;
+                            }
+                          }
+
+                          if(!isFound){
+                            return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_data_found), null);
+                          }
+                        }
+                        catch(er) {
+                            return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                        }
+                        break;
+                      }
                       case 'ACCELERATE_SYSTEM_OPTIONS':{
                         try{
                           var isFound = false;

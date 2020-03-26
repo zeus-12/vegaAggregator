@@ -44,6 +44,14 @@ var all = {
         {
             "name": "table",
             "description": "APIs to create the Tables and filter out them with certain conditions",
+        },
+        {
+            "name": "kot",
+            "description": "APIs to create and manage the KOTs",
+        },
+        {
+            "name": "user",
+            "description": "APIs to create, edit, change User details",
         }],
     "schemes": ["http"],
     "securityDefinitions": {
@@ -331,6 +339,106 @@ var all = {
                         "name": "delete_section_name",
                         "in": "body",
                         "description": "Table section name",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/user/{id}": {
+            "get": {
+                "tags": ["user"],
+                "summary": "To get user",
+                "description": "To get the user details against given user id",
+                "operationId": "getUserById",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User Code",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/user/fetch": {
+            "get": {
+                "tags": ["user"],
+                "summary": "To fetch all users",
+                "description": "To fetch all users filtered by role",
+                "operationId": "getAllUsers",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "filter",
+                        "in": "query",
+                        "description": "Filter by Role - admin / steward / agent",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/user/create": {
+            "post": {
+                "tags": ["user"],
+                "summary": "To create user",
+                "description": "To create a user with given details",
+                "operationId": "createNewUser",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "",
+                        "in": "body",
+                        "description": "User Object",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/user/changepasscode": {
+            "post": {
+                "tags": ["user"],
+                "summary": "To change user passcode",
+                "description": "To change the passcode set by the user",
+                "operationId": "changeUserPasscode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "",
+                        "in": "body",
+                        "description": "Passcode Object",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/user/delete": {
+            "post": {
+                "tags": ["user"],
+                "summary": "To delete user",
+                "description": "To delete a user against the given user id",
+                "operationId": "deleteUserById",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "delete_user_code",
+                        "in": "body",
+                        "description": "",
                         "required": true,
                         "type": "string"
                     }
