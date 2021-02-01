@@ -19,7 +19,6 @@
     <tag class="buttonSettings" onclick="openSettingsWindow()">Settings</tag>
     <tag class="buttonSettings" onclick="openDevicesWindow()" style="right: 135px;">Connected Devices</tag>
     <tag class="buttonSettings" onclick="openApprovedFunctionsWindow()" style="right: 260px;">Approved Services</tag>
-    <tag class="buttonSettings" onclick="runDataValidations()" style="right: 380px;">Run Validator</tag>
     
     <center><img src="assets/images/gathering_orders.gif" style="width: 100%; max-width: 800px;" id="mainBGImage"></center>
     <h1 class="titleMain blink_me" id="statusTitle">Accepting Orders</h1>
@@ -171,31 +170,6 @@
                          <col width="65%"></col>
                          <col width="35%"></col>
                          <tbody id="approvedServicesContent">
-
-                         </tbody>
-                      </table>
-                </div>  
-
-            </div>
-         </div>
-    </div>
-
-
-
-
-    <!-- VALIDATION RESULTS -->
-    <div id="validationResultsWindow" class="modal" style="z-index: 10000;">
-         <div class="settingsWindow" style="min-height: 180px; max-height: 80vh !important;">
-            <h1 class="settingsTitle">Validator Results<tag onclick="hideValidationResultsWindow()" class="printerWindowClose">X</tag></h1>
-            <div style="padding: 5px 15px; display: block;">
-                
-                <div class="table-responsive">
-                      <table class="table">
-                         <col width="10%"></col>
-                         <col width="35%"></col>
-                         <col width="40%"></col>
-                         <col width="15%"></col>
-                         <tbody id="validationResultsContent">
 
                          </tbody>
                       </table>
