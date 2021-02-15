@@ -52,12 +52,81 @@ var all = {
         {
             "name": "user",
             "description": "APIs to create, edit, change User details",
+        },
+        {
+            "name": "menu",
+            "description": "APIs relating to Master Menu",
         }],
     "schemes": ["http"],
     "securityDefinitions": {
         "access_key": {"type": "apiKey", "name": "x-access-token", "in": "header"}
     },
-    "definitions": {},
+    "definitions": {
+        "Category":{
+            "type": "object",
+            "properties": {
+              "categoryName":{
+                "type": "string"
+                }
+            }
+        },
+        "Item": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "price": {
+              "type": "string"
+            },
+            "code":{
+              "type": "integer"
+            },
+            "vegFlag": {
+              "type": "integer"
+            },
+            "isPackaged": {
+              "type": "boolean"
+            },
+            "shortCode":{
+                "type": "integer"
+            },
+            "cookingTime":{
+                "type": "integer"
+            },
+            "ingredients": {
+                "type": "array",
+                "items":{
+                  "type": "string"
+                }
+            },
+            "isAvailable": {
+              "type": "boolean"
+            },
+            "isCustom": {
+              "type": "boolean"
+            },
+            "customOptions": {
+              "type": "object"
+            }
+          }
+        },
+        "ApiResponse": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "type": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      },
     "paths": {
         "/settings/{id}": {
             "get": {
@@ -486,7 +555,248 @@ var all = {
                 "responses": responsesList,
                 "security": [{"access_key": []}]
             }
-        }     
+        },
+        "/menu": {
+            "get": {
+                "tags": ["menu"],
+                "summary": "To fetch complete menu",
+                "description": "To fetch complete menu",
+                "operationId": "getFullMenu",
+                "produces": ["application/json"],
+                "parameters": [],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/menu/category": {
+            "get": {
+                "tags": ["menu"],
+                "summary": "To fetch list of category",
+                "description": "To fetch complete list of category",
+                "operationId": "getCategoryList",
+                "produces": ["application/json"],
+                "parameters": [],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "post": {
+                "tags": ["menu"],
+                "summary": "To create new category",
+                "description": "To create new category",
+                "operationId": "createNewCategory",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Category Name",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Category"
+                          }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/menu/category/{categoryName}": {
+            "get": {
+                "tags": ["menu"],
+                "summary": "To get a category",
+                "description": "To get the category details against given category name",
+                "operationId": "getCategoryByName",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "put": {
+                "tags": ["menu"],
+                "summary": "To update category",
+                "description": "To update new category name against given category name",
+                "operationId": "updateCategoryByName",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "New Category Name",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Category"
+                          }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "delete": {
+                "tags": ["menu"],
+                "summary": "To delete a category",
+                "description": "To delete a category against given category name",
+                "operationId": "deleteCategoryByName",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/menu/category/{categoryName}/item": {
+            "get": {
+                "tags": ["menu"],
+                "summary": "To fetch all items of a given category",
+                "description": "To fetch all items of a given category",
+                "operationId": "getAllItems",
+                "produces": ["application/json"],
+                "parameters": [                    
+                {
+                    "name": "categoryName",
+                    "in": "path",
+                    "description": "Category Name",
+                    "required": true,
+                    "type": "string"
+                }],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "post": {
+                "tags": ["menu"],
+                "summary": "To create new item",
+                "description": "To create new item under a given category",
+                "operationId": "createNewItem",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Item Details",
+                        "required": true,                        
+                        "schema": {
+                            "$ref": "#/definitions/Item"
+                          }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/menu/category/{categoryName}/item/{itemCode}": {
+            "get": {
+                "tags": ["menu"],
+                "summary": "To get an item",
+                "description": "To get an item against given category name and item code",
+                "operationId": "getItemByCode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "itemCode",
+                        "in": "path",
+                        "description": "Item Code",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "put": {
+                "tags": ["menu"],
+                "summary": "To update an item",
+                "description": "To update an item against given category name and item code",
+                "operationId": "updateItemByCode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "itemCode",
+                        "in": "path",
+                        "description": "Item Code",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Update Item Details",
+                        "required": true,                        
+                        "schema": {
+                            "$ref": "#/definitions/Item"
+                          }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "delete": {
+                "tags": ["menu"],
+                "summary": "To delete an item",
+                "description": "To delete an item against given category name and item code",
+                "operationId": "deleteItemByCode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "itemCode",
+                        "in": "path",
+                        "description": "Item Code",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        }        
     }
 };
 

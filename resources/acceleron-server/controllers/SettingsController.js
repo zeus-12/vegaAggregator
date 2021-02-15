@@ -36,6 +36,7 @@ class SettingsController extends BaseController {
                 'ACCELERATE_KOT_RELAYING',
                 'ACCELERATE_MENU_CATALOG',
                 'ACCELERATE_MENU_CATEGORIES',
+                'ACCELERATE_MASTER_MENU',
                 'ACCELERATE_ORDER_SOURCES',
                 'ACCELERATE_PAYMENT_MODES',
                 'ACCELERATE_REGISTERED_DEVICES',
