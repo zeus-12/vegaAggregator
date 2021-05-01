@@ -42,7 +42,7 @@ async getSettingsById(settings_id) {
                 return majorCallback(err, null)
             }
             else {
-                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, data){
+                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, result){
                     if(error) {
                         return majorCallback(error, null)
                     }
@@ -54,16 +54,16 @@ async getSettingsById(settings_id) {
         });
 
         function fetchSettings(callback){
-              self.SettingsModel.getSettingsById(settings_id, function(error, data){
+              self.SettingsModel.getSettingsById(settings_id, function(error, result){
                 if(error) {
                     return callback(error, null)
                 }
                 else{
-                    if(_.isEmpty(data)){
-                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_datas), null);
+                    if(_.isEmpty(result)){
+                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
                     }
                     else{
-                        return callback(null, data);
+                        return callback(null, result);
                     }
                 }
               })
@@ -192,7 +192,7 @@ async getSettingsById(settings_id) {
                 return majorCallback(err, null)
             }
             else {
-                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, data){
+                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, result){
                     if(error) {
                         return majorCallback(error, null)
                     }
@@ -205,16 +205,16 @@ async getSettingsById(settings_id) {
 
 
         function fetchSettings(callback){
-              self.SettingsModel.getSettingsById(settings_id, function(error, data){
+              self.SettingsModel.getSettingsById(settings_id, function(error, result){
                 if(error) {
                     return callback(error, null)
                 }
                 else{
-                    if(_.isEmpty(data)){
-                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_datas), null);
+                    if(_.isEmpty(result)){
+                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
                     }
                     else{
-                        return callback(null, data);
+                        return callback(null, result);
                     }
                 }
               })
@@ -351,21 +351,21 @@ async getSettingsById(settings_id) {
 
     filterItemFromSettingsList(settings_id, filter_key, callback) {
       let self = this;
-      self.SettingsModel.getSettingsById(settings_id, function(error, data){
+      self.SettingsModel.getSettingsById(settings_id, function(error, result){
         if(error) {
             return callback(error, null)
         }
         else{
-            if(_.isEmpty(data)){
-                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_datas), null);
+            if(_.isEmpty(result)){
+                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
             }
             else{
-                if(data.value == undefined){
+                if(result.value == undefined){
                     return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
                 }
                 else{
 
-                    let settingsData = data.value;
+                    let settingsData = result.value;
                     switch(settings_id){
                       case 'ACCELERATE_STAFF_PROFILES':{
                         try{
@@ -453,7 +453,7 @@ async getSettingsById(settings_id) {
                 return majorCallback(err, null)
             }
             else {
-                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, data){
+                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, result){
                     if(error) {
                         return majorCallback(error, null)
                     }
@@ -465,16 +465,16 @@ async getSettingsById(settings_id) {
         });
 
         function fetchSettings(callback){
-              self.SettingsModel.getSettingsById(settings_id, function(error, data){
+              self.SettingsModel.getSettingsById(settings_id, function(error, result){
                 if(error) {
                     return callback(error, null)
                 }
                 else{
-                    if(_.isEmpty(data)){
-                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_datas), null);
+                    if(_.isEmpty(result)){
+                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
                     }
                     else{
-                        return callback(null, data);
+                        return callback(null, result);
                     }
                 }
               })
