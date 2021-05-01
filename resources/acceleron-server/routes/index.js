@@ -25,5 +25,6 @@ router.use('/settings', require('./SettingsRoute'));
 router.use('/table', require('./TableRoute'));
 router.use('/kot', require('./KOTRoute'));
 router.use('/user', require('./UserRoute'));
+router.use('/summary', require('./SummaryRoute'))
 
 module.exports = router;

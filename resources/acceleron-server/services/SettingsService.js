@@ -12,26 +12,22 @@ class SettingsService extends BaseService {
         this.SettingsModel = new SettingsModel(request);
     }
 
-    getSettingsById(settings_id, callback) {
+async getSettingsById(settings_id) {
       let self = this;
-      self.SettingsModel.getSettingsById(settings_id, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            if(_.isEmpty(result)){
-                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
+      const data = await self.SettingsModel.getSettingsById(settings_id).catch(error => {
+        throw error;
+      });
+            if(_.isEmpty(data)){
+                throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
             }
             else{
-                if(result.value == undefined){
-                    return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
+                if(data.value == undefined){
+                    throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted);
                 }
                 else{
-                    return callback(null, result.value); 
+                    return data.value;
                 }
             }
-        }
-      })
     }
   
     addNewEntryToSettings(settings_id, new_entry, majorCallback) {
@@ -46,7 +42,7 @@ class SettingsService extends BaseService {
                 return majorCallback(err, null)
             }
             else {
-                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, result){
+                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, data){
                     if(error) {
                         return majorCallback(error, null)
                     }
@@ -58,16 +54,16 @@ class SettingsService extends BaseService {
         });
 
         function fetchSettings(callback){
-              self.SettingsModel.getSettingsById(settings_id, function(error, result){
+              self.SettingsModel.getSettingsById(settings_id, function(error, data){
                 if(error) {
                     return callback(error, null)
                 }
                 else{
-                    if(_.isEmpty(result)){
-                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
+                    if(_.isEmpty(data)){
+                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_datas), null);
                     }
                     else{
-                        return callback(null, result);
+                        return callback(null, data);
                     }
                 }
               })
@@ -196,7 +192,7 @@ class SettingsService extends BaseService {
                 return majorCallback(err, null)
             }
             else {
-                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, result){
+                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, data){
                     if(error) {
                         return majorCallback(error, null)
                     }
@@ -209,16 +205,16 @@ class SettingsService extends BaseService {
 
 
         function fetchSettings(callback){
-              self.SettingsModel.getSettingsById(settings_id, function(error, result){
+              self.SettingsModel.getSettingsById(settings_id, function(error, data){
                 if(error) {
                     return callback(error, null)
                 }
                 else{
-                    if(_.isEmpty(result)){
-                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
+                    if(_.isEmpty(data)){
+                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_datas), null);
                     }
                     else{
-                        return callback(null, result);
+                        return callback(null, data);
                     }
                 }
               })
@@ -355,21 +351,21 @@ class SettingsService extends BaseService {
 
     filterItemFromSettingsList(settings_id, filter_key, callback) {
       let self = this;
-      self.SettingsModel.getSettingsById(settings_id, function(error, result){
+      self.SettingsModel.getSettingsById(settings_id, function(error, data){
         if(error) {
             return callback(error, null)
         }
         else{
-            if(_.isEmpty(result)){
-                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
+            if(_.isEmpty(data)){
+                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_datas), null);
             }
             else{
-                if(result.value == undefined){
+                if(data.value == undefined){
                     return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
                 }
                 else{
 
-                    let settingsData = result.value;
+                    let settingsData = data.value;
                     switch(settings_id){
                       case 'ACCELERATE_STAFF_PROFILES':{
                         try{
@@ -457,7 +453,7 @@ class SettingsService extends BaseService {
                 return majorCallback(err, null)
             }
             else {
-                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, result){
+                  self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, data){
                     if(error) {
                         return majorCallback(error, null)
                     }
@@ -469,16 +465,16 @@ class SettingsService extends BaseService {
         });
 
         function fetchSettings(callback){
-              self.SettingsModel.getSettingsById(settings_id, function(error, result){
+              self.SettingsModel.getSettingsById(settings_id, function(error, data){
                 if(error) {
                     return callback(error, null)
                 }
                 else{
-                    if(_.isEmpty(result)){
-                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
+                    if(_.isEmpty(data)){
+                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_datas), null);
                     }
                     else{
-                        return callback(null, result);
+                        return callback(null, data);
                     }
                 }
               })
