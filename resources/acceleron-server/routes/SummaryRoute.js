@@ -10,7 +10,7 @@ router.get('/billingmode', async function (req, res, next) {
   }
 });
 
-router.get('/billingandpaymentmodes', async function (req, res, next) {
+router.get('/billingandpaymentmode', async function (req, res, next) {
   try {
     const data = await new SummaryController(req).fetchSummaryByBillingAndPaymentMode();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);

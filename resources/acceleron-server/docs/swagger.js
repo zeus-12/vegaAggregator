@@ -52,6 +52,10 @@ var all = {
         {
             "name": "user",
             "description": "APIs to create, edit, change User details",
+        },
+        {
+            "name": "sales-summary",
+            "description": "APIs to create, edit, change User details",
         }],
     "schemes": ["http"],
     "securityDefinitions": {
@@ -479,6 +483,106 @@ var all = {
                         "name": "key",
                         "in": "query",
                         "description": "Filter Key - all, dine, nondine",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },"/settings/{id}": {
+            "get": {
+                "tags": ["settings"],
+                "summary": "To fetch the settings content",
+                "description": "To fetch the settings content by its unique id",
+                "operationId": "getSettingsById",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Settings ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/settings/{id}/newentry": {
+            "post": {
+                "tags": ["settings"],
+                "summary": "To add new entry in settings",
+                "description": "To add new entry to the settings content against its unique id. New entry object to be passed in body.",
+                "operationId": "addNewItemToSettings",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Settings ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/summary/billingmode": {
+            "get": {
+                "tags": ["sales-summary"],
+                "summary": "To get summary based on billing mode",
+                "description": "To fetch sales summary based on different billing modes from a given start date to the given end date",
+                "operationId": "getSummaryByBillingMode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "startdate",
+                        "in": "query",
+                        "description": "from date",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enddate",
+                        "in": "query",
+                        "description": "to date",
+                        "required": true,
+                        "type": "string"
+                    },
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/summary/billingandpaymentmode": {
+            "get": {
+                "tags": ["sales-summary"],
+                "summary": "To get summary of a billingmode from different payment modes",
+                "description": "To fetch sales summary from different payment modes of a given billing modes from a given start date to the given end date",
+                "operationId": "getSummaryByBillingAndPaymentMode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "startdate",
+                        "in": "query",
+                        "description": "from date",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enddate",
+                        "in": "query",
+                        "description": "to date",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "billingmode",
+                        "in": "query",
+                        "description": "billing mode - Dine In / Delivery / Takeaway",
                         "required": true,
                         "type": "string"
                     }
