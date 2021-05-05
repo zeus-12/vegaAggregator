@@ -53,9 +53,23 @@ async  fetchSummaryByBillingAndPaymentMode(){
         var billing_mode = self.request.query.billingmode;
         var paymentModes = [];
         var SELECTED_INVOICE_SOURCE_DB = 'accelerate_invoices';
+        var ALLOWED_BILLING_MODES = [];
 
         if (_.isEmpty(from_date) || _.isEmpty(to_date) || _.isEmpty(billing_mode)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
+        }
+
+        try {
+            const data = await self.SummaryService.getAllBillingModes();
+            for(var i = 0; i < data.length; i++){
+                ALLOWED_BILLING_MODES = [...ALLOWED_BILLING_MODES, data[i].name];
+            }
+        } catch (error) {
+            throw error;
+        };
+
+        if(!ALLOWED_BILLING_MODES.includes(billing_mode)){
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, "Not a valid billing mode");
         }
 
         try {
