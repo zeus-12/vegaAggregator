@@ -55,4 +55,25 @@ router.post('/:id/updateentry', function (req, res, next) {
     });
 })
 
+
+// Other APIs
+
+router.put('/ACCELERATE_KOT_RELAYING/renameCategory', function (req, res, next) {
+    return new SettingsController(req).renameCategoryKOTRelays(function (err, data) {
+        if (err != null) {
+            return next(err);
+        }
+        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    });
+})
+
+router.put('/ACCELERATE_KOT_RELAYING/deleteCategory', function (req, res, next) {
+    return new SettingsController(req).deleteCategoryKOTRelays(function (err, data) {
+        if (err != null) {
+            return next(err);
+        }
+        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    });
+})
+
 module.exports = router;

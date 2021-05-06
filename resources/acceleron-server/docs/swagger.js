@@ -79,17 +79,20 @@ var all = {
             "price": {
               "type": "string"
             },
-            "code":{
-              "type": "integer"
+            "isCustom": {
+              "type": "boolean"
             },
             "vegFlag": {
-              "type": "integer"
+                "type": "string"
             },
+            "code":{
+              "type": "string"
+            },   
             "isPackaged": {
               "type": "boolean"
             },
             "shortCode":{
-                "type": "integer"
+                "type": "string"
             },
             "cookingTime":{
                 "type": "integer"
@@ -100,14 +103,22 @@ var all = {
                   "type": "string"
                 }
             },
+            "customOptions": {
+                "type": "array",
+                "items":{
+                  "type": "object",
+                  "properties": {
+                    "customName": {
+                        "type": "string"
+                      },
+                    "customPrice": {
+                        "type": "string"
+                      }
+                  }
+                }
+            },
             "isAvailable": {
               "type": "boolean"
-            },
-            "isCustom": {
-              "type": "boolean"
-            },
-            "customOptions": {
-              "type": "object"
             }
           }
         },
@@ -263,6 +274,73 @@ var all = {
                         "description": "Unique Identifier Key - KOT / BILL / TABLE",
                         "required": true,
                         "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/settings/ACCELERATE_KOT_RELAYING/renameCategory": {
+            "put": {
+                "tags": ["settings"],
+                "summary": "To rename a category in KOT Relaying settings",
+                "description": "To rename a category in the list of entries in the KOT Relaying settings.",
+                "operationId": "renameCategoryKOTRelays",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "machineName",
+                        "in": "query",
+                        "description": "System Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Current and New Category Names",
+                        "required": true,
+                        "type": "object",
+                        "properties":{
+                            "categoryName":{
+                                "type" : "string"
+                            },
+                            "newCategoryName":{
+                                "type" : "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/settings/ACCELERATE_KOT_RELAYING/deleteCategory": {
+            "put": {
+                "tags": ["settings"],
+                "summary": "To delete a category related entires from KOT Relaying settings",
+                "description": "To delete a category in the list of entries in the KOT Relaying settings.",
+                "operationId": "deleteCategoryKOTRelays",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "machineName",
+                        "in": "query",
+                        "description": "System Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "object",
+                        "properties":{
+                            "categoryName":{
+                                "type" : "string"
+                            }
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -796,7 +874,113 @@ var all = {
                 "responses": responsesList,
                 "security": [{"access_key": []}]
             }
-        }        
+        },
+        "/menu/item/{itemCode}/toggleAvailability": {
+            "put": {
+                "tags": ["menu"],
+                "summary": "To toggle availability an item",
+                "description": "To toggle availability an item against given item code",
+                "operationId": "toggleAvailability",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "itemCode",
+                        "in": "path",
+                        "description": "Item Code",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "onlineFlag",
+                        "in": "query",
+                        "description": "Flag 1 to update online menu else not",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateToken",
+                        "in": "query",
+                        "description": "Token for updating online menu",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },  
+        "/menu/markAllMenuAvailable": {
+            "put": {
+                "tags": ["menu"],
+                "summary": "To mark all items in the menu available",
+                "description": "To mark all items in the menu available",
+                "operationId": "markAllMenuAvailable",
+                "produces": ["application/json"],
+                "parameters": [],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },  
+        "/menu/getLastItemCode": {
+            "get": {
+                "tags": ["menu"],
+                "summary": "To get the last item code in the menu",
+                "description": "To get the last item code in the menu",
+                "operationId": "getLastItemCode",
+                "produces": ["application/json"],
+                "parameters": [],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },  
+        "/menu/category/{categoryName}/markAllAvailableByCategory": {
+            "put": {
+                "tags": ["menu"],
+                "summary": "To mark all items in the given category as available",
+                "description": "To mark all items in the given category as available",
+                "operationId": "markAllAvailableByCategory",
+                "produces": ["application/json"],
+                "parameters": [                    
+                    {
+                    "name": "option",
+                    "in": "query",
+                    "description": "ALL_AVAIL or ALL_NOT_AVAIL",
+                    "required": true,
+                    "type": "string"
+                }],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/menu/item/{itemCode}/moveItemToCategory": {
+            "put": {
+                "tags": ["menu"],
+                "summary": "To move an item to a given category",
+                "description": "To move an item to a given category",
+                "operationId": "moveItemToCategory",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "New Category Name",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Category"
+                          }
+                    },
+                    {
+                        "name": "itemCode",
+                        "in": "path",
+                        "description": "Item Code",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        }           
     }
 };
 

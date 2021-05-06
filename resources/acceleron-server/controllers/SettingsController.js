@@ -343,6 +343,45 @@ class SettingsController extends BaseController {
         });
     }
 
+    renameCategoryKOTRelays(callback){
+        let self = this;
+        var machineName = self.request.query.machineName;
+        let categoryName = self.request.body.categoryName;
+        let newCategoryName = self.request.body.newCategoryName;
+
+        if (_.isEmpty(machineName) || _.isEmpty(categoryName) || _.isEmpty(newCategoryName)) {
+            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+        }
+        self.SettingsService.renameCategoryKOTRelays(machineName, categoryName, newCategoryName, function (error, result) {
+            if(error){
+                return callback(error, null);
+            }
+            else{
+                return callback(null, result);
+            }
+        });
+    }
+
+    deleteCategoryKOTRelays(callback){
+        let self = this;
+        var machineName = self.request.query.machineName;
+        let categoryName = self.request.body.categoryName;
+
+        if (_.isEmpty(machineName) || _.isEmpty(categoryName)) {
+            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+        }
+
+
+        self.SettingsService.deleteCategoryKOTRelays(machineName, categoryName, function (error, result) {
+            if(error){
+                return callback(error, null);
+            }
+            else{
+                return callback(null, result);
+            }
+        });
+    }
+
 }
 
 module.exports = SettingsController;

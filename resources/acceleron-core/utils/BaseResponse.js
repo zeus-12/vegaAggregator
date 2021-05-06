@@ -30,4 +30,7 @@ BaseResponse.ResponseType.NOT_FOUND = {status_code: 404, msg: 'not found'};
 BaseResponse.ResponseType.SERVER_TIMEDOUT = {status_code: 408, msg: 'server timed out'};
 BaseResponse.ResponseType.CONFLICT = {status_code: 409, msg: 'conflict'};
 
+/* Menu Responses */
+BaseResponse.ResponseType.ERROR_DUPLICATE_ITEM = {status_code: 501, msg: 'Error due to item duplication'};
+
 module.exports = BaseResponse;

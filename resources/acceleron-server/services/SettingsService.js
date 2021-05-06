@@ -1,4 +1,4 @@
-"use strict";
+ "use strict";
 let BaseService = ACCELERONCORE._services.BaseService;
 let SettingsModel = require('../models/SettingsModel');
 
@@ -634,6 +634,137 @@ class SettingsService extends BaseService {
         }
 
     }
+
+    renameCategoryKOTRelays(machineName, categoryName, newCategoryName, majorCallback) {
+      
+      let self = this;
+      async.waterfall([
+        fetchSettings,
+        makeChanges
+      ], function(err, new_update_data) {
+          if(err){
+              return majorCallback(err, null)
+          }
+          else {
+                self.SettingsModel.updateNewSettingsData('ACCELERATE_KOT_RELAYING', new_update_data, function(error, result){
+                  if(error) {
+                      return majorCallback(error, null)
+                  }
+                  else{
+                      return majorCallback(null, "Updated successfully");
+                  }
+                })                
+          }
+      });
+
+      function fetchSettings(callback){
+            self.SettingsModel.getSettingsById('ACCELERATE_KOT_RELAYING', function(error, result){
+              if(error) {
+                  return callback(error, null)
+              }
+              else{
+                  if(_.isEmpty(result)){
+                      return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
+                  }
+                  else{
+                      return callback(null, result);
+                  }
+              }
+            })
+      }
+
+      function makeChanges(settingsData, callback){
+
+        try{
+          var settingsList = settingsData.value;
+
+          for(var n=0; n<settingsList.length; n++){
+            if(settingsList[n].systemName == machineName){
+
+                for (var i=0; i<settingsList[n].data.length; i++){
+                  if(settingsList[n].data[i].name == categoryName){
+                    settingsList[n].data[i].name = newCategoryName;
+                    break;
+                  }
+                }
+              break;
+            }
+          }
+          settingsData.value = settingsList;
+          return callback(null, settingsData);
+        }
+        catch(error){
+          return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null); 
+        }
+      }
+
+    }
+
+    deleteCategoryKOTRelays(machineName, categoryName, majorCallback) {
+      
+      let self = this;
+
+      async.waterfall([
+        fetchSettings,
+        makeChanges
+      ], function(err, new_update_data) {
+          if(err){
+              return majorCallback(err, null)
+          }
+          else {
+                self.SettingsModel.updateNewSettingsData('ACCELERATE_KOT_RELAYING', new_update_data, function(error, result){
+                  if(error) {
+                      return majorCallback(error, null)
+                  }
+                  else{
+                      return majorCallback(null, "Updated successfully");
+                  }
+                })                
+          }
+      });
+
+      function fetchSettings(callback){
+            self.SettingsModel.getSettingsById('ACCELERATE_KOT_RELAYING', function(error, result){
+              if(error) {
+                  return callback(error, null)
+              }
+              else{
+                  if(_.isEmpty(result)){
+                      return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
+                  }
+                  else{
+                      return callback(null, result);
+                  }
+              }
+            })
+      }
+
+      function makeChanges(settingsData, callback){
+
+        try{
+          var settingsList = settingsData.value;
+
+          for(var n=0; n<settingsList.length; n++){
+            if(settingsList[n].systemName == machineName){
+                for (var i=0; i<settingsList[n].data.length; i++){
+                  if(settingsList[n].data[i].name == categoryName){
+                    settingsList[n].data.splice(i,1);
+                    break;
+                  }
+                }
+              break;
+            }
+          }
+          settingsData.value = settingsList;
+          return callback(null, settingsData);
+        }
+        catch(error){
+          return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null); 
+        }
+      }
+
+    }
+
 }
 
 module.exports = SettingsService;

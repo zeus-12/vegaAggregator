@@ -99,4 +99,52 @@ router.route('/category/:categoryName')
     }
   });
 
+
+  // Other APIs
+  router.put('/item/:itemCode/toggleAvailability', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).toggleAvailability();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+  router.put('/markAllMenuAvailable', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).markAllMenuAvailable();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+  router.get('/getLastItemCode', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).getLastItemCode();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+  router.put('/category/:categoryName/markAllAvailableByCategory', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).markAllAvailableByCategory();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+  router.put('/item/:itemCode/moveItemToCategory', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).moveItemToCategory();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+
 module.exports = router;
