@@ -12,28 +12,16 @@ class CommonService extends BaseService {
         this.SettingsModel = new SettingsModel(request);
     }
 
-    getSettingsFileById(settings_id, callback) {
-      let self = this;
-      self.SettingsModel.getSettingsById(settings_id, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            return callback(null, result);
-        }
-      })
+    async getSettingsFileById(settings_id) {
+      return await this.SettingsModel.getSettingsById(settings_id).catch(error => {
+        throw error
+      }); 
     }
 
-    updateSettingsFileById(settings_id, new_update_data, callback) {
-      let self = this;
-      self.SettingsModel.updateNewSettingsData(settings_id, new_update_data, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            return callback(null, "Updated successfully");
-        }
-      })    
+    async updateSettingsFileById(settings_id, new_update_data) {
+      return await this.SettingsModel.updateNewSettingsData(settings_id, new_update_data).catch(error => {
+        throw error
+      });   
     }
 }
 

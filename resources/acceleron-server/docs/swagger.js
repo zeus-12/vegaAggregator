@@ -62,6 +62,23 @@ var all = {
         "access_key": {"type": "apiKey", "name": "x-access-token", "in": "header"}
     },
     "definitions": {
+        "Table":{
+            "type": "object",
+            "properties": {
+                "table":{
+                    "type": "string"
+                },
+                "capacity":{
+                    "type": "string"
+                },
+                "sortIndex":{
+                    "type": "string"
+                },
+                "type":{
+                    "type": "string"
+                }    
+            }
+        },
         "Category":{
             "type": "object",
             "properties": {
@@ -423,11 +440,13 @@ var all = {
                 "produces": ["application/json"],
                 "parameters": [
                     {
-                        "name": "",
+                        "name": "body",
                         "in": "body",
                         "description": "Table Object",
                         "required": true,
-                        "type": "string"
+                        "schema": {
+                            "$ref": "#/definitions/Table"
+                          }
                     }
                 ],
                 "responses": responsesList,
@@ -447,7 +466,12 @@ var all = {
                         "in": "body",
                         "description": "Name of table to delete",
                         "required": true,
-                        "type": "string"
+                        "type": "object",
+                        "properties":{
+                            "delete_table_name":{
+                                "type" : "string"
+                            }
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -467,7 +491,12 @@ var all = {
                         "in": "body",
                         "description": "Table section name",
                         "required": true,
-                        "type": "string"
+                        "type": "object",
+                        "properties":{
+                            "section_name":{
+                                "type" : "string"
+                            }
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -487,7 +516,12 @@ var all = {
                         "in": "body",
                         "description": "Table section name",
                         "required": true,
-                        "type": "string"
+                        "type": "object",
+                        "properties":{
+                            "delete_section_name":{
+                                "type" : "string"
+                            }
+                        }
                     }
                 ],
                 "responses": responsesList,

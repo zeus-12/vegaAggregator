@@ -11,45 +11,32 @@ class KOTController extends BaseController {
         this.KOTService = new KOTService(request);
     }
 
-    getKOTById(callback) {
-        let self = this;
-        var kot_id = self.request.params.id;
+    async getKOTById() {
 
+        var kot_id = this.request.params.id;
         if (_.isEmpty(kot_id)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.kot_id_is_empty_or_invalid);
         }
-
-        self.KOTService.getKOTById(kot_id, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });
+        return await this.KOTService.getKOTById(kot_id).catch(error => {
+            throw error
+          });
     }
 
-    fetchKOTsByFilter(callback){
-        let self = this;
-        var filter_key = self.request.query.key;
+    async fetchKOTsByFilter(){
 
+        var filter_key = this.request.query.key;
         if (_.isEmpty(filter_key)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.filter_key_is_empty_or_invalid);
         }
 
         let ALLOWED_FILTER_KEYS = ['all', 'dine', 'nondine'];
         if(!ALLOWED_FILTER_KEYS.includes(filter_key)){
-          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not a valid filter"))
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_filter);
         }
 
-        self.KOTService.fetchKOTsByFilter(filter_key, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });
+        return await this.KOTService.fetchKOTsByFilter(filter_key).catch(error => {
+            throw error
+          });
     }
 }
 

@@ -10,9 +10,16 @@ class CommonModel extends BaseModel{
         this.couch = ACCELERONCORE._connectors.CouchDB;
     }
 
-    getDataByPath(url, callback) {
-        this.couch.get(url, function (err, data) {
-            return callback(err, data);
+    async getDataByPath(url) {
+        return new Promise((resolve, reject) => {
+            this.couch.get(url, function (err, data) {
+            if(err){
+                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
+            }
+            else{
+                resolve(data);
+            }
+            });
         });
     }
 }

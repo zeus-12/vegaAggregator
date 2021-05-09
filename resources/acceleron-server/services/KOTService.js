@@ -16,25 +16,18 @@ class KOTService extends BaseService {
         this.SettingsService = new SettingsService(request);
     }
 
-    getKOTById(kot_id, callback) {
-      let self = this;
-      self.KOTModel.getTableById(kot_id, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            if(_.isEmpty(result)){
-                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
-            }
-            else{
-                return callback(null, result);
-            }
-        }
-      })
+    async getKOTById(kot_id) {
+      const data = await this.KOTModel.getKOTById(kot_id).catch(error => {
+        throw error
+      });
+      if(_.isEmpty(data)){
+        throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+      }
+      return data;
     }    
 
-    fetchKOTsByFilter(filter_key, callback) {
-      let self = this;
+    async fetchKOTsByFilter(filter_key) {
+
       let path = '';
 
       switch(filter_key){
@@ -47,24 +40,20 @@ class KOTService extends BaseService {
           break;
         }
         default:{
-          return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request), null);
+          throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
       }
 
-      self.CommonModel.getDataByPath(path, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            let kotList = result.rows;
-            let responseList = [];
-            for(var i = 0; i < kotList.length; i++){
-              responseList.push(kotList[i].value);
-            }
-
-            return callback(null, responseList);
-        }
-      })
+      const result = await this.CommonModel.getDataByPath(path).catch(error => {
+        throw error
+      });
+      console.log(result.rows[0].key)
+      var kotList = result.rows;
+      var responseList = [];
+      for(var i = 0; i < kotList.length; i++){
+        responseList.push(kotList[i].value);
+      }
+      return responseList;
     }
 
 }

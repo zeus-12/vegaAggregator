@@ -11,101 +11,83 @@ class TableController extends BaseController {
         this.TableService = new TableService(request);
     }
 
-    getTableById(callback) {
-        let self = this;
-        var table_id = self.request.params.id;
+    async getTableById() {
+        var table_id = this.request.params.id;
 
         if (_.isEmpty(table_id)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.table_id_is_empty_or_invalid)
         }
 
-        self.TableService.getTableById(table_id, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });
+        return await this.TableService.getTableById(table_id).catch(error => {
+            throw error
+          });
     }
     
-    fetchTablesByFilter(callback){
-        let self = this;
-        var filter_key = self.request.query.key;
-        var unique_id = self.request.query.uniqueId;
+    async fetchTablesByFilter(){
+        var filter_key = this.request.query.key;
+        var unique_id = this.request.query.uniqueId;
 
         if (_.isEmpty(filter_key)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.filter_key_is_empty_or_invalid)
         }
 
         let ALLOWED_FILTER_KEYS = ['all', 'live', 'name', 'section'];
         if(!ALLOWED_FILTER_KEYS.includes(filter_key)){
-          return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Not a valid filter"))
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_filter)
         }
 
         //Validations
         switch(filter_key){
             case 'name':{
                 if(_.isEmpty(unique_id)){
-                    return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_data_format))
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.unique_id_is_empty_or_invalid)
                 }
                 break;
             } 
         }
-
-        self.TableService.fetchTablesByFilter(filter_key, unique_id, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });
+        return await this.TableService.fetchTablesByFilter(filter_key, unique_id).catch(error => {
+            throw error
+          });
     }
 
-    resetTable(callback){
-        let self = this;
-        var table_id = self.request.params.id;   
+    async resetTable(){
+        var table_id = this.request.params.id;   
         
         if (_.isEmpty(table_id)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
-        }  
-
-        self.TableService.resetTable(table_id, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });   
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.table_id_is_empty_or_invalid)
+        } 
+        return await this.TableService.resetTable(table_id).catch(error => {
+            throw error
+          });   
     }
 
-    addNewTableSection(callback) {
-        let self = this;
+    async addNewTableSection() {
 
-        let new_entry = self.request.body;
-        if (_.isEmpty(new_entry.section_name)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+        var sectionName = this.request.body.section_name;
+        if (_.isEmpty(sectionName)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.section_name_empty_or_invalid)
+        }
+        return await this.TableService.addNewTableSection(sectionName).catch(error => {
+            throw error
+          }); 
+    }
+
+    async createNewTable() {
+
+        var new_entry = this.request.body;
+        if (_.isEmpty(new_entry.table)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.table_empty_or_invalid)
+        }
+        if (_.isEmpty(new_entry.capacity)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.capacity_empty_or_invalid)
+        }
+        if ( _.isEmpty(new_entry.sortIndex)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.sort_index_empty_or_invalid)
+        }
+        if ( _.isEmpty(new_entry.type)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.type_empty_or_invalid)
         }
         
-        self.TableService.addNewTableSection(new_entry.section_name, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });
-    }
-
-    createNewTable(callback) {
-        let self = this;
-
-        let new_entry = self.request.body;
-        if (_.isEmpty(new_entry.table) || _.isEmpty(new_entry.capacity) || _.isEmpty(new_entry.sortIndex) || _.isEmpty(new_entry.type)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
-        }
         
         //Complete table object
         new_entry._id = new_entry.sortIndex;
@@ -121,52 +103,41 @@ class TableController extends BaseController {
         new_entry.capacity = parseInt(new_entry.capacity);
         new_entry.sortIndex = parseInt(new_entry.sortIndex);
 
-        if (isNaN(new_entry.capacity) || isNaN(new_entry.sortIndex)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, "Capacity and Sort Index must be a number"));
+        if (isNaN(new_entry.capacity)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.capacity_must_be_a_number)
+        }
+        if (isNaN(new_entry.sortIndex)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.sort_index_must_be_a_number)
         }
 
-        self.TableService.createNewTable(new_entry, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });
+        return await this.TableService.createNewTable(new_entry).catch(error => {
+            throw error
+          }); 
+
     }
 
-    deleteTableByName(callback){
-        let self = this;
-        let tableData = self.request.body;
-        if (_.isEmpty(tableData.delete_table_name)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+    async deleteTableByName(){
+
+        var tableName = this.request.body.delete_table_name;
+        if (_.isEmpty(tableName)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.table_name_empty_or_invalid)
         }
 
-        self.TableService.deleteTableByName(tableData.delete_table_name, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });        
+        return await this.TableService.deleteTableByName(tableName).catch(error => {
+            throw error
+          });      
     }
 
-    deleteTableSection(callback){
-        let self = this;
-        let tableInfo = self.request.body;
-        if (_.isEmpty(tableInfo.delete_section_name)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+    async deleteTableSection(){
+
+        let sectionName = this.request.body.delete_section_name;
+        if (_.isEmpty(sectionName)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.section_name_empty_or_invalid)
         }
 
-        self.TableService.deleteTableSection(tableInfo.delete_section_name, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });         
+        return await this.TableService.deleteTableSection(sectionName).catch(error => {
+            throw error
+          });         
     }
 }
 

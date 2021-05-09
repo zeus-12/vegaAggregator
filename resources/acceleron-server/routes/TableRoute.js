@@ -1,67 +1,67 @@
 let router = new ACCELERONCORE._routes.BaseRouter();
 let TableController = require('../controllers/TableController');
 
-router.post('/create', function (req, res, next) {
-    return new TableController(req).createNewTable(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.post('/create', async function (req, res, next) {
+    try {
+        const data = await new TableController(req).createNewTable();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+        return next(error)
+    }
 })
 
-router.post('/delete', function (req, res, next) {
-    return new TableController(req).deleteTableByName(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.post('/delete', async function (req, res, next) {
+    try {
+        const data = await new TableController(req).deleteTableByName();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+        return next(error)
+    }
 })
 
-router.post('/section/new', function (req, res, next) {
-    return new TableController(req).addNewTableSection(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.post('/section/new', async function (req, res, next) {
+    try {
+        const data = await new TableController(req).addNewTableSection();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+        return next(error)
+    }
 })
 
-router.post('/section/delete', function (req, res, next) {
-    return new TableController(req).deleteTableSection(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.post('/section/delete', async function (req, res, next) {
+    try {
+        const data = await new TableController(req).deleteTableSection();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+        return next(error)
+    }
 })
 
-router.get('/filter', function (req, res, next) {
-    return new TableController(req).fetchTablesByFilter(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.get('/filter', async function (req, res, next) {
+    try {
+        const data = await new TableController(req).fetchTablesByFilter();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+        return next(error)
+    }
 })
 
-router.get('/:id/resettable', function (req, res, next) {
-    return new TableController(req).resetTable(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.get('/:id/resettable', async function (req, res, next) {
+    try {
+        const data = await new TableController(req).resetTable();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+        return next(error)
+    }
 })
 
-router.get('/:id', function (req, res, next) {
-    return new TableController(req).getTableById(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.get('/:id', async function (req, res, next) {
+    try {
+        const data = await new TableController(req).getTableById();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+        return next(error)
+    }
 })
 
 module.exports = router;
