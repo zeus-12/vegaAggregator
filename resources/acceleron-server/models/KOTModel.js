@@ -10,9 +10,16 @@ class KOTModel extends BaseModel{
         this.couch = ACCELERONCORE._connectors.CouchDB;
     }
 
-    getKOTById(kot_id, callback) {
-        this.couch.get('/accelerate_kot/'+kot_id, function (err, data) {
-            return callback(err, data);
+    async getKOTById(kot_id) {
+        return new Promise((resolve, reject) => {
+            this.couch.get('/accelerate_kot/'+kot_id, function (err, data) {
+            if(err){
+                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
+            }
+            else{
+                resolve(data);
+            }
+            });
         });
     }
 }

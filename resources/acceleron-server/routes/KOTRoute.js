@@ -1,22 +1,22 @@
 let router = new ACCELERONCORE._routes.BaseRouter();
 let KOTController = require('../controllers/KOTController');
 
-router.get('/filter', function (req, res, next) {
-    return new KOTController(req).fetchKOTsByFilter(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.get('/filter', async function (req, res, next) {
+    try {
+        const data = await new KOTController(req).fetchKOTsByFilter();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+      } catch (error) {
+        return next(error)
+      }
 })
 
-router.get('/:id', function (req, res, next) {
-    return new KOTController(req).getKOTById(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.get('/:id', async function (req, res, next) {
+    try {
+        const data = await new KOTController(req).getKOTById();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+      } catch (error) {
+        return next(error)
+      }
 })
 
 module.exports = router;

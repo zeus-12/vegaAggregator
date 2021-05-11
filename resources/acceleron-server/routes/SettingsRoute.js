@@ -1,58 +1,80 @@
 let router = new ACCELERONCORE._routes.BaseRouter();
 let SettingsController = require('../controllers/SettingsController');
 
-router.get('/applyquickfix', function (req, res, next) {
-    return new SettingsController(req).applyQuickFix(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+
+router.get('/applyquickfix',async function(req, res, next) {
+    try {
+      const data = await new SettingsController(req).applyQuickFix();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
 })
 
-router.get('/:id', function (req, res, next) {
-    return new SettingsController(req).getSettingsById(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.get('/:id',async function(req, res, next) {
+    try {
+      const data = await new SettingsController(req).getSettingsById();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
 })
 
-router.post('/:id/newentry', function (req, res, next) {
-    return new SettingsController(req).addNewEntryToSettings(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.post('/:id/newentry',async function(req, res, next) {
+    try {
+      const data = await new SettingsController(req).addNewEntryToSettings();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
 })
 
-router.post('/:id/removeentry', function (req, res, next) {
-    return new SettingsController(req).removeEntryFromSettings(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.post('/:id/removeentry',async function(req, res, next) {
+    try {
+      const data = await new SettingsController(req).removeEntryFromSettings();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
 })
 
-router.get('/:id/filter', function (req, res, next) {
-    return new SettingsController(req).filterItemFromSettingsList(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.get('/:id/filter',async function(req, res, next) {
+    try {
+      const data = await new SettingsController(req).filterItemFromSettingsList();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
 })
 
-router.post('/:id/updateentry', function (req, res, next) {
-    return new SettingsController(req).updateItemFromSettingsList(function (err, data) {
-        if (err != null) {
-            return next(err);
-        }
-        return new BaseResponse(ResponseType.SUCCESS).send(res, data);
-    });
+router.post('/:id/updateentry',async function(req, res, next) {
+    try {
+      const data = await new SettingsController(req).updateItemFromSettingsList();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+})
+
+
+// Other APIs
+
+router.put('/ACCELERATE_KOT_RELAYING/renameCategory',async function(req, res, next) {
+    try {
+      const data = await new SettingsController(req).renameCategoryKOTRelays();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+})
+
+router.put('/ACCELERATE_KOT_RELAYING/deleteCategory',async function(req, res, next) {
+    try {
+      const data = await new SettingsController(req).deleteCategoryKOTRelays();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
 })
 
 module.exports = router;
