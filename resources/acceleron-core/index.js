@@ -9,6 +9,7 @@ let all = {
 };
 
 all._connectors.CouchDB = require('./connectors/CouchDBConnector');
+all._connectors.CouchDBAsync = require('./connectors/CouchDBConnectorAsync');
 
 all._utils.ErrorResponse = require('./utils/ErrorResponse');
 all._utils.BaseResponse = require('./utils/BaseResponse');
