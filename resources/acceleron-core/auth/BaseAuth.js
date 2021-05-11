@@ -12,6 +12,7 @@ module.exports = function (req, res, next) {
     if (ignore_routes.indexOf(route) >= 0) {
         next();
     } else if (token) {
+
         // verifies secret and checks exp
         if (!_.isEmpty(process.env.SERVICE_ACCESS_TOKEN) && token === process.env.SERVICE_ACCESS_TOKEN){
             return next()

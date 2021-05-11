@@ -9,7 +9,7 @@ class SettingsModel extends BaseModel{
         super(request);
         this.couch = ACCELERONCORE._connectors.CouchDB;
     }
-
+    
     async getSettingsById(settings_id) {
         return new Promise((resolve, reject) => {
             this.couch.get('/accelerate_settings/'+settings_id, function (err, data) {
@@ -21,7 +21,7 @@ class SettingsModel extends BaseModel{
             }
             });
         });
-    }
+    } 
 
     async updateNewSettingsData(settings_id, new_update_data) {
         return new Promise((resolve, reject) => {

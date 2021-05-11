@@ -56,6 +56,10 @@ var all = {
         {
             "name": "menu",
             "description": "APIs relating to Master Menu",
+        },
+        {
+            "name": "sales-summary",
+            "description": "APIs to create, edit, change User details",
         }],
     "schemes": ["http"],
     "securityDefinitions": {
@@ -1014,7 +1018,68 @@ var all = {
                 "responses": responsesList,
                 "security": [{"access_key": []}]
             }
-        }           
+        },
+        "/summary/billingmode": {
+            "get": {
+                "tags": ["sales-summary"],
+                "summary": "To get summary based on billing mode",
+                "description": "To fetch sales summary based on different billing modes from a given start date to the given end date",
+                "operationId": "getSummaryByBillingMode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "startdate",
+                        "in": "query",
+                        "description": "from date",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enddate",
+                        "in": "query",
+                        "description": "to date",
+                        "required": true,
+                        "type": "string"
+                    },
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/summary/billingandpaymentmode": {
+            "get": {
+                "tags": ["sales-summary"],
+                "summary": "To get summary of a billingmode from different payment modes",
+                "description": "To fetch sales summary from different payment modes of a given billing modes from a given start date to the given end date",
+                "operationId": "getSummaryByBillingAndPaymentMode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "startdate",
+                        "in": "query",
+                        "description": "from date",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enddate",
+                        "in": "query",
+                        "description": "to date",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "billingmode",
+                        "in": "query",
+                        "description": "billing mode - Dine In / Delivery / Takeaway",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        }            
     }
 };
 
