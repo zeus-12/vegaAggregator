@@ -18,25 +18,21 @@ class TableService extends BaseService {
         this.SettingsService = new SettingsService(request);
     }
 
-    getTableById(table_id, callback) {
-      let self = this;
-      self.TableModel.getTableById(table_id, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            if(_.isEmpty(result)){
-                return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
-            }
-            else{
-                return callback(null, result);
-            }
-        }
-      })
-    }    
+    async getTableById(table_id) {
+      const data = await this.TableModel.getTableById(table_id).catch(error => {
+        throw error
+      });
 
-    fetchTablesByFilter(filter_key, unique_id, callback) {
-      let self = this;
+      if(_.isEmpty(data)){
+        throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+      }
+      else{
+        return data; 
+      }
+    }   
+
+    async fetchTablesByFilter(filter_key, unique_id) {
+
       let path = '';
 
       switch(filter_key){
@@ -57,228 +53,133 @@ class TableService extends BaseService {
           break;
         }
         default:{
-          return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request), null);
+          throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
       }
 
-      self.CommonModel.getDataByPath(path, function(error, result){
-        if(error) {
-            return callback(error, null)
+      const result = await this.CommonModel.getDataByPath(path).catch(error => {
+        throw error
+      });
+
+      if(filter_key == "all" || filter_key == "live" || filter_key == "section"){ //Set of tables
+        let tableList = result.rows;
+        let responseList = [];
+        for(var i = 0; i < tableList.length; i++){
+          responseList.push(tableList[i].value);
+        }
+        return responseList;
+      }
+      else if(filter_key == "name"){ //Single table
+        if(_.isEmpty(result)){
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+        }
+
+        if(_.isEmpty(result.rows)){
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
         }
         else{
-              if(filter_key == "all" || filter_key == "live" || filter_key == "section"){ //Set of tables
-                let tableList = result.rows;
-                let responseList = [];
-                for(var i = 0; i < tableList.length; i++){
-                  responseList.push(tableList[i].value);
-                }
-
-                return callback(null, responseList);
-              }
-              else if(filter_key == "name"){ //Single table
-                if(_.isEmpty(result)){
-                  return callback(new ErrorResponse(ResponseType.NOT_FOUND, ErrorType.no_matching_results), null);
-                }
-
-                if(_.isEmpty(result.rows)){
-                  return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
-                }
-                else{
-                  return callback(null, result.rows[0].value);
-                }
-              }
+          return result.rows[0].value;
         }
-      })
+      }
     }
 
-    resetTable(table_id, callback){
-      let self = this;
-      self.getTableById(table_id, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            if(_.isEmpty(result)){
-              return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
-            }
-            else{
-              var tableData = result;
+    async resetTable(table_id){
 
-              tableData.assigned = "";
-              tableData.remarks = "";
-              tableData.KOT = "";
-              tableData.status = 0;
-              tableData.lastUpdate = "";   
-              tableData.guestName = ""; 
-              tableData.guestContact = ""; 
-              tableData.reservationMapping = ""; 
-              tableData.guestCount = "";
-
-              self.TableModel.saveSingleTableData(table_id, tableData, function(error, result){
-                if(error) {
-                    return callback(error, null)
-                }
-                else{
-                    return callback(null, "Updated successfully");
-                }
-              })   
-
-            }
-        }
-      })      
+      var tableData = await this.getTableById(table_id).catch(error => {
+        throw error
+      });
+      tableData.assigned = "";
+      tableData.remarks = "";
+      tableData.KOT = "";
+      tableData.status = 0;
+      tableData.lastUpdate = "";   
+      tableData.guestName = ""; 
+      tableData.guestContact = ""; 
+      tableData.reservationMapping = ""; 
+      tableData.guestCount = "";            
+    return await this.TableModel.saveSingleTableData(table_id, tableData).catch(error => {
+      throw error
+    });            
+      
     }
 
-    updateTable(table_id, newData, callback){
-      let self = this;
-      self.TableModel.updateTable(table_id, newData, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            return callback(null, "Updated successfully");
-        }
-      })   
+    async updateTable(table_id, newData){
+      return await this.TableModel.updateTable(table_id, newData).catch(error => {
+        throw error
+      });   
     }
 
-    addNewTableSection(sectionName, callback){
-      let self = this;
-      self.SettingsService.addNewEntryToSettings('ACCELERATE_TABLE_SECTIONS', {new_section_name : sectionName}, function(error, result){
-        if(error){
-          return callback(error, null)
-        }
-        else{
-          return callback(null, "Section added successfully");
-        }
-      })
+    async addNewTableSection(sectionName){
+      return await this.SettingsService.addNewEntryToSettings('ACCELERATE_TABLE_SECTIONS', {new_section_name : sectionName}).catch(error => {
+        throw error
+      }); 
     }
 
-    createNewTable(newTableData, callback){
-      let self = this;
+    async createNewTable(newTableData){
+      const tableData = await this.fetchTablesByFilter('all', '').catch(error => {
+        throw error
+      }); 
 
-      self.fetchTablesByFilter('all', '', function(error, result){
-        if(error) {
-            return callback(error, null)
+      let isDuplicate = false; 
+      for(var i = 0; i < tableData.length; i++){
+        if (tableData[i].table == newTableData.table || tableData[i].sortIndex == newTableData.sortIndex){
+            isDuplicate = true;
+            break;
         }
-        else{
-            let tableData = result;
-            let isDuplicate = false;
-            for(var i = 0; i < tableData.length; i++){
-              if (tableData[i].table == newTableData.table || tableData[i].sortIndex == newTableData.sortIndex){
-                  isDuplicate = true;
-                  break;
-              }
-            }
-
-            if(isDuplicate){
-              return callback(new ErrorResponse(ResponseType.CONFLICT, ErrorType.entry_already_exists), null);
-            }
-
-            self.TableModel.createNewTable(newTableData, function(error, result){
-                if(error) {
-                  return callback(error, null)
-                }
-                else{
-                  return callback(null, result);
-                }
-            })
-        }
-      })
+      }          
+      if(isDuplicate){
+        throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.entry_already_exists);
+      }
+      return await this.TableModel.createNewTable(newTableData).catch(error => {
+        throw error
+      });  
     }
 
-    deleteTableByName(tableName, callback){
-      let self = this;
+    async deleteTableByName(tableName){
 
-      self.fetchTablesByFilter('name', tableName, function(error, result){
-        if(error) {
-            return callback(error, null)
-        }
-        else{
-            let tableData = result;
-            
-            if(tableData.status != 0){
-              return callback(new ErrorResponse(ResponseType.CONFLICT, 'Table '+tableName+' is not free, can not be deleted'), null);
-            }
+      const tableData = await this.fetchTablesByFilter('name', tableName).catch(error => {
+        throw error
+      });
 
-            self.TableModel.deleteTable(tableData._id, tableData._rev, function(error, result){
-                if(error) {
-                  return callback(error, null)
-                }
-                else{
-                  return callback(null, "Table "+tableName+" has been deleted");
-                }
-            })
-        }
-      })      
+      if(tableData.status != 0){
+        throw new ErrorResponse(ResponseType.CONFLICT, 'Table '+tableName+' is not free, can not be deleted');
+      }
+      await this.TableModel.deleteTable(tableData._id, tableData._rev).catch(error => {
+        throw error
+      }); 
+      return "Table "+tableName+" has been deleted";      
     }
 
-    deleteTableSection(sectionName, finalCallback){
-      let self = this;
-      self.fetchTablesByFilter('section', sectionName, function(error, result){
-        if(error) {
-            return finalCallback(error, null)
+    async deleteTableSection(sectionName){
+      const tableData = await this.fetchTablesByFilter('section', sectionName).catch(error => {
+        throw error
+      });
+      let isAllFree = true;
+      for(var i = 0; i < tableData.length; i++){ //validate if all tables are free
+        if(tableData[i].status != 0){
+          isAllFree = false;
+          break;
         }
-        else{
-            let tableData = result;
-            let isAllFree = true;
-            for(var i = 0; i < tableData.length; i++){ //validate if all tables are free
-              if(tableData[i].status != 0){
-                isAllFree = false;
-                break;
-              }
-            }
+      }
+      if(!isAllFree){
+        throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.all_tables_not_free);
+      }  
+      if(_.isEmpty(tableData)){
+        return "Deleted successfully";
+      }  
+      for(var i = 0; i < tableData.length; i++){ 
+        var sectionTable = tableData[i]
+        await this.TableModel.deleteTable(sectionTable._id, sectionTable._rev).catch(error => {
+          throw new ErrorResponse(ResponseType.ERROR, "Error while deleting tables in "+sectionName);
+        });
+      }
+      
+      await this.SettingsService.removeEntryFromSettings('ACCELERATE_TABLE_SECTIONS', {section_name : sectionName}).catch(error => {
+        throw error
+      });
 
-            if(!isAllFree){
-              return finalCallback(new ErrorResponse(ResponseType.CONFLICT, 'All the tables are not free, section can not be deleted'), null);
-            }
-
-            async.series([
-              deleteTables,
-              deleteSection
-            ], function(err, res) {
-                if(err){
-                  return finalCallback(err, null)
-                }
-                else {
-                  return finalCallback(null, 'Deleted successfully')               
-                }
-            });
-
-            function deleteTables(callback){
-              if(_.isEmpty(tableData)){
-                return callback(null, "Deleted successfully");
-              }
-
-              async.eachSeries(tableData, function (sectionTable, loopCallback) {
-                  self.TableModel.deleteTable(sectionTable._id, sectionTable._rev, function(err, deleteResponse){
-                      if(err){
-                          return loopCallback(null, "failed")
-                      }
-                      else{
-                          return loopCallback(null, "succeeded")
-                      }
-                  })
-              }, 
-              function (err) {
-                  if(err){
-                    callback(new ErrorResponse(ResponseType.ERROR, "Error while deleting tables in "+sectionName), null);
-                  }
-                  return callback(null, "Deleted successfully");
-              });
-            }
-
-            function deleteSection(callback){
-              self.SettingsService.removeEntryFromSettings('ACCELERATE_TABLE_SECTIONS', {section_name : sectionName}, function(error, result){
-                  if(error) {
-                    return callback(error, null)
-                  }
-                  else{
-                    return callback(null, "Deleted successfully");
-                  }
-              })     
-            }
-        }
-
-      })       
+      return "Deleted successfully";
+      
     }
 
 }

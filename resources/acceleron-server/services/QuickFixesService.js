@@ -6,6 +6,7 @@ let CommonService = require('./CommonService');
 
 var _ = require('underscore');
 var async = require('async');
+const ErrorType = require('../utils/errorConstants');
 
 class QuickFixesService extends BaseService {
     constructor(request) {
@@ -16,183 +17,81 @@ class QuickFixesService extends BaseService {
         this.CommonService = new CommonService(request);
     }
 
-    applyQuickFix(fix_key, callback) {
-        let self = this;
+    async applyQuickFix(fix_key) {
+
         if(fix_key == "KOT" || fix_key == "BILL"){
-            self.quickFixIndices(fix_key, function(error, result){
-                if(error) {
-                    return callback(error, null)
-                }
-                else{
-                    return callback(null, "Fixed successfully");
-                }
-            })                     
+            await this.quickFixIndices(fix_key).catch(error => {
+                throw error
+            });
+            return "Fixed successfully";                    
         }
         else{ //table mapping fix
-            self.quickFixTables(function(error, result){
-                if(error) {
-                    return callback(error, null)
-                }
-                else{
-                    return callback(null, "Fixed successfully");
-                }
-            })        
+            await this.quickFixTables().catch(error => {
+                throw error
+            });        
         }
     }
 
-    quickFixIndices(fix_key, majorCallback){
-        let self = this;
-
-        async.waterfall([
-          fetchIndexData,
-          incrementIndex
-        ], function(err, new_update_data) {
-            if(err){
-                return majorCallback(err, null)
-            }
-            else {
-                let settings_id = 'ACCELERATE_'+fix_key+'_INDEX';
-                self.CommonService.updateSettingsFileById(settings_id, new_update_data, function(error, result){
-                    if(error) {
-                        return majorCallback(error, null)
-                    }
-                    else{
-                        return majorCallback(null, "Updated successfully");
-                    }
-                })                
-            }
-        });
-
-        function fetchIndexData(callback){
-            let settings_id = 'ACCELERATE_'+fix_key+'_INDEX';
-            self.CommonService.updateSettingsFileById(settings_id, function(error, result){
-                if(error) {
-                    return callback(error, null)
-                }
-                else{
-                    if(_.isEmpty(result)){
-                        return callback(new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results), null);
-                    }
-                    else{
-                        return callback(null, result);
-                    }
-                }
-            })
-        }
-
-        function incrementIndex(settingsData, callback){
-            try {
-                var indexValue = settingsData.value;
-                indexValue++;                
-                settingsData.value = indexValue;
-                return callback(null, settingsData);
-             }
-             catch(er) {
-                return callback(new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted), null);
-             }              
-        }        
-    }
-
-    quickFixTables(majorCallback){
-        let self = this;
-
-        async.waterfall([
-          fetchAllLiveTables,
-          resetAllLiveTables,
-          fetchActiveDineOrders,
-          remapOrdersToTables
-        ], function(err, data) {
-            if(err){
-                return majorCallback(err, null)
-            }
-            else {
-                return majorCallback(null, "Fixed successfully");              
-            }
-        });
-
-        function fetchAllLiveTables(callback){
-            self.TableService.fetchTablesByFilter('live', '', function(error, result){
-                if(error) {
-                    return callback(error, null)
-                }
-                else{
-                    return callback(null, result);
-                }
-            })
-        }
-
-        function resetAllLiveTables(liveTablesData, finalCallback){
-
-            if(_.isEmpty(liveTablesData)){ //Incase no live tables
-              return finalCallback(null, "Reset successfully");
-            }
-
-            async.eachSeries(liveTablesData, function (liveTable, loopCallback) {
-                self.TableService.resetTable(liveTable._id, function(err, resetResponse){
-                    if(err){
-                        return loopCallback(null, "failed")
-                    }
-                    else{
-                        return loopCallback(null, "succeeded")
-                    }
-                })
-            }, function (err) {
-                if(err)
-                    finalCallback(err);
-
-                return finalCallback(null, "Reset successfully");
+    async quickFixIndices(fix_key){
+        let settings_id = 'ACCELERATE_'+fix_key+'_INDEX';
+            const settingsData = await this.CommonService.getSettingsFileById(settings_id).catch(error => {
+                throw error
             });
-        }   
+            if(_.isEmpty(settingsData)){
+                throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+            }
+            var indexValue = settingsData.value;
+            indexValue++;                
+            settingsData.value = indexValue;  
+            return await this.CommonService.updateSettingsFileById(settings_id, settingsData).catch(error => {
+                throw error
+            });                  
+    }
 
-        function fetchActiveDineOrders(statusChange, callback){
-            self.KOTService.fetchKOTsByFilter('dine', function(error, result){
-                if(error) {
-                    return callback(error, null)
-                }
-                else{
-                    return callback(null, result);
-                }
-            })
+    async quickFixTables(){
+        
+        const liveTablesData = await this.TableService.fetchTablesByFilter('live', '').catch(error => {
+            throw error
+        });
+
+        if(_.isEmpty(liveTablesData)){ //Incase no live tables
+            return "Fixed successfully";
+        }
+
+        for(var i = 0; i < liveTablesData.length; i++){ 
+            liveTable = liveTablesData[i]
+            await this.TableService.resetTable(liveTable._id).catch(error => {
+              throw new ErrorResponse(ResponseType.ERROR, ErrorType.live_table_reset_failed);
+            });
         } 
 
-        function remapOrdersToTables(liveOrdersData, finalCallback){
-            if(_.isEmpty(liveOrdersData)){ //No active dine orders
-              return finalCallback(null, "Reset successfully");
-            }
+        const liveOrdersData = await this.KOTService.fetchKOTsByFilter('dine').catch(error => {
+            throw error;
+          });
 
-            async.eachSeries(liveOrdersData, function (liveKOT, loopCallback) {
-                self.TableService.fetchTablesByFilter('name', liveKOT.table, function(err, tableData){
-                    if(err){
-                        return loopCallback(null, "failed")
-                    }
-                    else{
-                        tableData.assigned = liveKOT.stewardName;
-                        tableData.remarks = "";
-                        tableData.KOT = liveKOT.KOTNumber;
-                        tableData.status = 1;
-                        tableData.lastUpdate = liveKOT.timeKOT != "" ? liveKOT.timeKOT : liveKOT.timePunch;   
-                        tableData.guestName = liveKOT.customerName; 
-                        tableData.guestContact = liveKOT.customerMobile; 
-                        tableData.reservationMapping = ""; 
-                        tableData.guestCount = liveKOT.guestCount;
-
-                        self.TableService.updateTable(tableData._id, tableData, function(err, resetResponse){
-                            if(err){
-                                return loopCallback(null, "failed")
-                            }
-                            else{
-                                return loopCallback(null, "succeeded")
-                            }
-                        })
-                    }
-                })
-            }, function (err) {
-                if(err)
-                    finalCallback(err);
-
-                return finalCallback(null, "Reset successfully");
+        if(_.isEmpty(liveOrdersData)){ //No active dine orders
+            return "Fixed successfully";
+        }
+        for(var i = 0; i < liveOrdersData.length; i++){ 
+            liveKOT = liveOrdersData[i]
+            const tableData = await this.TableService.fetchTablesByFilter('name', liveKOT.table).catch(error => {
+                throw error
             });
-        }    
+            tableData.assigned = liveKOT.stewardName;
+            tableData.remarks = "";
+            tableData.KOT = liveKOT.KOTNumber;
+            tableData.status = 1;
+            tableData.lastUpdate = liveKOT.timeKOT != "" ? liveKOT.timeKOT : liveKOT.timePunch;   
+            tableData.guestName = liveKOT.customerName; 
+            tableData.guestContact = liveKOT.customerMobile; 
+            tableData.reservationMapping = ""; 
+            tableData.guestCount = liveKOT.guestCount;
+
+            await this.TableService.updateTable(tableData._id, tableData).catch(error => {
+                throw new ErrorResponse(ResponseType.ERROR, ErrorType.remapping_orders_failed);
+            });
+        }
+        return "Fixed successfully";   
     }
 }
 
