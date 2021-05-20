@@ -239,7 +239,7 @@ class SettingsController extends BaseController {
         
         var settings_id = this.request.params.id;
         var filter_key = this.request.query.uniqueKey;
-        var entry_to_update = self.request.body;
+        var entry_to_update = this.request.body;
 
         if (_.isEmpty(settings_id)) {
             throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.settings_id_is_empty_or_invalid)
