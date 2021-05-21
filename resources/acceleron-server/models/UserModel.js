@@ -7,7 +7,7 @@ class UserModel extends BaseModel{
 
     constructor(request) {
         super(request);
-        this.couch = ACCELERONCORE._connectors.CouchDB;
+        this.couch = ACCELERONCORE._connectors.CouchDBAsync;
     }
     
 }

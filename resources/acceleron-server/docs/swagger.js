@@ -59,7 +59,7 @@ var all = {
         },
         {
             "name": "sales-summary",
-            "description": "APIs to create, edit, change User details",
+            "description": "APIs to fetch sales-summary",
         }],
     "schemes": ["http"],
     "securityDefinitions": {
@@ -1075,6 +1075,33 @@ var all = {
                         "required": true,
                         "type": "string"
                     }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/summary/paymentmode": {
+            "get": {
+                "tags": ["sales-summary"],
+                "summary": "To get summary based on payment mode",
+                "description": "To fetch sales summary based on different payment modes from a given start date to the given end date",
+                "operationId": "getSummaryByPaymentMode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "startdate",
+                        "in": "query",
+                        "description": "from date",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enddate",
+                        "in": "query",
+                        "description": "to date",
+                        "required": true,
+                        "type": "string"
+                    },
                 ],
                 "responses": responsesList,
                 "security": [{"access_key": []}]
