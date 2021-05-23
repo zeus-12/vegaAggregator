@@ -18,5 +18,13 @@ router.get('/:id', async function (req, res, next) {
         return next(error)
       }
 })
+router.put('/tabletransfer',async function(req, res, next) {
+  try {
+    const data = await new KOTController(req).tableTransferKOT();
+    return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+  } catch (error) {
+    return next(error)
+  }
+})
 
 module.exports = router;
