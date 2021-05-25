@@ -93,5 +93,7 @@ ErrorType.live_table_reset_failed ="Resetting Live tables failed"
 
 /*KOT Errors*/
 ErrorType.kot_id_is_empty_or_invalid = 'KOT ID is empty or invalid format, please re-enter it correctly'
+ErrorType.order_not_dine = 'Order is not a Dine-In order'
+ErrorType.same_table = 'Same Table'
 
 module.exports = ErrorType

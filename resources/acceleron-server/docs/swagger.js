@@ -672,6 +672,33 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
+        "/kot/tabletransfer": {
+            "put": {
+                "tags": ["kot"],
+                "summary": "To transfer KOT to another table",
+                "description": "To transfer KOT from a table to another using the kot_id and new table number",
+                "operationId": "tableTransferKOT",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "kotId",
+                        "in": "query",
+                        "description": "KOT ID of the order",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "newTableNumber",
+                        "in": "query",
+                        "description": "New Table Number",
+                        "required": true,
+                        "type": "string"
+                    }               
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
         "/menu": {
             "get": {
                 "tags": ["menu"],

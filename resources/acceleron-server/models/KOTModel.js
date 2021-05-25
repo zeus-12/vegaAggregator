@@ -22,6 +22,18 @@ class KOTModel extends BaseModel{
             });
         });
     }
+    async updateKOTById(kotId, newKOTData){
+        return new Promise((resolve, reject) => {
+            this.couch.put('/accelerate_kot/'+kotId, newKOTData, function (err, data) {
+            if(err){
+                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
+            }
+            else{
+                resolve("Updated Successfully");
+            }
+            });
+        }); 
+    }
 }
 
 module.exports = KOTModel;
