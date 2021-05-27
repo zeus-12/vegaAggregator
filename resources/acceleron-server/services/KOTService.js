@@ -39,6 +39,10 @@ class KOTService extends BaseService {
           path = '/accelerate_kot/_design/table-mapping/_view/fetchdineorders';
           break;
         }
+        case 'nondine':{
+          path = '/accelerate_kot/_design/table-mapping/_view/fetchnondineorders';
+          break;
+        }
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
@@ -47,7 +51,6 @@ class KOTService extends BaseService {
       const result = await this.CommonModel.getDataByPath(path).catch(error => {
         throw error
       });
-      console.log(result.rows[0].key)
       var kotList = result.rows;
       var responseList = [];
       for(var i = 0; i < kotList.length; i++){

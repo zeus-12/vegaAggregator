@@ -218,7 +218,7 @@ class MenuController extends BaseController {
       if(_.isEmpty(categoryName)){
         throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.category_name_is_empty_or_invalid)
       }
-      if(_.isEmpty(option)){
+      if(_.isEmpty(availOption)){
         throw new ErrorResponse(ResponseType.ERROR, ErrorType.avail_option_empty)
       }
       

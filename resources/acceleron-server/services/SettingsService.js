@@ -199,7 +199,7 @@ class SettingsService extends BaseService {
                 isFound = true;
                 returnResponse = valueList[i]
                 delete returnResponse['password'];
-                 break;
+                break;
             }
           }
           break;
@@ -232,7 +232,6 @@ class SettingsService extends BaseService {
       if(!isFound){
         throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
       }
-      
       return returnResponse;
     }
 
@@ -356,23 +355,31 @@ class SettingsService extends BaseService {
       const settingsData = await this.getSettingsById('ACCELERATE_KOT_RELAYING').catch(error => {
         throw error
       });
-      var valueList = settingsData.value;
+      var settingsList = settingsData.value;
+      var isFound = false;
+      var isCategoryFound = false;
       for(var n=0; n<settingsList.length; n++){
         if(settingsList[n].systemName == machineName){
           for (var i=0; i<settingsList[n].data.length; i++){
             if(settingsList[n].data[i].name == categoryName){
               settingsList[n].data[i].name = newCategoryName;
+              isCategoryFound = true;
               break;
             }
           }
+          isFound = true;
           break;
         }
-      }   
-      settingsData.value = valueList;
+      }
+      if(!isFound || !isCategoryFound){
+        throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+      }
+      else{    
+      settingsData.value = settingsList;
       return await this.SettingsModel.updateNewSettingsData('ACCELERATE_KOT_RELAYING', settingsData).catch(error => {
         throw error
-      });  
-
+      });
+      }  
     }
 
     async deleteCategoryKOTRelays(machineName, categoryName) {
@@ -380,23 +387,31 @@ class SettingsService extends BaseService {
       const settingsData = await this.getSettingsById('ACCELERATE_KOT_RELAYING').catch(error => {
         throw error
       });
-      var valueList = settingsData.value;
+      var settingsList = settingsData.value;
+      var isFound = false;
+      var isCategoryFound = false;
       for(var n=0; n<settingsList.length; n++){
         if(settingsList[n].systemName == machineName){
             for (var i=0; i<settingsList[n].data.length; i++){
               if(settingsList[n].data[i].name == categoryName){
                 settingsList[n].data.splice(i,1);
+                isCategoryFound = true;
                 break;
               }
             }
+          isFound = true;  
           break;
         }
-      }   
-      settingsData.value = valueList;
+      }
+      if(!isFound || !isCategoryFound){
+        throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+      }
+      else{      
+      settingsData.value = settingsList;
       return await this.SettingsModel.updateNewSettingsData('ACCELERATE_KOT_RELAYING', settingsData).catch(error => {
         throw error
       });  
-
+      }
     }
 
 }

@@ -202,7 +202,7 @@ class MenuService extends BaseService {
         var min = 0;  //Index of min and max values.
         var max = 0;
         var g = 0;
-        while (item.customOptions[g]) {
+        while (itemObject.customOptions[g]) {
             if (parseInt(itemObject.customOptions[g].customPrice) > parseInt(itemObject.customOptions[max].customPrice)) {
                 max = g;
             }
@@ -266,7 +266,7 @@ class MenuService extends BaseService {
         var min = 0;  //Index of min and max values.
         var max = 0;
         var g = 0;
-        while (item.customOptions[g]) {
+        while (newItemObject.customOptions[g]) {
             if (parseInt(newItemObject.customOptions[g].customPrice) > parseInt(newItemObject.customOptions[max].customPrice)) {
               max = g;
             }

@@ -16,17 +16,11 @@ class UserController extends BaseController {
         var user_id = self.request.params.id;
 
         if (_.isEmpty(user_id)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
         }
-
-        self.UserService.getUserById(user_id, function (error, result) {
-            if(error){
-                return callback(error, null);
-            }
-            else{
-                return callback(null, result);
-            }
-        });
+        return await this.UserService.getUserById(user_id).catch(error => {
+            throw error
+        }); 
     }
 
     async getAllUsers() {
@@ -73,17 +67,17 @@ class UserController extends BaseController {
 
         let passData = this.request.body;
         if (_.isEmpty(passData.code)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.code_is_empty_or_invalid));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.code_is_empty_or_invalid);
         }
         if ( _.isEmpty(passData.current_passcode)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.passcode_is_empty_or_invalid));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.passcode_is_empty_or_invalid);
         }
         if (_.isEmpty(passData.updating_passcode)) {
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.passcode_is_empty_or_invalid));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.passcode_is_empty_or_invalid);
         }
 
         if(passData.updating_passcode.length != 4 || isNaN(passData.updating_passcode)){
-            return callback(new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.passcode_has_to_be_four_digit));
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.passcode_has_to_be_four_digit);
         }
 
         return await this.UserService.changeUserPasscode(passData).catch(error => {

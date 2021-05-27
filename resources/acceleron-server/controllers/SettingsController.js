@@ -278,6 +278,9 @@ class SettingsController extends BaseController {
                 if(_.isEmpty(entry_to_update.updateField)){
                     throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.update_field_is_empty_or_invalid)
                 }
+                if(_.isEmpty(entry_to_update.newValue)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.new_Value_is_empty_or_invalid)
+                }
                 break;
             }
             case 'ACCELERATE_SHORTCUT_KEYS':{
