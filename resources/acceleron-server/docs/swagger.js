@@ -230,7 +230,7 @@ var all = {
                     {
                         "name": "body",
                         "in": "body",
-                        "description": "Entry Object to be removed",
+                        "description": "Entry object to be removed",
                         "required": true,
                         "type": "object",
                         "properties":{
@@ -650,7 +650,7 @@ var all = {
                     {
                         "name": "body",
                         "in": "body",
-                        "description": "",
+                        "description": "Passcode Object",
                         "required": true,
                         "type": "object",
                         "properties":{
@@ -681,7 +681,7 @@ var all = {
                     {
                         "name": "delete_user_code",
                         "in": "body",
-                        "description": "Passcode Object",
+                        "description": "",
                         "required": true,
                         "type": "object",
                         "properties":{
