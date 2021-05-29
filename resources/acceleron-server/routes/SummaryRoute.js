@@ -19,5 +19,14 @@ router.get('/billingandpaymentmode', async function (req, res, next) {
   }
 });
 
+router.get('/paymentmode', async function (req, res, next) {
+  try {
+    const data = await new SummaryController(req).fetchSummaryByPaymentMode();
+    return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 
 module.exports = router;

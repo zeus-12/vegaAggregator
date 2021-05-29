@@ -7,72 +7,47 @@ class TableModel extends BaseModel{
 
     constructor(request) {
         super(request);
-        this.couch = ACCELERONCORE._connectors.CouchDB;
+        this.couch = ACCELERONCORE._connectors.CouchDBAsync;
     }
 
-    async getTableById(table_id, callback) {
-        return new Promise((resolve, reject) => {
-            this.couch.get('/accelerate_tables/'+table_id, function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve(data);
-            }
-            });
+    async getTableById(table_id) {
+        const data = await this.couch.get('/accelerate_tables/'+table_id).catch(error => {
+            throw error;
         });
+
+        return data;
     }
 
     async saveSingleTableData(table_id, tableData){
-        return new Promise((resolve, reject) => {
-            this.couch.put('/accelerate_tables/'+table_id, tableData, function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve("Updated Successfully");
-            }
-            });
-        });      
+        const data = await this.couch.put('/accelerate_tables/'+table_id, tableData).catch(error => {
+            throw error;
+        });
+
+        return data;    
     }
 
     async updateTable(table_id, new_table_data){
-        return new Promise((resolve, reject) => {
-            this.couch.put('/accelerate_tables/'+table_id, new_table_data, function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve("Updated Successfully");
-            }
-            });
-        }); 
+        const data = await this.couch.put('/accelerate_tables/'+table_id, new_table_data).catch(error => {
+            throw error;
+        });
+
+        return data;
     }
 
     async createNewTable(tableData){
-        return new Promise((resolve, reject) => {
-            this.couch.post('/accelerate_tables/', tableData, function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve(data);
-            }
-            });
-        });       
+        const data = await this.couch.post('/accelerate_tables/', tableData).catch(error => {
+            throw error;
+        });
+
+        return data;    
     }
 
     async deleteTable(tableId, tableRev, callback){
-        return new Promise((resolve, reject) => {
-            this.couch.delete('/accelerate_tables/'+tableId+'?rev='+tableRev, function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve(data);
-            }
-            });
-        });        
+        const data = await this.couch.delete('/accelerate_tables/'+tableId+'?rev='+tableRev).catch(error => {
+            throw error;
+        });
+
+        return data;       
     }
 }
 

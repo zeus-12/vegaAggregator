@@ -41,6 +41,10 @@ class KOTService extends BaseService {
           path = '/accelerate_kot/_design/table-mapping/_view/fetchdineorders';
           break;
         }
+        case 'nondine':{
+          path = '/accelerate_kot/_design/table-mapping/_view/fetchnondineorders';
+          break;
+        }
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }

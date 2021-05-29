@@ -59,7 +59,7 @@ var all = {
         },
         {
             "name": "sales-summary",
-            "description": "APIs to create, edit, change User details",
+            "description": "APIs to fetch sales-summary",
         }],
     "schemes": ["http"],
     "securityDefinitions": {
@@ -194,6 +194,18 @@ var all = {
                         "description": "Settings ID",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "New Entry Object",
+                        "required": true,
+                        "type": "object",
+                        "properties":{
+                            "name":{
+                                "type" : "string"
+                            }
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -204,7 +216,7 @@ var all = {
             "post": {
                 "tags": ["settings"],
                 "summary": "To remove entry from settings",
-                "description": "To add an entry from the settings content against its unique id. Entry object to be removed to be passed in body.",
+                "description": "To remove an entry from the settings content against its unique id. Entry object to be removed to be passed in body.",
                 "operationId": "removeEntryFromSettings",
                 "produces": ["application/json"],
                 "parameters": [
@@ -214,6 +226,18 @@ var all = {
                         "description": "Settings ID",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Entry object to be removed",
+                        "required": true,
+                        "type": "object",
+                        "properties":{
+                            "name":{
+                                "type" : "string"
+                            }
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -268,6 +292,18 @@ var all = {
                         "description": "Unique Identifier Key",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Fields to be updated",
+                        "required": true,
+                        "type": "object",
+                        "properties":{
+                            "updateField":{
+                                "type" : "string"
+                            }
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -563,7 +599,7 @@ var all = {
                     {
                         "name": "filter",
                         "in": "query",
-                        "description": "Filter by Role - admin / steward / agent",
+                        "description": "Filter by Role - ADMIN / STEWARD / AGENT",
                         "required": false,
                         "type": "string"
                     }
@@ -581,11 +617,22 @@ var all = {
                 "produces": ["application/json"],
                 "parameters": [
                     {
-                        "name": "",
+                        "name": "body",
                         "in": "body",
                         "description": "User Object",
                         "required": true,
-                        "type": "string"
+                        "type": "object",
+                        "properties":{
+                            "name":{
+                                "type" : "string"
+                            },
+                            "role":{
+                                "type" : "string"
+                            },
+                            "code":{
+                                "type" : "string"
+                            },
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -601,11 +648,22 @@ var all = {
                 "produces": ["application/json"],
                 "parameters": [
                     {
-                        "name": "",
+                        "name": "body",
                         "in": "body",
                         "description": "Passcode Object",
                         "required": true,
-                        "type": "string"
+                        "type": "object",
+                        "properties":{
+                            "code":{
+                                "type" : "string"
+                            },
+                            "current_passcode":{
+                                "type" : "string"
+                            },
+                            "updating_passcode":{
+                                "type" : "string"
+                            },
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -625,7 +683,12 @@ var all = {
                         "in": "body",
                         "description": "",
                         "required": true,
-                        "type": "string"
+                        "type": "object",
+                        "properties":{
+                            "delete_user_code":{
+                                "type" : "string"
+                            }
+                        }
                     }
                 ],
                 "responses": responsesList,
@@ -1005,7 +1068,14 @@ var all = {
                 "description": "To mark all items in the given category as available",
                 "operationId": "markAllAvailableByCategory",
                 "produces": ["application/json"],
-                "parameters": [                    
+                "parameters": [ 
+                    {
+                        "name": "categoryName",
+                        "in": "path",
+                        "description": "Category Name",
+                        "required": true,
+                        "type": "string"
+                    },                   
                     {
                     "name": "option",
                     "in": "query",
@@ -1102,6 +1172,33 @@ var all = {
                         "required": true,
                         "type": "string"
                     }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/summary/paymentmode": {
+            "get": {
+                "tags": ["sales-summary"],
+                "summary": "To get summary based on payment mode",
+                "description": "To fetch sales summary based on different payment modes from a given start date to the given end date",
+                "operationId": "getSummaryByPaymentMode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "startdate",
+                        "in": "query",
+                        "description": "from date",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enddate",
+                        "in": "query",
+                        "description": "to date",
+                        "required": true,
+                        "type": "string"
+                    },
                 ],
                 "responses": responsesList,
                 "security": [{"access_key": []}]

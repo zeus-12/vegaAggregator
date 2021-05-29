@@ -7,59 +7,39 @@ class MenuModel extends BaseModel{
 
     constructor(request) {
         super(request);
-        this.couch = ACCELERONCORE._connectors.CouchDB;
+        this.couch = ACCELERONCORE._connectors.CouchDBAsync;
     }
 
     async getMenu() {
-        return new Promise((resolve, reject) => {
-            this.couch.get('/accelerate_settings/ACCELERATE_MASTER_MENU', function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve(data);
-            }
-            });
+        const data = await this.couch.get('/accelerate_settings/ACCELERATE_MASTER_MENU').catch(error => {
+            throw error;
         });
+
+        return data;
     }
 
     async updateMenu(updateData) {
-        return new Promise((resolve, reject) => {
-        this.couch.put('/accelerate_settings/ACCELERATE_MASTER_MENU', updateData, function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve("Updated successfully");
-            }
+        const data = await this.couch.put('/accelerate_settings/ACCELERATE_MASTER_MENU', updateData).catch(error => {
+            throw error;
         });
-    });
+
+        return data;
     }
 
     async getCategoryList() {
-        return new Promise((resolve, reject) => {
-        this.couch.get('/accelerate_settings/ACCELERATE_MENU_CATEGORIES', function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve(data);
-            }
+        const data = await this.couch.get('/accelerate_settings/ACCELERATE_MENU_CATEGORIES').catch(error => {
+            throw error;
         });
-    });
+
+        return data;
     }
 
     async updateCategoryList(updateData) {
-        return new Promise((resolve, reject) => {
-        this.couch.put('/accelerate_settings/ACCELERATE_MENU_CATEGORIES', updateData, function (err, data) {
-            if(err){
-                reject(new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong));
-            }
-            else{
-                resolve("Updated successfully");
-            }
+        const data = await this.couch.put('/accelerate_settings/ACCELERATE_MENU_CATEGORIES', updateData).catch(error => {
+            throw error;
         });
-    });
+
+        return data;
     }
 }
 

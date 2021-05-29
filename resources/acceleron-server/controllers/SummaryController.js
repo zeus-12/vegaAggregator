@@ -14,7 +14,6 @@ class SummaryController extends BaseController {
 
 async fetchSummaryByBillingMode(){
 
-
         let self = this;
         var from_date = self.request.query.startdate;
         var to_date = self.request.query.enddate;
@@ -31,7 +30,7 @@ async fetchSummaryByBillingMode(){
 
         try {
             const data = await self.SummaryService.getAllBillingModes();
-            billingModes = data;
+            billingModes = data.value;
         } catch (error) {
             throw error;
         };
@@ -59,10 +58,14 @@ async  fetchSummaryByBillingAndPaymentMode(){
             throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
         }
 
+        if (from_date > to_date){
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.from_date_should_be_greater_than_to_date);            
+        }
+
         try {
             const data = await self.SummaryService.getAllBillingModes();
-            for(var i = 0; i < data.length; i++){
-                ALLOWED_BILLING_MODES = [...ALLOWED_BILLING_MODES, data[i].name];
+            for(var i = 0; i < data.value.length; i++){
+                ALLOWED_BILLING_MODES = [...ALLOWED_BILLING_MODES, data.value[i].name];
             }
         } catch (error) {
             throw error;
@@ -74,7 +77,7 @@ async  fetchSummaryByBillingAndPaymentMode(){
 
         try {
             const data = await self.SummaryService.getAllPaymentModes();
-            paymentModes = data;
+            paymentModes = data.value;
         } catch (error) {
             throw error;
         };
@@ -87,6 +90,38 @@ async  fetchSummaryByBillingAndPaymentMode(){
         }
 
     }
+
+async fetchSummaryByPaymentMode(){
+
+        let self = this;
+        var from_date = self.request.query.startdate;
+        var to_date = self.request.query.enddate;
+        var paymentModes = [];
+        var SELECTED_INVOICE_SOURCE_DB = 'accelerate_invoices';
+
+        if (_.isEmpty(from_date) || _.isEmpty(to_date)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
+        }
+        if (from_date > to_date){
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.from_date_should_be_greater_than_to_date);            
+        }
+
+        try {
+            const data = await self.SummaryService.getAllPaymentModes();
+            paymentModes = data.value;
+        } catch (error) {
+            throw error;
+        };
+
+        try {
+            const data = await self.SummaryService.fetchSummaryByPaymentMode(SELECTED_INVOICE_SOURCE_DB, paymentModes, from_date, to_date);
+            return data;
+        } catch (error) {
+            throw error; 
+        }
+    
+}
+
 }
 
 module.exports = SummaryController;

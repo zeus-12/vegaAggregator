@@ -27,22 +27,22 @@ class UserService extends BaseService {
         throw error
       });
       let finalData = [];
-      for(var i = 0; i < userData.length; i++){
+      for(var i = 0; i < userData.value.length; i++){
         if(!_.isEmpty(filter)){
-          if(userData[i].role == filter){
-            delete userData[i]['password'];
-            finalData.push(userData[i]);
+          if(userData.value[i].role == filter){
+            delete userData.value[i]['password'];
+            finalData.push(userData.value[i]);
           }
         }
         else{
-          delete userData[i]['password'];
+          delete userData.value[i]['password'];
         }
       }
       if(!_.isEmpty(filter)){
         return finalData;
       }
       else{
-        return userData;
+        return userData.value;
       }
      
     }

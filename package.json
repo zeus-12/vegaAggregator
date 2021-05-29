@@ -4,7 +4,8 @@
   "description": "Subsidiary application for VegaPOS to aggregate orders from different sources",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "test": "jest"
   },
   "repository": "https://github.com/Accelerate-net/vegaAggregator",
   "keywords": [
@@ -14,7 +15,9 @@
   ],
   "author": "Accelerate",
   "license": "CC0-1.0",
-  "devDependencies": {},
+  "devDependencies": {
+    "jest": "^26.6.3"
+  },
   "dependencies": {
     "async": "^3.1.0",
     "aws-sdk": "2.307.0",
