@@ -19,7 +19,6 @@ async fetchSummaryByBillingMode(){
         var to_date = self.request.query.enddate;
         var curr_date = moment().format('YYYYMMDD');
         var billingModes = [];
-        var SELECTED_INVOICE_SOURCE_DB = 'accelerate_invoices';
 
         if (_.isEmpty(from_date) || _.isEmpty(to_date)) {
             throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
@@ -36,7 +35,7 @@ async fetchSummaryByBillingMode(){
         };
 
         try {
-            const data = await self.SummaryService.fetchSummaryByBillingMode(SELECTED_INVOICE_SOURCE_DB, billingModes, from_date, to_date, curr_date);
+            const data = await self.SummaryService.fetchSummaryByBillingMode(billingModes, from_date, to_date, curr_date);
             return data;
         } catch (error) {
             throw error; 
@@ -51,7 +50,6 @@ async  fetchSummaryByBillingAndPaymentMode(){
         var to_date = self.request.query.enddate;
         var billing_mode = self.request.query.billingmode;
         var paymentModes = [];
-        var SELECTED_INVOICE_SOURCE_DB = 'accelerate_invoices';
         var ALLOWED_BILLING_MODES = [];
 
         if (_.isEmpty(from_date) || _.isEmpty(to_date) || _.isEmpty(billing_mode)) {
@@ -83,13 +81,13 @@ async  fetchSummaryByBillingAndPaymentMode(){
         };
 
         try {
-            const data = await self.SummaryService.fetchSummaryByBillingAndPaymentMode(SELECTED_INVOICE_SOURCE_DB, paymentModes, from_date, to_date, billing_mode);
+            const data = await self.SummaryService.fetchSummaryByBillingAndPaymentMode(paymentModes, from_date, to_date, billing_mode);
             return data;
         } catch (error) {
             throw error; 
         }
 
-    }
+}
 
 async fetchSummaryByPaymentMode(){
 
@@ -97,7 +95,6 @@ async fetchSummaryByPaymentMode(){
         var from_date = self.request.query.startdate;
         var to_date = self.request.query.enddate;
         var paymentModes = [];
-        var SELECTED_INVOICE_SOURCE_DB = 'accelerate_invoices';
 
         if (_.isEmpty(from_date) || _.isEmpty(to_date)) {
             throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
@@ -114,12 +111,89 @@ async fetchSummaryByPaymentMode(){
         };
 
         try {
-            const data = await self.SummaryService.fetchSummaryByPaymentMode(SELECTED_INVOICE_SOURCE_DB, paymentModes, from_date, to_date);
+            const data = await self.SummaryService.fetchSummaryByPaymentMode(paymentModes, from_date, to_date);
             return data;
         } catch (error) {
             throw error; 
         }
     
+}
+
+async  fetchSummaryByPaymentModeAndExtras(){
+
+    let self = this;
+    var from_date = self.request.query.startdate;
+    var to_date = self.request.query.enddate;
+    var payment_mode = self.request.query.paymentmode;
+    var billingParameters = [];
+    var ALLOWED_PAYMENT_MODES = [];
+
+    if (_.isEmpty(from_date) || _.isEmpty(to_date) || _.isEmpty(payment_mode)) {
+        throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
+    }
+
+    if (from_date > to_date){
+        throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.from_date_should_be_greater_than_to_date);            
+    }
+
+    try {
+        const data = await self.SummaryService.getAllPaymentModes();
+        for(var i = 0; i < data.value.length; i++){
+            ALLOWED_PAYMENT_MODES = [...ALLOWED_PAYMENT_MODES, data.value[i].code];
+        }
+    } catch (error) {
+        throw error;
+    };
+
+    if(!ALLOWED_PAYMENT_MODES.includes(payment_mode)){
+        throw new ErrorResponse(ResponseType.BAD_REQUEST, "Not a valid payment mode");
+    }
+
+    try {
+        const data = await self.SummaryService.getAllBillingParameters();
+        billingParameters = data.value;
+    } catch (error) {
+        throw error;
+    };
+
+    try {
+        const data = await self.SummaryService.fetchSummaryByPaymentModeAndExtras(billingParameters, from_date, to_date, payment_mode);
+        return data;
+    } catch (error) {
+        throw error; 
+    }
+
+}
+
+async fetchSummaryBySessions(){
+
+    let self = this;
+    var from_date = self.request.query.startdate;
+    var to_date = self.request.query.enddate;
+    var diningSessions = [];
+
+
+    if (_.isEmpty(from_date) || _.isEmpty(to_date)) {
+        throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
+    }
+    if (from_date > to_date){
+        throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.from_date_should_be_greater_than_to_date);            
+    }
+
+    try {
+        const data = await self.SummaryService.getAllDiningSessions();
+        diningSessions = data.value;
+    } catch (error) {
+        throw error;
+    };
+
+    try {
+        const data = await self.SummaryService.fetchSummaryBySessions(diningSessions, from_date, to_date);
+        return data;
+    } catch (error) {
+        throw error; 
+    }
+
 }
 
 }

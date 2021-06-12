@@ -28,5 +28,23 @@ router.get('/paymentmode', async function (req, res, next) {
   }
 });
 
+router.get('/paymentmodeandextras', async function (req, res, next) {
+  try {
+    const data = await new SummaryController(req).fetchSummaryByPaymentModeAndExtras();
+    return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.get('/sessions', async function (req, res, next) {
+  try {
+    const data = await new SummaryController(req).fetchSummaryBySessions();
+    return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 
 module.exports = router;
