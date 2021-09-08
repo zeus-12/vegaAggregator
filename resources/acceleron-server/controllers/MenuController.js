@@ -185,10 +185,10 @@ class MenuController extends BaseController {
         throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.item_code_is_empty_or_invalid)
       }
       if(_.isNull(onlineFlag) ){
-        throw new ErrorResponse(ResponseType.ERROR, ErrorType.online_flag_empty)
+        throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.online_flag_empty)
       }
       if(_.isEmpty(updateToken) ){
-        throw new ErrorResponse(ResponseType.ERROR, ErrorType.update_token_empty)
+        throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.update_token_empty)
       }
 
       return await this.MenuService.toggleAvailability(itemCode, onlineFlag, updateToken)
@@ -243,6 +243,66 @@ class MenuController extends BaseController {
           throw error
         });
     }
+
+  // Menu Photos
+
+  async addNewPhoto() {
+    const itemCode = this.request.body.code;
+    const image = this.request.body.data;
+
+    if( _.isEmpty(itemCode)){
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.item_code_is_empty_or_invalid)
+    }
+    if( _.isEmpty(image)){
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.image_is_empty_or_invalid)
+    }
+
+    return await this.MenuService.addNewPhoto(itemCode, image).catch(error => {
+      throw error
+    });
+  }
+
+  async getPhotoByCode() {
+    const itemCode = this.request.params.itemCode;
+
+    if(_.isEmpty(itemCode)){
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.item_code_is_empty_or_invalid)
+    }
+
+    return await this.MenuService.getPhotoByCode(itemCode).catch(error => {
+      throw error
+    });
+  }
+
+  async updatePhotoByCode() {
+    const itemCode = this.request.params.itemCode;
+    const newImage = this.request.body.data;
+
+    if( _.isEmpty(itemCode) ){
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.item_code_is_empty_or_invalid)
+    }
+    if( _.isEmpty(newImage)){
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.image_is_empty_or_invalid)
+    }
+
+    return await this.MenuService.updatePhotoByCode(itemCode, newImage)
+    .catch(error => {
+        throw error
+      });
+  }
+
+  async deletePhotoByCode() {
+    const itemCode = this.request.params.itemCode;
+
+    if(_.isEmpty(itemCode)){
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.item_code_is_empty_or_invalid)
+    }
+    
+    return await this.MenuService.deletePhotoByCode(itemCode).catch(error => {
+      throw error
+    });
+  }
+
 
 }
   

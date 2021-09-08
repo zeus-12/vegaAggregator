@@ -1,3 +1,5 @@
+const { object } = require("underscore");
+
 var responsesList = {
     "200": {
         "description": "success"
@@ -56,6 +58,10 @@ var all = {
         {
             "name": "menu",
             "description": "APIs relating to Master Menu",
+        },
+        {
+            "name": "manageMenu",
+            "description": "APIs relating to Menu Setting and Mapped Menu",
         },
         {
             "name": "sales-summary",
@@ -143,6 +149,40 @@ var all = {
             }
           }
         },
+        "Image":{
+            "type": "object",
+            "properties": {
+                "code":{
+                    "type": "string"
+                },
+                "data":{
+                    "type": "string"
+                }    
+            }
+        },
+        "MappedMenuItem":{
+            "type": "object",
+            "properties": {
+                "mappedCode": {
+                    "type": "string"
+                },
+                "mappedPrice": {
+                    "type": "string"
+                },
+                "mappedVariant": {
+                    "type": "string"
+                },
+                "mappedName": {
+                    "type": "string"
+                },
+                "systemCode": {
+                    "type": "string"
+                },
+                "systemVariant": {
+                    "type": "string"
+                }
+            }
+        },        
         "ApiResponse": {
           "type": "object",
           "properties": {
@@ -1110,6 +1150,268 @@ var all = {
                         "description": "Item Code",
                         "required": true,
                         "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/menu/menuPhoto": {
+            "post": {
+                "tags": ["menu"],
+                "summary": "To add new photo",
+                "description": "To add new photo for an item",
+                "operationId": "addNewPhoto",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Image",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Image"
+                          }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/menu/menuPhoto/{itemCode}": {
+            "get": {
+                "tags": ["menu"],
+                "summary": "To get an photo of an item",
+                "description": "To get an photo of an item against given item code",
+                "operationId": "getPhotoByCode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "itemCode",
+                        "in": "path",
+                        "description": "Item Code",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "put": {
+                "tags": ["menu"],
+                "summary": "To update the photo an item",
+                "description": "To update the photo an item against given  item code",
+                "operationId": "updatePhotoByCode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "itemCode",
+                        "in": "path",
+                        "description": "Item Code",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Update Photo",
+                        "required": true,                        
+                        "type": "object",
+                        "properties": {
+                            "data":{
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "delete": {
+                "tags": ["menu"],
+                "summary": "To delete photo of an item",
+                "description": "To delete photo of an item against given item code",
+                "operationId": "deletePhotoByCode",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "itemCode",
+                        "in": "path",
+                        "description": "Item Code",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/manageMenu/otherMenuMapping": {
+            "post": {
+                "tags": ["manageMenu"],
+                "summary": "To create new mapped menu",
+                "description": "To create new mapped menu for an order source",
+                "operationId": "createNewMappedMenu",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "New Mapped Menu",
+                        "required": true,
+                        "type": "object",
+                        "properties": {
+                            "code":{
+                                "type": "string"
+                            },
+                            "orderSource":{
+                                "type": "string"
+                            },
+                            "billingPrice":{
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/manageMenu/otherMenuMapping/{menuTypeCode}": {
+            "get": {
+                "tags": ["manageMenu"],
+                "summary": "To get a mapped menu",
+                "description": "To get a mapped menu against given menu type",
+                "operationId": "getMappedMenuByType",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "menuTypeCode",
+                        "in": "path",
+                        "description": "Menu Source Type",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "put": {
+                "tags": ["manageMenu"],
+                "summary": "To update a mapped menu",
+                "description": "To update a mapped menu against given menu type",
+                "operationId": "updateMappedMenuByType",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "menuTypeCode",
+                        "in": "path",
+                        "description": "Menu Source Type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Update Menu data",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/MappedMenuItem"
+                          }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            },
+            "post": {
+                "tags": ["manageMenu"],
+                "summary": "To create an item in a mapped menu",
+                "description": "To create an item in a mapped menu against given menu type",
+                "operationId": "createNewMappedItem",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "menuTypeCode",
+                        "in": "path",
+                        "description": "Menu Source Type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "New Item Object",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/MappedMenuItem"
+                          }
+                        
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/manageMenu/otherMenuMapping/{menuTypeCode}/createWithArray": {
+            "post": {
+                "tags": ["manageMenu"],
+                "summary": "To create an items with a list in a mapped menu",
+                "description": "To create an item with a list in a mapped menu against given menu type",
+                "operationId": "createMappedItemsWithArray",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "menuTypeCode",
+                        "in": "path",
+                        "description": "Menu Source Type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "New Item Object",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/MappedMenuItem"
+                        }      
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/manageMenu/otherMenuMapping/{menuTypeCode}/item/{itemIndex}": {
+            "put": {
+                "tags": ["manageMenu"],
+                "summary": "To update a mapped menu",
+                "description": "To update a mapped menu against given menu type",
+                "operationId": "updateMappedMenuByType",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "menuTypeCode",
+                        "in": "path",
+                        "description": "Menu Source Type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "itemIndex",
+                        "in": "path",
+                        "description": "Item Index in List",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Update Menu data",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/MappedMenuItem"
+                          }
                     }
                 ],
                 "responses": responsesList,

@@ -29,6 +29,8 @@ ErrorType.online_flag_empty = 'Flag for Online menu updation is not provided'
 ErrorType.update_token_empty = 'Token for Online menu updation is not provided'
 ErrorType.avail_option_empty = 'Availability option empty. Provide value as ALL_AVAIL or ALL_NOT_AVAIL'
 
+ErrorType.image_is_empty_or_invalid = 'Item Image is empty or invalid '
+
 
 
 /* Settings Errors */
@@ -41,7 +43,9 @@ ErrorType.start_time_empty_or_invalid = 'Start Time is empty or invalid format, 
 ErrorType.end_time_empty_or_invalid = 'End Time is empty or invalid format, please re-enter it correctly'
 ErrorType.reason_name_empty_or_invalid = 'Reason Name is empty or invalid format, please re-enter it correctly'
 ErrorType.comment_empty_or_invalid = 'Comment is empty or invalid format, please re-enter it correctly'
-
+ErrorType.payment_name_is_empty_or_invalid = 'Payment Name is empty or invalid format, please re-enter it correctly'
+ErrorType.main_type_is_empty_or_invalid = 'Main Type is empty or invalid format, please re-enter it correctly'
+ErrorType.printer_name_is_empty_or_invalid = 'Printer Name is empty or invalid format, please re-enter it correctly'
 ErrorType.filter_key_is_empty_or_invalid = 'Filter Key is empty or invalid format, please re-enter it correctly'
 ErrorType.update_field_is_empty_or_invalid = 'Update Field is empty or invalid format, please re-enter it correctly'
 ErrorType.system_name_is_empty_or_invalid = 'System Name is empty or invalid format, please re-enter it correctly'
@@ -95,5 +99,8 @@ ErrorType.live_table_reset_failed ="Resetting Live tables failed"
 ErrorType.kot_id_is_empty_or_invalid = 'KOT ID is empty or invalid format, please re-enter it correctly'
 ErrorType.order_not_dine = 'Order is not a Dine-In order'
 ErrorType.same_table = 'Same Table'
+
+/*Manage Menu*/
+ErrorType.mapped_menu_type_is_empty_or_invalid = "Mapped Menu Type is empty or invalid"
 
 module.exports = ErrorType

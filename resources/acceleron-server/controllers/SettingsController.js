@@ -42,6 +42,7 @@ class SettingsController extends BaseController {
                 'ACCELERATE_REGISTERED_DEVICES',
                 'ACCELERATE_SAVED_COMMENTS',
                 'ACCELERATE_SAVED_ORDERS',
+                'ACCELERATE_SHORTCUT_KEYS',
                 'ACCELERATE_STAFF_PROFILES',
                 'ACCELERATE_TABLE_SECTIONS',
                 'ACCELERATE_TEXT_TO_KITCHEN_LOG',
@@ -192,6 +193,12 @@ class SettingsController extends BaseController {
                 }
                 break;
             }
+            case 'ACCELERATE_MENU_CATALOG':{
+                if(_.isEmpty(entry_to_remove.categoryName)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.category_name_is_empty_or_invalid)
+                }
+                break;
+            }
         }
 
         return await this.SettingsService.removeEntryFromSettings(settings_id, entry_to_remove).catch(error => {
@@ -257,9 +264,12 @@ class SettingsController extends BaseController {
         let ALLOWED_SETTINGS = [
                 'ACCELERATE_CONFIGURED_MACHINES',
                 'ACCELERATE_CONFIGURED_PRINTERS',
+                'ACCELERATE_KOT_RELAYING',
+                'ACCELERATE_MENU_CATALOG',
+                'ACCELERATE_PAYMENT_MODES',
+                'ACCELERATE_PERSONALISATIONS',
                 'ACCELERATE_SHORTCUT_KEYS',
-                'ACCELERATE_SYSTEM_OPTIONS',
-                'ACCELERATE_PERSONALISATIONS'
+                'ACCELERATE_SYSTEM_OPTIONS'   
             ]  
 
         if(!ALLOWED_SETTINGS.includes(settings_id)){
@@ -268,9 +278,27 @@ class SettingsController extends BaseController {
 
         //Validate entry_to_update
         switch(settings_id){
-            case 'ACCELERATE_SYSTEM_OPTIONS':{
-                if(_.isEmpty(entry_to_update.updateField)){
-                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.update_field_is_empty_or_invalid)
+            case 'ACCELERATE_CONFIGURED_MACHINES':{
+                if(_.isEmpty(entry_to_update.new_system_name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.system_name_is_empty_or_invalid)
+                }
+                break
+            }
+            case 'ACCELERATE_KOT_RELAYING':{
+                if(_.isEmpty(entry_to_update.categoryName)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.category_name_is_empty_or_invalid)
+                }
+                break
+            }
+            case 'ACCELERATE_MENU_CATALOG':{
+                if(_.isEmpty(entry_to_update.mainType)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.main_type_is_empty_or_invalid)
+                }
+                break
+            }
+            case 'ACCELERATE_PAYMENT_MODES':{
+                if(_.isEmpty(entry_to_update.paymentName)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.payment_name_is_empty_or_invalid)
                 }
                 break
             }
@@ -282,7 +310,7 @@ class SettingsController extends BaseController {
                     throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.new_Value_is_empty_or_invalid)
                 }
                 break;
-            }
+            }            
             case 'ACCELERATE_SHORTCUT_KEYS':{
                 if(_.isEmpty(entry_to_update.updateField)){
                     throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.update_field_is_empty_or_invalid)
@@ -292,12 +320,12 @@ class SettingsController extends BaseController {
                 }
                 break;
             }
-            case 'ACCELERATE_CONFIGURED_MACHINES':{
-                if(_.isEmpty(entry_to_update.new_system_name)){
-                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.system_name_is_empty_or_invalid)
+            case 'ACCELERATE_SYSTEM_OPTIONS':{
+                if(_.isEmpty(entry_to_update.updateField)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.update_field_is_empty_or_invalid)
                 }
                 break
-            }
+            }     
         }
 
         return await this.SettingsService.updateItemFromSettingsList(settings_id, filter_key, entry_to_update).catch(error => {
