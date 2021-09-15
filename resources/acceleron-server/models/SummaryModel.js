@@ -90,31 +90,51 @@ class SummaryModel extends BaseModel {
     return data;
   }
 
+  async getGrandTotalByType(grandTotalType, from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          "/_design/invoice-summary/_view/" +
+          grandTotalType +
+          '?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
   async getHourlySales(filter_type, from_date, to_date) {
     var custom_filter_url;
-    	if (filter_type == "All Orders") {
-        custom_filter_url =
-          "/" +
-          SELECTED_INVOICE_SOURCE_DB +
-          '/_design/invoice-summary/_view/timeslotwise_countoverall?startkey=["ANY_MODE","' +
-          from_date +
-          '", 0]&endkey=["ANY_MODE","' +
-          to_date +
-          '", 23]';
-      } else {
-        custom_filter_url =
-          "/" +
-          SELECTED_INVOICE_SOURCE_DB +
-          '/_design/invoice-summary/_view/timeslotwise_countbymode?startkey=["' +
-          filter_type +
-          '", "' +
-          from_date +
-          '", 0]&endkey=["' +
-          filter_type +
-          '", "' +
-          to_date +
-          '", 23]';
-      }
+    if (filter_type == "All Orders") {
+      custom_filter_url =
+        "/" +
+        SELECTED_INVOICE_SOURCE_DB +
+        '/_design/invoice-summary/_view/timeslotwise_countoverall?startkey=["ANY_MODE","' +
+        from_date +
+        '", 0]&endkey=["ANY_MODE","' +
+        to_date +
+        '", 23]';
+    } else {
+      custom_filter_url =
+        "/" +
+        SELECTED_INVOICE_SOURCE_DB +
+        '/_design/invoice-summary/_view/timeslotwise_countbymode?startkey=["' +
+        filter_type +
+        '", "' +
+        from_date +
+        '", 0]&endkey=["' +
+        filter_type +
+        '", "' +
+        to_date +
+        '", 23]';
+    }
     const data = await this.couch.get(custom_filter_url).catch((error) => {
       throw error;
     });
@@ -144,6 +164,54 @@ class SummaryModel extends BaseModel {
     return data;
   }
 
+  async getTotalExtrasByBillingParameter(billingParameter, from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/invoice-summary/_view/sumbyextras?startkey=["' +
+          billingParameter +
+          '","' +
+          from_date +
+          '"]&endkey=["' +
+          billingParameter +
+          '","' +
+          to_date +
+          '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getTotalCustomExtrasByBillingParameter(
+    billingParameter,
+    from_date,
+    to_date
+  ) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/invoice-summary/_view/sumbyextras_custom?startkey=["' +
+          billingParameter +
+          '","' +
+          from_date +
+          '"]&endkey=["' +
+          billingParameter +
+          '","' +
+          to_date +
+          '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
   async getSalesByBillingMode(billingMode, from_date, to_date) {
     const data = await this.couch
       .get(
@@ -156,6 +224,42 @@ class SummaryModel extends BaseModel {
           '"]&endkey=["' +
           billingMode +
           '","' +
+          to_date +
+          '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getGrossRefunds(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/refund-summary/_view/allrefunds?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getNetRefunds(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/refund-summary/_view/allrefunds_netamount?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
           to_date +
           '"]'
       )

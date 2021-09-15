@@ -49,6 +49,7 @@ class SummaryController extends BaseController {
       "refunds",
       "billcancellations",
       "itemcancellations",
+      "quicksummary"
     ];
 
     initialValidator(ALLOWED_TYPES, summary_type, from_date, to_date);
@@ -282,6 +283,18 @@ class SummaryController extends BaseController {
               from_date,
               to_date
             );
+          return data;
+        } catch (error) {
+          throw error;
+        }
+      }
+
+      case "quicksummary": {
+        try {
+          const data = await self.SummaryService.fetchOverAllTurnOver(
+            from_date,
+            to_date
+          );
           return data;
         } catch (error) {
           throw error;
