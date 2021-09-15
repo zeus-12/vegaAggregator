@@ -1121,26 +1121,66 @@ class SummaryService extends BaseService {
           });
         } else {
           itemPos = null;
-          for (j = 0; j < responseList[0].summary.length; j++){
-            if (responseList[0].summary[j].category == data.rows[i].key[1] && responseList[0].summary[j].name == data.rows[i].key[2]) {
+          for (j = 0; j < responseList[0].summary.length; j++) {
+            if (
+              responseList[0].summary[j].category == data.rows[i].key[1] &&
+              responseList[0].summary[j].name == data.rows[i].key[2]
+            ) {
               itemPos = j;
             }
           }
-          if (itemPos != null){
+          if (itemPos != null) {
             responseList[0].summary[itemPos].sum =
               parseFloat(responseList[0].summary[itemPos].sum) +
               parseFloat(data.rows[i].key[4]);
             responseList[0].summary[itemPos].count += data.rows[i].value;
+          } else {
+            responseList[0].summary.push({
+              category: data.rows[i].key[1],
+              name: data.rows[i].key[2],
+              sum: data.rows[i].key[4],
+              count: data.rows[i].value,
+            });
+          }
         }
-        else {
-          responseList[0].summary.push({
-            category: data.rows[i].key[1],
-            name: data.rows[i].key[2],
-            sum: data.rows[i].key[4],
-            count: data.rows[i].value,
-          });
-        }
-        } 
+        i++;
+      }
+    }
+    return responseList;
+  }
+
+  //Deatailed summary of cancelled items in the given DATE RANGE
+  async fetchSummaryByItemCancellationsDetailed(from_date, to_date) {
+    let self = this;
+    let responseList = [
+      {
+        type: "Item_Cancellations_detailed",
+        summary: [],
+      },
+    ];
+    let i = 0;
+    let data = {};
+
+    data = await self.SummaryModel.getCancelledItemsDetailed(
+      from_date,
+      to_date
+    ).catch((error) => {
+      throw error;
+    });
+
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_matching_results
+      );
+    } else if (_.isEmpty(data.rows)) {
+      return responseList;
+    }
+    else {
+      while (i < data.rows.length) {
+        delete data.rows[i].value._id;
+        delete data.rows[i].value._rev;
+          responseList[0].summary.push(data.rows[i].value);
         i++;
       }
     }
@@ -1203,13 +1243,13 @@ class SummaryService extends BaseService {
     var billing_parameters = [];
     i = 0;
 
-        try {
-          data = await self.getAllBillingParameters();
-          billing_parameters = data.value;
-        } catch (error) {
-          throw error;
+    try {
+      data = await self.getAllBillingParameters();
+      billing_parameters = data.value;
+    } catch (error) {
+      throw error;
     }
-    
+
     while (i < billing_parameters.length) {
       data = await self.SummaryModel.getTotalExtrasByBillingParameter(
         billing_parameters[i].name,
@@ -1226,10 +1266,12 @@ class SummaryService extends BaseService {
       } else if (_.isEmpty(data.rows[0])) {
         responseList.push({
           type: billing_parameters[i].name,
-          summary: [{
-          sum: 0,
-          count: 0,
-          }]
+          summary: [
+            {
+              sum: 0,
+              count: 0,
+            },
+          ],
         });
       } else {
         responseList.push({
@@ -1336,8 +1378,6 @@ class SummaryService extends BaseService {
         netCount: data.rows[0].value.count,
       };
     }
-
-
 
     return responseList;
   }

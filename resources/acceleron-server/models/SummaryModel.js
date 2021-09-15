@@ -72,6 +72,24 @@ class SummaryModel extends BaseModel {
     return data;
   }
 
+  async getCancelledItemsDetailed(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          CANCELLED_ITEMS_SOURCE_DB +
+          '/_design/cancellation-summary/_view/fetchall?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '", {}]&descending=false'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
   async getSalesByItems(from_date, to_date) {
     const data = await this.couch
       .get(

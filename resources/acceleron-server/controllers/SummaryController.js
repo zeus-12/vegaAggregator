@@ -49,7 +49,7 @@ class SummaryController extends BaseController {
       "refunds",
       "billcancellations",
       "itemcancellations",
-      "quicksummary"
+      "quicksummary",
     ];
 
     initialValidator(ALLOWED_TYPES, summary_type, from_date, to_date);
@@ -277,15 +277,42 @@ class SummaryController extends BaseController {
       }
 
       case "itemcancellations": {
-        try {
-          const data =
-            await self.SummaryService.fetchSummaryByItemCancellations(
-              from_date,
-              to_date
-            );
-          return data;
-        } catch (error) {
-          throw error;
+        var detailed_by = self.request.query.detailedby;
+
+        if (_.isEmpty(detailed_by)) {
+          throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.missing_required_parameters
+          );
+        }
+
+        if (detailed_by == "false") {
+          try {
+            const data =
+              await self.SummaryService.fetchSummaryByItemCancellations(
+                from_date,
+                to_date
+              );
+            return data;
+          } catch (error) {
+            throw error;
+          }
+        } else if (detailed_by == "true") {
+          try {
+            const data =
+              await self.SummaryService.fetchSummaryByItemCancellationsDetailed(
+                from_date,
+                to_date
+              );
+            return data;
+          } catch (error) {
+            throw error;
+          }
+        } else {
+          throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            "datailed_by should be either 'true' or 'false' "
+          );
         }
       }
 
@@ -302,7 +329,6 @@ class SummaryController extends BaseController {
       }
     }
   }
-
 }
 
 module.exports = SummaryController;
