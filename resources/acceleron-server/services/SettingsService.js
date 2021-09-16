@@ -96,11 +96,92 @@ class SettingsService extends BaseService {
                  valueList.push(new_entry.new_comment);
              break;
         }
+        case 'ACCELERATE_BILLING_PARAMETERS':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == new_entry.name){
+               throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.billing_parameter_already_exists);
+            }
+          }
+          let newEntryFormatted = {
+            "name": new_entry.name,
+            "excludePackagedFoods": new_entry.excludePackagedFoods,
+            "value": new_entry.value,
+            "unit": new_entry.unit,
+            "unitName": new_entry.unitName
+          }
+          valueList.push(newEntryFormatted);
+          break;
+        }
+        case 'ACCELERATE_DISCOUNT_TYPES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == new_entry.name){
+               throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.discount_name_already_exits);
+            }
+          }
+          let newEntryFormatted = {
+            "name": new_entry.name,
+            "maxDiscountUnit": new_entry.maxDiscountUnit,
+            "maxDiscountValue": new_entry.maxDiscountValue,
+          }
+          valueList.push(newEntryFormatted);
+          break;
+        }
+        case 'ACCELERATE_BILLING_MODES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == new_entry.name){
+               throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.billing_mode_already_exists);
+            }
+          }
+          const billParamData = await this.getSettingsById('ACCELERATE_BILLING_PARAMETERS').catch(error => {
+            throw error
+          });
+          var billParamList = billParamData.value;
+          for (var i=0; i<new_entry.extras.length; i++) {
+            var isActive = 0
+            for (var j=0; j<billParamList.length; j++) {
+              if(billParamList[j].name == new_entry.extras[i].name){
+                isActive = 1
+              }
+            }
+            if(!isActive){
+              throw new ErrorResponse(ResponseType.BAD_REQUEST, 'Please remove "'+ new_entry.extras[i].name + '" from extras as it is no longer a billing parameter');
+            }
+          }
+          valueList.push(new_entry);
+          break;
+        }
+        case 'ACCELERATE_PAYMENT_MODES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == new_entry.name){
+               throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.payment_mode_already_exists);
+            }
+          }
+          let newEntryFormatted = {
+            "name": new_entry.name,
+            "code": new_entry.code,
+          }
+          valueList.push(newEntryFormatted);
+          break;
+        }
+        case 'ACCELERATE_ORDER_SOURCES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == new_entry.name){
+               throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.order_source_name_already_exists);
+            }
+          }
+          let newEntryFormatted = {
+            "name": new_entry.name,
+            "code": new_entry.code,
+            "defaultTakeaway": new_entry.defaultTakeaway,
+            "defaultDelivery": new_entry.defaultDelivery
+          }
+          valueList.push(newEntryFormatted);
+          break;
+        }
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
       }
-
       settingsData.value = valueList;
       return await this.SettingsModel.updateNewSettingsData(settings_id, settingsData).catch(error => {
         throw error
@@ -158,14 +239,14 @@ class SettingsService extends BaseService {
             break;
         }
         case 'ACCELERATE_SAVED_COMMENTS':{           
-                 for (var i=0; i<valueList.length; i++) {
-                   if (valueList[i] == entry_to_remove.saved_comment){
-                        valueList.splice(i,1);
-                        isFound = true;
-                        break;
-                   }
-                 }
-            break;
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i] == entry_to_remove.saved_comment){
+              valueList.splice(i,1);
+              isFound = true;
+              break;
+            }
+          }
+          break;
         }
         case 'ACCELERATE_MENU_CATALOG':{           
           for (var i=0; i<valueList.length; i++) {
@@ -175,8 +256,59 @@ class SettingsService extends BaseService {
                  break;
             }
           }
-     break;
- }
+          break;
+        }
+        case 'ACCELERATE_BILLING_PARAMETERS':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == entry_to_remove.name){
+                 valueList.splice(i,1);
+                 isFound = true;
+                 break;
+            }
+          }
+          break;
+        }
+        case 'ACCELERATE_DISCOUNT_TYPES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == entry_to_remove.name){
+                 valueList.splice(i,1);
+                 isFound = true;
+                 break;
+            }
+          }
+          break;
+        }
+        case 'ACCELERATE_BILLING_MODES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == entry_to_remove.name){
+                 valueList.splice(i,1);
+                 isFound = true;
+                 break;
+            }
+          }
+          break;
+        }
+        case 'ACCELERATE_PAYMENT_MODES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == entry_to_remove.name){
+                 valueList.splice(i,1);
+                 isFound = true;
+                 break;
+            }
+          }
+          break;
+        }
+        case 'ACCELERATE_ORDER_SOURCES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == entry_to_remove.name){
+                 valueList.splice(i,1);
+                 isFound = true;
+                 break;
+            }
+          }
+          break;
+        }
+        
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
@@ -409,6 +541,27 @@ class SettingsService extends BaseService {
               break;
             }
           }   
+          break;
+        }
+        case 'ACCELERATE_BILL_LAYOUT':{
+          if(filter_key == 'logo'){
+            for(var i=0;i<valueList.length;i++){
+              if(valueList[i].name == 'data_custom_header_image'){
+                valueList[i].value = entry_to_update.value;
+                break;
+              }
+            }
+          }
+          else if(filter_key == 'text'){
+            for(var i=0;i<valueList.length;i++){
+              if(valueList[i].name == 'data_custom_header_image'){
+                entry_to_update.push(valueList[i]);
+                break;
+              }
+            }
+            valueList = entry_to_update
+          }
+          
           break;
         }
         default:{

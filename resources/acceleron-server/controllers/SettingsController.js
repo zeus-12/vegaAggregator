@@ -125,6 +125,82 @@ class SettingsController extends BaseController {
                 }
                 break;
             }
+            case 'ACCELERATE_BILLING_PARAMETERS':{
+                if(_.isEmpty(new_entry.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_param_name_empty_or_invalid)
+                }
+                if( !_.isBoolean(new_entry.excludePackagedFoods)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_param_excludePackagedFoods_empty_or_invalid)
+                }
+                if(_.isNaN(new_entry.value)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_param_value_empty_or_invalid)
+                }
+                if(_.isEmpty(new_entry.unit)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_param_unit_empty_or_invalid)
+                }
+                if(_.isEmpty(new_entry.unitName)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_param_unit_name_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_DISCOUNT_TYPES':{
+                if(_.isEmpty(new_entry.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.discount_name_empty_or_invalid)
+                }
+                if( _.isEmpty(new_entry.maxDiscountUnit)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.discount_unit_empty_or_invalid)
+                }
+                if( _.isNaN(new_entry.maxDiscountValue)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.discount_value_empty_or_invalid)
+                }
+                
+                break;
+            }
+            case 'ACCELERATE_BILLING_MODES':{
+                if(_.isEmpty(new_entry.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_mode_name_empty_or_invalid)
+                }
+                if(_.isEmpty(new_entry.type)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_mode_type_empty_or_invalid)
+                }
+                if( _.isBoolean(new_entry.isDiscountable)){
+                    if(new_entry.isDiscountable){
+                        if(_.isNaN(new_entry.maxDiscount)){
+                            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_mode_discount_empty_or_invalid)
+                        }
+                        if(!new_entry.maxDiscount){
+                            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_mode_discount_is_zero)
+                        }
+                    }
+                    else{
+                        new_entry.maxDiscount = ""
+                    }  
+                }
+                else {
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_mode_discountable_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_PAYMENT_MODES':{
+                if(_.isEmpty(new_entry.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.payment_name_empty_or_invalid)
+                }
+                if( _.isEmpty(new_entry.code)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.payment_code_empty_or_invalid)
+                }
+                
+                break;
+            }
+            case 'ACCELERATE_ORDER_SOURCES':{
+                if(_.isEmpty(new_entry.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.order_source_name_empty_or_invalid)
+                }
+                if( _.isEmpty(new_entry.code)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.order_source_code_empty_or_invalid)
+                }                
+                break;
+            }
+
         }
 
         return await this.SettingsService.addNewEntryToSettings(settings_id, new_entry).catch(error => {
@@ -133,7 +209,6 @@ class SettingsController extends BaseController {
     }
 
     async removeEntryFromSettings() {
-
         var settings_id = this.request.params.id;
         var entry_to_remove = this.request.body;
 
@@ -196,6 +271,36 @@ class SettingsController extends BaseController {
             case 'ACCELERATE_MENU_CATALOG':{
                 if(_.isEmpty(entry_to_remove.categoryName)){
                     throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.category_name_is_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_BILLING_PARAMETERS':{
+                if(_.isEmpty(entry_to_remove.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_param_name_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_DISCOUNT_TYPES':{
+                if(_.isEmpty(entry_to_remove.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.discount_name_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_BILLING_MODES':{
+                if(_.isEmpty(entry_to_remove.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.bill_mode_name_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_PAYMENT_MODES':{
+                if(_.isEmpty(entry_to_remove.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.payment_name_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_ORDER_SOURCES':{
+                if(_.isEmpty(entry_to_remove.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.order_source_name_empty_or_invalid)
                 }
                 break;
             }
@@ -269,7 +374,8 @@ class SettingsController extends BaseController {
                 'ACCELERATE_PAYMENT_MODES',
                 'ACCELERATE_PERSONALISATIONS',
                 'ACCELERATE_SHORTCUT_KEYS',
-                'ACCELERATE_SYSTEM_OPTIONS'   
+                'ACCELERATE_SYSTEM_OPTIONS',
+                'ACCELERATE_BILL_LAYOUT'   
             ]  
 
         if(!ALLOWED_SETTINGS.includes(settings_id)){
