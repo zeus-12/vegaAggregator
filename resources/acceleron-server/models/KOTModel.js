@@ -10,8 +10,8 @@ class KOTModel extends BaseModel{
         this.couch = ACCELERONCORE._connectors.CouchDBAsync;
     }
 
-    async getKOTById(kot_id) {
-        return await this.couch.get('/accelerate_kot/'+kot_id).catch(error => {
+    async getKOTById(kotId) {
+        return await this.couch.get('/accelerate_kot/'+kotId).catch(error => {
             throw error;
         });
     }
@@ -19,6 +19,13 @@ class KOTModel extends BaseModel{
         return await this.couch.put('/accelerate_kot/'+kotId, newKOTData).catch(error => {
             throw new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong);
         });
+    }
+    async deleteKOTById(kotId, kotRev) {
+        const data = await this.couch.delete('/accelerate_kot/'+kotId+'?rev='+kotRev).catch(error => {
+            throw error;
+        });
+
+        return data;
     }
 }
 

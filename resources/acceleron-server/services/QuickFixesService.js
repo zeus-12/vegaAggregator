@@ -59,7 +59,7 @@ class QuickFixesService extends BaseService {
         }
 
         for(var i = 0; i < liveTablesData.length; i++){ 
-            liveTable = liveTablesData[i]
+            var liveTable = liveTablesData[i]
             await this.TableService.resetTable(liveTable._id).catch(error => {
               throw new ErrorResponse(ResponseType.ERROR, ErrorType.live_table_reset_failed);
             });
@@ -73,21 +73,20 @@ class QuickFixesService extends BaseService {
             return "Fixed successfully";
         }
         for(var i = 0; i < liveOrdersData.length; i++){ 
-            liveKOT = liveOrdersData[i]
-            const tableData = await this.TableService.fetchTablesByFilter('name', liveKOT.table).catch(error => {
-                throw error
-            });
-            tableData.assigned = liveKOT.stewardName;
-            tableData.remarks = "";
-            tableData.KOT = liveKOT.KOTNumber;
-            tableData.status = 1;
-            tableData.lastUpdate = liveKOT.timeKOT != "" ? liveKOT.timeKOT : liveKOT.timePunch;   
-            tableData.guestName = liveKOT.customerName; 
-            tableData.guestContact = liveKOT.customerMobile; 
-            tableData.reservationMapping = ""; 
-            tableData.guestCount = liveKOT.guestCount;
-
-            await this.TableService.updateTable(tableData._id, tableData).catch(error => {
+            var liveKOT = liveOrdersData[i]
+            var updateData = {
+                "assigned" : liveKOT.stewardName,
+                "remarks" : "",
+                "KOT" : liveKOT.KOTNumber,
+                "status" : 1,
+                "lastUpdate" : liveKOT.timeKOT != "" ? liveKOT.timeKOT : liveKOT.timePunch,   
+                "guestName" : liveKOT.customerName, 
+                "guestContact" : liveKOT.customerMobile, 
+                "reservationMapping" : "", 
+                "guestCount" : liveKOT.guestCount
+            }
+            
+            await this.TableService.updateTableByFilter('name', liveKOT.table, updateData).catch(error => {
                 throw new ErrorResponse(ResponseType.ERROR, ErrorType.remapping_orders_failed);
             });
         }

@@ -69,6 +69,12 @@ ErrorType.payment_name_empty_or_invalid = 'Payment Mode Name is empty or invalid
 ErrorType.payment_code_empty_or_invalid = 'Payment Mode Code is empty or invalid format, please re-enter it correctly'
 ErrorType.order_source_name_empty_or_invalid = 'Order Source Name is empty or invalid format, please re-enter it correctly'
 ErrorType.order_source_code_empty_or_invalid = 'Order Source Code is empty or invalid format, please re-enter it correctly'
+ErrorType.printer_name_empty_or_invalid = 'Printer name is empty or invalid format, set a name to easily identify the printer (Eg. Kitchen KOT)'
+ErrorType.printer_type_empty_or_invalid = 'Please select a Printer type'
+ErrorType.printer_width_empty_or_invalid = 'Printer width is empty or invalid format, please re-enter it correctly'
+ErrorType.printer_actions_empty_or_invalid = 'Please select atleast one action'
+
+
 
 ErrorType.table_section_already_exists = 'Table Section already exists. Please choose a different name.'
 ErrorType.ingredient_already_exists = 'Ingredient already exists. Please choose a different name.'
@@ -81,7 +87,7 @@ ErrorType.discount_name_already_exists = 'Discount Name already exists. Please s
 ErrorType.billing_mode_already_exists = 'Billing Mode already exists with same name. Please choose a different name.'
 ErrorType.payment_mode_already_exists = 'Payment Mode already exists with same name. Please choose a different name.'
 ErrorType.order_source_name_already_exists = 'Order Source already exists with same name. Please choose a different name.'
-
+ErrorType.printer_name_already_exists = 'Printer Name already taken. Please set a different name.'
 
 
 

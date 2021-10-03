@@ -86,6 +86,33 @@ var all = {
                 },
                 "type":{
                     "type": "string"
+                },
+                "status" : {
+                    "type": "integer"
+                },
+                "assigned" : {
+                    "type": "string"
+                },
+                "remarks" : {
+                    "type": "string"
+                },
+                "KOT" : {
+                    "type": "string"
+                },
+                "lastUpdate" :{
+                    "type": "string"
+                },   
+                "guestName" : {
+                    "type": "string"
+                }, 
+                "guestContact" : {
+                    "type": "string"
+                }, 
+                "reservationMapping" : {
+                    "type": "string"
+                }, 
+                "guestCount" : {
+                    "type": "string"
                 }    
             }
         },
@@ -524,6 +551,53 @@ var all = {
                         "in": "body",
                         "description": "Table Object",
                         "required": true,
+                        "properties": {
+                            "table":{
+                                "type": "string"
+                            },
+                            "capacity":{
+                                "type": "string"
+                            },
+                            "sortIndex":{
+                                "type": "string"
+                            },
+                            "type":{
+                                "type": "string"
+                            }
+                          }
+                    }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/update": {
+            "post": {
+                "tags": ["table"],
+                "summary": "To create new table",
+                "description": "To create a table to with generic contents",
+                "operationId": "updateTableByFilter",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "key",
+                        "in": "query",
+                        "description": "Filter Key - all, live, name, section",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uniqueId",
+                        "in": "query",
+                        "description": "Identifier - Table Name / Table ID etc.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Update Table Object",
+                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/Table"
                           }
@@ -603,6 +677,67 @@ var all = {
                             }
                         }
                     }
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/tabletransfer": {
+            "put": {
+                "tags": ["table"],
+                "summary": "To transfer KOT to another table",
+                "description": "To transfer KOT from a table to another using the kot_id and new table number",
+                "operationId": "tableTransferKOT",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "kotId",
+                        "in": "query",
+                        "description": "KOT ID of the order",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "newTableNumber",
+                        "in": "query",
+                        "description": "New Table Number",
+                        "required": true,
+                        "type": "string"
+                    }               
+                ],
+                "responses": responsesList,
+                "security": [{"access_key": []}]
+            }
+        },
+        "/table/mergeKOT": {
+            "put": {
+                "tags": ["table"],
+                "summary": "To merge KOTs to another table",
+                "description": "To merge KOTs of a set a table to another table ",
+                "operationId": "mergeKOT",
+                "produces": ["application/json"],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "Merge Data",
+                        "required": true,
+                        "type": "object",
+                        "properties":{
+                            "accelerateLicenceeBranch":{
+                                "type" : "string"
+                            },
+                            "tableName":{
+                                "type" : "string"
+                            },
+                            "tableList":{
+                                "type": "array",
+                                "items":{
+                                    "type": "string"
+                                }           
+                            }
+                        }
+                    }               
                 ],
                 "responses": responsesList,
                 "security": [{"access_key": []}]
@@ -770,33 +905,6 @@ var all = {
                         "required": true,
                         "type": "string"
                     }
-                ],
-                "responses": responsesList,
-                "security": [{"access_key": []}]
-            }
-        },
-        "/kot/tabletransfer": {
-            "put": {
-                "tags": ["kot"],
-                "summary": "To transfer KOT to another table",
-                "description": "To transfer KOT from a table to another using the kot_id and new table number",
-                "operationId": "tableTransferKOT",
-                "produces": ["application/json"],
-                "parameters": [
-                    {
-                        "name": "kotId",
-                        "in": "query",
-                        "description": "KOT ID of the order",
-                        "required": true,
-                        "type": "string"
-                    },
-                    {
-                        "name": "newTableNumber",
-                        "in": "query",
-                        "description": "New Table Number",
-                        "required": true,
-                        "type": "string"
-                    }               
                 ],
                 "responses": responsesList,
                 "security": [{"access_key": []}]

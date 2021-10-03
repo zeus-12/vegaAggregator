@@ -18,13 +18,23 @@ router.get('/:id', async function (req, res, next) {
         return next(error)
       }
 })
-router.put('/tabletransfer',async function(req, res, next) {
+
+router.put('/:id', async function (req, res, next) {
   try {
-    const data = await new KOTController(req).tableTransferKOT();
-    return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
-  } catch (error) {
-    return next(error)
-  }
+      const data = await new KOTController(req).updateKOTById();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+})
+
+router.delete('/:id', async function (req, res, next) {
+  try {
+      const data = await new KOTController(req).deleteKOTById();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
 })
 
 module.exports = router;

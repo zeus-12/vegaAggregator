@@ -200,6 +200,24 @@ class SettingsController extends BaseController {
                 }                
                 break;
             }
+            case 'ACCELERATE_CONFIGURED_PRINTERS':{
+                if(_.isEmpty(new_entry.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_name_empty_or_invalid)
+                }
+                if(_.isEmpty(new_entry.type)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_type_empty_or_invalid)
+                }
+                if(_.isNaN(new_entry.width)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_width_empty_or_invalid)
+                }
+                if(_.isEmpty(new_entry.actions)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_actions_empty_or_invalid)
+                }
+                if(_.isEmpty(new_entry.machineName)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.machine_name_is_empty_or_invalid)
+                }
+                break;
+            }
 
         }
 
@@ -301,6 +319,18 @@ class SettingsController extends BaseController {
             case 'ACCELERATE_ORDER_SOURCES':{
                 if(_.isEmpty(entry_to_remove.name)){
                     throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.order_source_name_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_CONFIGURED_PRINTERS':{
+                if(_.isEmpty(entry_to_remove.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_name_empty_or_invalid)
+                }
+                break;
+            }
+            case 'ACCELERATE_KOT_RELAYING':{
+                if(_.isEmpty(entry_to_remove.printer)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_name_empty_or_invalid)
                 }
                 break;
             }

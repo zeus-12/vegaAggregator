@@ -52,7 +52,6 @@ router.post('/:id/updateentry',async function(req, res, next) {
       const data = await new SettingsController(req).updateItemFromSettingsList();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
     } catch (error) {
-      console.log(error)
       return next(error)
     }
 })

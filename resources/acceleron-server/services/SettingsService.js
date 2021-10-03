@@ -178,6 +178,31 @@ class SettingsService extends BaseService {
           valueList.push(newEntryFormatted);
           break;
         }
+        case 'ACCELERATE_CONFIGURED_PRINTERS':{
+          var listIndex = 0;
+          for(var i=0; i<valueList.length; i++){
+            if(valueList[i].systemName == new_entry.machineName){
+              var printers = valueList[i].data;
+              for (var j=0; j<printers.length; j++) {
+                if (printers[j].name == new_entry.name){
+                   throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.printer_name_already_exists);
+                }
+              }
+              listIndex = i;
+              break;
+            }
+          }
+          
+          let newEntryFormatted = {
+            "name": new_entry.name,
+            "type": new_entry.type,
+            "height": new_entry.height,
+            "width": new_entry.width,
+            "actions": new_entry.actions,
+          }
+          valueList[listIndex].data.push(newEntryFormatted);
+          break;
+        }
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
@@ -304,6 +329,38 @@ class SettingsService extends BaseService {
                  valueList.splice(i,1);
                  isFound = true;
                  break;
+            }
+          }
+          break;
+        }
+        case 'ACCELERATE_CONFIGURED_PRINTERS':{
+          for(var i=0; i<valueList.length; i++){
+            if(valueList[i].systemName == entry_to_remove.machineName){
+              var printers = valueList[i].data;
+              for (var j=0; j<printers.length; j++) {
+                if (printers[j].name == entry_to_remove.name){
+                  valueList[i].data.splice(j,1);
+                  isFound = true;
+                  break;
+                }
+              }
+              break;
+            }
+          }
+          break;
+        }
+        case 'ACCELERATE_KOT_RELAYING':{
+          for(var i=0; i<valueList.length; i++){
+            if(valueList[i].systemName == entry_to_remove.machineName){
+              var kots = valueList[i].data;
+              for (var j=0; j<kots.length; j++) {
+                if (kots[j].printer == entry_to_remove.printer){
+                  valueList[i].data.splice(j,1);
+                  isFound = true;
+                  break;
+                }
+              }
+              break;
             }
           }
           break;
