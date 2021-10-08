@@ -82,7 +82,7 @@ router.put('/tabletransfer',async function(req, res, next) {
     }
   })
 
-router.put('/mergeKOT', async function (req, res, next) {
+router.put('/mergekot', async function (req, res, next) {
     try {
         const data = await new TableController(req).mergeKOT();
         return await new BaseResponse(ResponseType.SUCCESS).send(res, data);

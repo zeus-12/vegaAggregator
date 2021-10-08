@@ -59,7 +59,7 @@ router.post('/:id/updateentry',async function(req, res, next) {
 
 // Other APIs
 
-router.put('/ACCELERATE_KOT_RELAYING/renameCategory',async function(req, res, next) {
+router.put('/ACCELERATE_KOT_RELAYING/renamecategory',async function(req, res, next) {
     try {
       const data = await new SettingsController(req).renameCategoryKOTRelays();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -68,7 +68,7 @@ router.put('/ACCELERATE_KOT_RELAYING/renameCategory',async function(req, res, ne
     }
 })
 
-router.put('/ACCELERATE_KOT_RELAYING/deleteCategory',async function(req, res, next) {
+router.put('/ACCELERATE_KOT_RELAYING/deletecategory',async function(req, res, next) {
     try {
       const data = await new SettingsController(req).deleteCategoryKOTRelays();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);

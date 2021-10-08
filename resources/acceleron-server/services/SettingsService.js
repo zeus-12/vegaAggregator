@@ -4,6 +4,7 @@ let SettingsModel = require('../models/SettingsModel');
 
 var _ = require('underscore');
 var async = require('async');
+const ErrorType = require('../utils/errorConstants');
 
 class SettingsService extends BaseService {
     constructor(request) {
@@ -178,31 +179,33 @@ class SettingsService extends BaseService {
           valueList.push(newEntryFormatted);
           break;
         }
-        case 'ACCELERATE_CONFIGURED_PRINTERS':{
-          var listIndex = 0;
-          for(var i=0; i<valueList.length; i++){
-            if(valueList[i].systemName == new_entry.machineName){
-              var printers = valueList[i].data;
-              for (var j=0; j<printers.length; j++) {
-                if (printers[j].name == new_entry.name){
-                   throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.printer_name_already_exists);
-                }
-              }
-              listIndex = i;
-              break;
+        case 'ACCELERATE_CONFIGURED_MACHINES':{
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].licence == new_entry.licence){
+               throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.license_already_used);
             }
           }
-          
-          let newEntryFormatted = {
-            "name": new_entry.name,
-            "type": new_entry.type,
-            "height": new_entry.height,
-            "width": new_entry.width,
-            "actions": new_entry.actions,
-          }
-          valueList[listIndex].data.push(newEntryFormatted);
+          valueList.push(new_entry);
           break;
         }
+        case 'ACCELERATE_PERSONALISATIONS':
+        case 'ACCELERATE_SYSTEM_OPTIONS':
+        case 'ACCELERATE_SHORTCUT_KEYS':
+        case 'ACCELERATE_CONFIGURED_PRINTERS':
+        case 'ACCELERATE_KOT_RELAYING':{
+          var isAlreadyFound = false;
+          for(var n=0; n<valueList.length; n++){
+            if(valueList[n].systemName == new_entry.systemName){
+              isAlreadyFound = true;
+              break;
+            }
+          }  
+          if(!isAlreadyFound){
+            valueList.push(new_entry);              
+          }
+          break;
+        }
+        
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
@@ -539,7 +542,6 @@ class SettingsService extends BaseService {
           }     
           break;
         }
-
         case 'ACCELERATE_MENU_CATALOG':{
           if(valueList.length == 0){
             var newEntry = {
@@ -600,6 +602,41 @@ class SettingsService extends BaseService {
           }   
           break;
         }
+        case 'ACCELERATE_CONFIGURED_PRINTERS':{
+          for(var n=0; n<valueList.length; n++){
+            if(valueList[n].systemName == filter_key){
+              if(valueList[n].data.length == 0){
+                var newEntry = {
+                  "name": entry_to_update.name,
+                  "type": entry_to_update.type,
+                  "height": entry_to_update.height,
+                  "width": entry_to_update.width,
+                  "actions": entry_to_update.actions,
+                }
+                valueList[n].data.push(newEntry);
+              }
+              else{
+                for (var i=0; i<valueList[n].data.length; i++){
+                  if(valueList[n].data[i].name == entry_to_update.name){
+                    throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.printer_name_already_exists);
+                  }
+                }
+                if(!isFound){
+                  var newEntry = {
+                    "name": entry_to_update.name,
+                    "type": entry_to_update.type,
+                    "height": entry_to_update.height,
+                    "width": entry_to_update.width,
+                    "actions": entry_to_update.actions,
+                  }
+                  valueList[n].data.push(newEntry);
+                }  
+              }
+              break;
+            }
+          }   
+          break;
+        }
         case 'ACCELERATE_BILL_LAYOUT':{
           if(filter_key == 'logo'){
             for(var i=0;i<valueList.length;i++){
@@ -621,6 +658,16 @@ class SettingsService extends BaseService {
           
           break;
         }
+        case 'ACCELERATE_PAYMENT_MODES':{
+            for(var i=0;i<valueList.length;i++){
+              if(valueList[i].code == filter_key){
+                valueList[i].name = entry_to_update.paymentName;
+                break;
+              }
+            }       
+          break;
+        }
+
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }

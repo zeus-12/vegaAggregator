@@ -26,6 +26,7 @@ router.use('/kot', require('./KOTRoute'));
 router.use('/user', require('./UserRoute'));
 router.use('/summary', require('./SummaryRoute'));
 router.use('/menu', require('./MenuRoute'));
-router.use('/manageMenu', require('./ManageMenuRoute'));
+router.use('/managemenu', require('./ManageMenuRoute'));
+router.use('/license', require('./LicenseRoute'));
 
 module.exports = router;

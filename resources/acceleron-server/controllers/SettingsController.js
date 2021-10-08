@@ -39,6 +39,7 @@ class SettingsController extends BaseController {
                 'ACCELERATE_MASTER_MENU',
                 'ACCELERATE_ORDER_SOURCES',
                 'ACCELERATE_PAYMENT_MODES',
+                'ACCELERATE_PERSONALISATIONS',
                 'ACCELERATE_REGISTERED_DEVICES',
                 'ACCELERATE_SAVED_COMMENTS',
                 'ACCELERATE_SAVED_ORDERS',
@@ -72,7 +73,6 @@ class SettingsController extends BaseController {
                 'ACCELERATE_BILLING_PARAMETERS',
                 'ACCELERATE_CANCELLATION_REASONS',
                 'ACCELERATE_CONFIGURED_MACHINES',
-                'ACCELERATE_CONFIGURED_PRINTERS',
                 'ACCELERATE_COOKING_INGREDIENTS',
                 'ACCELERATE_DINE_SESSIONS',
                 'ACCELERATE_DISCOUNT_TYPES',
@@ -200,24 +200,7 @@ class SettingsController extends BaseController {
                 }                
                 break;
             }
-            case 'ACCELERATE_CONFIGURED_PRINTERS':{
-                if(_.isEmpty(new_entry.name)){
-                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_name_empty_or_invalid)
-                }
-                if(_.isEmpty(new_entry.type)){
-                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_type_empty_or_invalid)
-                }
-                if(_.isNaN(new_entry.width)){
-                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_width_empty_or_invalid)
-                }
-                if(_.isEmpty(new_entry.actions)){
-                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_actions_empty_or_invalid)
-                }
-                if(_.isEmpty(new_entry.machineName)){
-                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.machine_name_is_empty_or_invalid)
-                }
-                break;
-            }
+            
 
         }
 
@@ -461,6 +444,24 @@ class SettingsController extends BaseController {
                     throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.update_field_is_empty_or_invalid)
                 }
                 break
+            }
+            case 'ACCELERATE_CONFIGURED_PRINTERS':{
+                if(_.isEmpty(entry_to_update.name)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_name_empty_or_invalid)
+                }
+                if(_.isEmpty(entry_to_update.type)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_type_empty_or_invalid)
+                }
+                if(_.isNaN(entry_to_update.width)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_width_empty_or_invalid)
+                }
+                if(_.isEmpty(entry_to_update.actions)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.printer_actions_empty_or_invalid)
+                }
+                if(_.isEmpty(entry_to_update.machineName)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.machine_name_is_empty_or_invalid)
+                }
+                break;
             }     
         }
 

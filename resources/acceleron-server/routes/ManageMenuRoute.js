@@ -1,7 +1,7 @@
 let router = new ACCELERONCORE._routes.BaseRouter();
 let ManageMenuController = require('../controllers/ManageMenuController');
 
-router.post('/otherMenuMapping', async function(req, res, next) {
+router.post('/othermenumapping', async function(req, res, next) {
   try {
     const data = await new ManageMenuController(req).createNewMappedMenu();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -11,7 +11,7 @@ router.post('/otherMenuMapping', async function(req, res, next) {
 })
 
 
-router.get('/otherMenuMapping/:menuTypeCode', async function(req, res, next) {
+router.get('/othermenumapping/:menuTypeCode', async function(req, res, next) {
   try {
     const data = await new ManageMenuController(req).getMappedMenuByType();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -20,7 +20,7 @@ router.get('/otherMenuMapping/:menuTypeCode', async function(req, res, next) {
   }
 })
 
-router.post('/otherMenuMapping/:menuTypeCode', async function(req, res, next) {
+router.post('/othermenumapping/:menuTypeCode', async function(req, res, next) {
   try {
     const data = await new ManageMenuController(req).createNewMappedItem();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -29,7 +29,7 @@ router.post('/otherMenuMapping/:menuTypeCode', async function(req, res, next) {
   }
 })
 
-router.post('/otherMenuMapping/:menuTypeCode/createWithArray', async function(req, res, next) {
+router.post('/othermenumapping/:menuTypeCode/createwitharray', async function(req, res, next) {
   try {
     const data = await new ManageMenuController(req).createMappedItemsWithArray();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -38,7 +38,7 @@ router.post('/otherMenuMapping/:menuTypeCode/createWithArray', async function(re
   }
 })
 
-router.put('/otherMenuMapping/:menuTypeCode/item/:itemIndex', async function(req, res, next) {
+router.put('/othermenumapping/:menuTypeCode/item/:itemIndex', async function(req, res, next) {
   try {
     const data = await new ManageMenuController(req).updateMappedMenuByType();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);

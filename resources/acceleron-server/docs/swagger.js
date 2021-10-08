@@ -60,7 +60,7 @@ var all = {
             "description": "APIs relating to Master Menu",
         },
         {
-            "name": "manageMenu",
+            "name": "managemenu",
             "description": "APIs relating to Menu Setting and Mapped Menu",
         },
         {
@@ -404,7 +404,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/settings/ACCELERATE_KOT_RELAYING/renameCategory": {
+        "/settings/ACCELERATE_KOT_RELAYING/renamecategory": {
             "put": {
                 "tags": ["settings"],
                 "summary": "To rename a category in KOT Relaying settings",
@@ -439,7 +439,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/settings/ACCELERATE_KOT_RELAYING/deleteCategory": {
+        "/settings/ACCELERATE_KOT_RELAYING/deletecategory": {
             "put": {
                 "tags": ["settings"],
                 "summary": "To delete a category related entires from KOT Relaying settings",
@@ -709,7 +709,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/table/mergeKOT": {
+        "/table/mergekot": {
             "put": {
                 "tags": ["table"],
                 "summary": "To merge KOTs to another table",
@@ -1151,7 +1151,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/menu/item/{itemCode}/toggleAvailability": {
+        "/menu/item/{itemCode}/toggleavailability": {
             "put": {
                 "tags": ["menu"],
                 "summary": "To toggle availability an item",
@@ -1185,7 +1185,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },  
-        "/menu/markAllMenuAvailable": {
+        "/menu/markallmenuavailable": {
             "put": {
                 "tags": ["menu"],
                 "summary": "To mark all items in the menu available",
@@ -1197,7 +1197,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },  
-        "/menu/getLastItemCode": {
+        "/menu/getlastitemcode": {
             "get": {
                 "tags": ["menu"],
                 "summary": "To get the last item code in the menu",
@@ -1209,7 +1209,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },  
-        "/menu/category/{categoryName}/markAllAvailableByCategory": {
+        "/menu/category/{categoryName}/markallavailablebycategory": {
             "put": {
                 "tags": ["menu"],
                 "summary": "To mark all items in the given category as available",
@@ -1235,7 +1235,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/menu/item/{itemCode}/moveItemToCategory": {
+        "/menu/item/{itemCode}/moveitemtocategory": {
             "put": {
                 "tags": ["menu"],
                 "summary": "To move an item to a given category",
@@ -1264,7 +1264,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/menu/menuPhoto": {
+        "/menu/menuphoto": {
             "post": {
                 "tags": ["menu"],
                 "summary": "To add new photo",
@@ -1286,7 +1286,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/menu/menuPhoto/{itemCode}": {
+        "/menu/menuphoto/{itemCode}": {
             "get": {
                 "tags": ["menu"],
                 "summary": "To get an photo of an item",
@@ -1354,9 +1354,9 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/manageMenu/otherMenuMapping": {
+        "/managemenu/othermenumapping": {
             "post": {
-                "tags": ["manageMenu"],
+                "tags": ["managemenu"],
                 "summary": "To create new mapped menu",
                 "description": "To create new mapped menu for an order source",
                 "operationId": "createNewMappedMenu",
@@ -1385,9 +1385,9 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/manageMenu/otherMenuMapping/{menuTypeCode}": {
+        "/managemenu/othermenumapping/{menuTypeCode}": {
             "get": {
-                "tags": ["manageMenu"],
+                "tags": ["managemenu"],
                 "summary": "To get a mapped menu",
                 "description": "To get a mapped menu against given menu type",
                 "operationId": "getMappedMenuByType",
@@ -1405,7 +1405,7 @@ var all = {
                 "security": [{"access_key": []}]
             },
             "put": {
-                "tags": ["manageMenu"],
+                "tags": ["managemenu"],
                 "summary": "To update a mapped menu",
                 "description": "To update a mapped menu against given menu type",
                 "operationId": "updateMappedMenuByType",
@@ -1432,7 +1432,7 @@ var all = {
                 "security": [{"access_key": []}]
             },
             "post": {
-                "tags": ["manageMenu"],
+                "tags": ["managemenu"],
                 "summary": "To create an item in a mapped menu",
                 "description": "To create an item in a mapped menu against given menu type",
                 "operationId": "createNewMappedItem",
@@ -1460,9 +1460,9 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/manageMenu/otherMenuMapping/{menuTypeCode}/createWithArray": {
+        "/managemenu/othermenuMapping/{menuTypeCode}/createwitharray": {
             "post": {
-                "tags": ["manageMenu"],
+                "tags": ["managemenu"],
                 "summary": "To create an items with a list in a mapped menu",
                 "description": "To create an item with a list in a mapped menu against given menu type",
                 "operationId": "createMappedItemsWithArray",
@@ -1490,9 +1490,9 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/manageMenu/otherMenuMapping/{menuTypeCode}/item/{itemIndex}": {
+        "/managemenu/othermenuMapping/{menuTypeCode}/item/{itemIndex}": {
             "put": {
-                "tags": ["manageMenu"],
+                "tags": ["managemenu"],
                 "summary": "To update a mapped menu",
                 "description": "To update a mapped menu against given menu type",
                 "operationId": "updateMappedMenuByType",

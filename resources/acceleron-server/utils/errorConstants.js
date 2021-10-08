@@ -130,7 +130,11 @@ ErrorType.kot_id_is_empty_or_invalid = 'KOT ID is empty or invalid format, pleas
 ErrorType.order_not_dine = 'Order is not a Dine-In order'
 ErrorType.same_table = 'Same Table'
 
-/*Manage Menu*/
+/*Manage Menu Errors*/
 ErrorType.mapped_menu_type_is_empty_or_invalid = "Mapped Menu Type is empty or invalid"
+
+/*License Errors*/
+ErrorType.machine_not_in_license = "Licence Error: Machine Name not issued in Licence."
+ErrorType.license_already_used = "Activation Error: Licence already used."
 
 module.exports = ErrorType
