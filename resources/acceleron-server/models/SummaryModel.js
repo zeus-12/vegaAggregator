@@ -54,6 +54,24 @@ class SummaryModel extends BaseModel {
     return data;
   }
 
+  async getCancelledInvoicesCount(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          CANCELLED_INVOICE_SOURCE_DB +
+          '/_design/invoices/_view/getcount?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
   async getCancelledItems(from_date, to_date) {
     const data = await this.couch
       .get(
@@ -90,6 +108,40 @@ class SummaryModel extends BaseModel {
     return data;
   }
 
+  async getCancelledInvoicesDetailed(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          CANCELLED_INVOICE_SOURCE_DB +
+          '/_design/invoice-filters/_view/showall?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]&descending=false&include_docs=true'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getCancelledOrdersDetailed(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        '/accelerate_cancelled_orders/_design/order-filters/_view/showall?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '", {}]&descending=false&include_docs=true'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
   async getSalesByItems(from_date, to_date) {
     const data = await this.couch
       .get(
@@ -100,6 +152,60 @@ class SummaryModel extends BaseModel {
           '"]&endkey=["' +
           to_date +
           '", {}]&group=true'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getAllInvoices(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/invoice-summary/_view/fetchall?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]&descending=false&include_docs=true'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getAllCancelledInvoices(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          CANCELLED_INVOICE_SOURCE_DB +
+          '/_design/invoice-summary/_view/fetchall?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]&descending=false&include_docs=true'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getFirstAndLastInvoiceNumber(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/invoices/_view/getlastbill?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]'
       )
       .catch((error) => {
         throw error;
@@ -120,6 +226,24 @@ class SummaryModel extends BaseModel {
           '"]&endkey=["' +
           to_date +
           '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getHourlySalesSum(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/invoice-summary/_view/timeslotwise_sumoverall?startkey=["ANY_MODE","' +
+          from_date +
+          '", 0]&endkey=["ANY_MODE","' +
+          to_date +
+          '", 23]'
       )
       .catch((error) => {
         throw error;
@@ -280,6 +404,24 @@ class SummaryModel extends BaseModel {
           '"]&endkey=["' +
           to_date +
           '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getRefundsList(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/refund-summary/_view/fetchall?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]&descending=false&include_docs=true'
       )
       .catch((error) => {
         throw error;
@@ -609,6 +751,32 @@ class SummaryModel extends BaseModel {
           to_date +
           '",{}]'
       )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async checkForPendingBills(from_date, to_date) {
+    const data = await this.couch
+      .get(
+        '/accelerate_bills/_design/bill-filters/_view/showall?startkey=["' +
+          from_date +
+          '"]&endkey=["' +
+          to_date +
+          '"]&descending=false'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async checkForRunningOrders() {
+    const data = await this.couch
+      .get("/accelerate_kot/_design/kot-fetch/_view/fetchall")
       .catch((error) => {
         throw error;
       });

@@ -50,6 +50,8 @@ class SummaryController extends BaseController {
       "billcancellations",
       "itemcancellations",
       "quicksummary",
+      "salesreport",
+      "accountancyreport"
     ];
 
     initialValidator(ALLOWED_TYPES, summary_type, from_date, to_date);
@@ -326,6 +328,103 @@ class SummaryController extends BaseController {
         } catch (error) {
           throw error;
         }
+      }
+
+      case "salesreport": {
+        var is_super_admin_logged_in = self.request.query.isSuperAdminLoggedIn;
+        var curr_date = moment().format("YYYYMMDD");
+        if (_.isEmpty(is_super_admin_logged_in)) {
+          throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.missing_required_parameters
+          );
+        }
+        try {
+          const data = await self.SummaryService.fetchSingleClickReport(
+            is_super_admin_logged_in,
+            from_date,
+            to_date,
+            curr_date
+          );
+          return data;
+        } catch (error) {
+          throw error;
+        }
+      }
+
+      case "accountancyreport": {
+        var report_type = self.request.query.reportType;
+
+        if (_.isEmpty(report_type)) {
+          throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.missing_required_parameters
+          );
+        }
+
+        var ALLOWED_REPORT_TYPES = [
+          "OVERALL_REPORT",
+          "INVOICE_REPORT",
+          "BILL_CANCELLATIONS",
+          "ITEM_CANCELLATIONS",
+        ];
+
+        checkAvailability("Report type", ALLOWED_REPORT_TYPES, report_type);
+
+        // Different ways in which excel report summary can be fetched
+        switch (report_type) {
+          case "OVERALL_REPORT": {
+            try {
+              const data = await self.SummaryService.excelOverallReport(
+                from_date,
+                to_date,
+                curr_date
+              );
+              return data;
+            } catch (error) {
+              throw error;
+            }
+          }
+
+          case "INVOICE_REPORT": {
+            try {
+              const data = await self.SummaryService.excelInvoiceReport(
+                from_date,
+                to_date
+              );
+              return data;
+            } catch (error) {
+              throw error;
+            }
+          }
+
+          case "BILL_CANCELLATIONS": {
+            try {
+              const data =
+                await self.SummaryService.excelBillCancellationsReport(
+                  from_date,
+                  to_date
+                );
+              return data;
+            } catch (error) {
+              throw error;
+            }
+          }
+
+          case "ITEM_CANCELLATIONS": {
+            try {
+              const data =
+                await self.SummaryService.excelItemCancellationsReport(
+                  from_date,
+                  to_date
+                );
+              return data;
+            } catch (error) {
+              throw error;
+            }
+          }
+        }
+        break;
       }
     }
   }
