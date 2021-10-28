@@ -11,11 +11,14 @@ class KOTModel extends BaseModel{
     }
 
     async getKOTById(kot_id) {
-        const data = await this.couch.get('/accelerate_kot/'+kot_id).catch(error => {
+        return await this.couch.get('/accelerate_kot/'+kot_id).catch(error => {
             throw error;
         });
-
-        return data;
+    }
+    async updateKOTById(kotId, newKOTData){
+        return await this.couch.put('/accelerate_kot/'+kotId, newKOTData).catch(error => {
+            throw new ErrorResponse(ResponseType.ERROR, ErrorType.something_went_wrong);
+        });
     }
 }
 

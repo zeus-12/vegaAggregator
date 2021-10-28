@@ -33,11 +33,28 @@ class KOTController extends BaseController {
         if(!ALLOWED_FILTER_KEYS.includes(filter_key)){
             throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_filter);
         }
-
         return await this.KOTService.fetchKOTsByFilter(filter_key).catch(error => {
             throw error
           });
     }
+
+    async tableTransferKOT() {
+        const kotId = this.request.query.kotId;
+        const newTableNumber = this.request.query.tableNumber;
+        if(_.isEmpty(kotId)){
+          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.category_name_is_empty_or_invalid)
+        }
+        if( _.isEmpty(newTableNumber) ){
+          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.item_code_is_empty_or_invalid)
+        }
+  
+        return await this.KOTService.tableTransferKOT(kotId, newTableNumber)
+        .catch(error => {
+            throw error
+          });
+      }
+
+
 }
 
 module.exports = KOTController;

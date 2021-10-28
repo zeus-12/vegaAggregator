@@ -146,5 +146,44 @@ router.route('/category/:categoryName')
     }
   })
 
+  //Menu Photos
+
+  router.post('/menuPhoto', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).addNewPhoto();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+  router.get('/menuPhoto/:itemCode', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).getPhotoByCode();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+  router.put('/menuPhoto/:itemCode', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).updatePhotoByCode();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+  router.delete('/menuPhoto/:itemCode', async function(req, res, next) {
+    try {
+      const data = await new MenuController(req).deletePhotoByCode();
+      return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+    } catch (error) {
+      return next(error)
+    }
+  })
+
+
 
 module.exports = router;

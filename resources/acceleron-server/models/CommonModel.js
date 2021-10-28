@@ -11,11 +11,9 @@ class CommonModel extends BaseModel{
     }
 
     async getDataByPath(url) {
-        const data = await this.couch.get(url).catch(error => {
+        return await this.couch.get(url).catch(error => {
             throw error;
         });
-
-        return data;
     }
 }
 

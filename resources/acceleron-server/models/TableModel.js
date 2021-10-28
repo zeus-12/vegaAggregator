@@ -42,11 +42,10 @@ class TableModel extends BaseModel{
         return data;    
     }
 
-    async deleteTable(tableId, tableRev, callback){
+    async deleteTable(tableId, tableRev){
         const data = await this.couch.delete('/accelerate_tables/'+tableId+'?rev='+tableRev).catch(error => {
             throw error;
         });
-
         return data;       
     }
 }

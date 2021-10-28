@@ -167,6 +167,16 @@ class SettingsService extends BaseService {
                  }
             break;
         }
+        case 'ACCELERATE_MENU_CATALOG':{           
+          for (var i=0; i<valueList.length; i++) {
+            if (valueList[i].name == entry_to_remove.categoryName){
+                 valueList.splice(i,1);
+                 isFound = true;
+                 break;
+            }
+          }
+     break;
+ }
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
@@ -338,6 +348,67 @@ class SettingsService extends BaseService {
           if(!isFound){
             throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
           }     
+          break;
+        }
+
+        case 'ACCELERATE_MENU_CATALOG':{
+          if(valueList.length == 0){
+            var newEntry = {
+              "name": filter_key,
+              "mainType": entry_to_update.mainType
+            }
+
+            valueList.push(newEntry);
+          }
+          else{
+            var isFound = false
+            for(var i = 0; i < valueList.length; i++){
+              if(valueList[i].name == filter_key){
+                valueList[i].mainType = entry_to_update.mainType;
+                isFound = true;
+                break;
+              }
+            }
+            if(!isFound){
+              var newEntry =     {
+                "name": filter_key,
+                "mainType": entry_to_update.mainType
+              }
+              valueList.push(newEntry);
+            }
+          }     
+          break;
+        }
+        case 'ACCELERATE_KOT_RELAYING':{
+          for(var n=0; n<valueList.length; n++){
+            if(valueList[n].systemName == filter_key){
+              if(valueList[n].data.length == 0){
+                var newEntry = {
+                  "name": entry_to_update.categoryName,
+                  "printer": entry_to_update.printerName
+                }
+                valueList[n].data.push(newEntry);
+              }
+              else{
+                var isFound = false
+                for (var i=0; i<valueList[n].data.length; i++){
+                  if(valueList[n].data[i].name == entry_to_update.categoryName){
+                    valueList[n].data[i].printer = entry_to_update.printerName;
+                    isFound = true;
+                    break;
+                  }
+                }
+                if(!isFound){
+                  var newEntry =     {
+                    "name": entry_to_update.categoryName,
+                    "printer": entry_to_update.printerName
+                  }
+                  valueList[n].data.push(newEntry);
+                }  
+              }
+              break;
+            }
+          }   
           break;
         }
         default:{

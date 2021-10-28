@@ -2,7 +2,7 @@
 let BaseService = ACCELERONCORE._services.BaseService;
 let MenuModel = require('../models/MenuModel');
 var _ = require('underscore');
-const { result } = require('underscore');
+
 
 class MenuService extends BaseService {
     constructor(request) {
@@ -440,29 +440,105 @@ class MenuService extends BaseService {
       var itemObject = ''
       var isItemFound = false;
       for (var j=0; j<menu.length; j++) {
-          var items = menu[j].items
-          for (var k=0; k<items.length; k++) {
-            if (items[k].code == itemCode){
-              isItemFound = true;
-              itemObject = items[k];
-              items.splice(k,1);
-            }         
-          }          
+        var items = menu[j].items
+        for (var k=0; k<items.length; k++) {
+          if (items[k].code == itemCode){
+            isItemFound = true;
+            itemObject = items[k];
+            items.splice(k,1);
+          }         
+        }          
       
       }
       if(isItemFound){
+        await this.MenuModel.updateMenu(menuData).catch(error => {
+          throw error
+        });
+        return await this.createNewItem(newCategoryName,itemObject).catch(error => {
+          throw error
+        });
+      }
+      else{  
+        throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results) 
+      }
+
+    }
+
+  //Menu Photos
+
+    async addNewPhoto(itemCode, image) {
+
+      var imageObject = {}
+      imageObject._id = itemCode
+      imageObject.code = itemCode
+      imageObject.data = image
+
+      const menuData = await this.getFullMenu().catch(error => {     
+        throw error
+      });
+      var menu = menuData.value;
+
+      for (var j=0; j<menu.length; j++) {
+        var items = menu[j].items
+        for (var k=0; k<items.length; k++) {
+          if(items[k].code == itemCode){
+            imageObject.category = menu[j].category;
+            items[k].isPhoto = true;
+          }         
+        }          
+      }
       await this.MenuModel.updateMenu(menuData).catch(error => {
         throw error
       });
-      return await this.createNewItem(newCategoryName,itemObject).catch(error => {
+
+      return await this.MenuModel.updateMenuPhoto(itemCode, imageObject).catch(error => {
+        throw error
+      });
+
+    }
+  
+    async getPhotoByCode(itemCode) {
+      const imageData =  await this.MenuModel.getMenuPhoto(itemCode).catch(error => {
+        throw error
+      });
+      return imageData.data
+
+    }
+
+    async updatePhotoByCode(itemCode, newImage) {
+      const imageData =  await this.MenuModel.getMenuPhoto(itemCode).catch(error => {
+        throw error
+      });
+      imageData.data = newImage;
+      return await this.MenuModel.updateMenuPhoto(itemCode, imageData).catch(error => {
         throw error
       });
     }
-    else{  
-      throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results) 
-    }
 
+    async deletePhotoByCode(itemCode) {
+      const menuData = await this.getFullMenu().catch(error => {     
+        throw error
+      });
+      var menu = menuData.value;
 
+      for (var j=0; j<menu.length; j++) {
+        var items = menu[j].items
+        for (var k=0; k<items.length; k++) {
+          if(items[k].code == itemCode){
+            items[k].isPhoto = false;
+          }         
+        }          
+      }
+      await this.MenuModel.updateMenu(menuData).catch(error => {
+        throw error
+      });
+      const imageData =  await this.MenuModel.getMenuPhoto(itemCode).catch(error => {
+        throw error
+      }); 
+
+      return await this.MenuModel.deleteMenuPhoto(itemCode, imageData._rev).catch(error => {
+        throw error
+      });
     }
 
   }
