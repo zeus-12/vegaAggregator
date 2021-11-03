@@ -1460,7 +1460,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/managemenu/othermenuMapping/{menuTypeCode}/createwitharray": {
+        "/managemenu/othermenumapping/{menuTypeCode}/createwitharray": {
             "post": {
                 "tags": ["managemenu"],
                 "summary": "To create an items with a list in a mapped menu",
@@ -1490,7 +1490,7 @@ var all = {
                 "security": [{"access_key": []}]
             }
         },
-        "/managemenu/othermenuMapping/{menuTypeCode}/item/{itemIndex}": {
+        "/managemenu/othermenumapping/{menuTypeCode}/item/{itemIndex}": {
             "put": {
                 "tags": ["managemenu"],
                 "summary": "To update a mapped menu",
