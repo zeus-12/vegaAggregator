@@ -119,6 +119,9 @@ ErrorType.passcode_has_to_be_four_digit = 'Passcode has to be a 4 digit number'
 ErrorType.no_user_found = 'No user Found'
 ErrorType.incorrect_password = 'Incorrect passcode entered, please re-enter it correctly'
 
+/* Summary Errors */
+ErrorType.bills_not_settled = "Please settle all the pending bills on the given dates to continue";
+
 
 /*Quick Fix Service Errors*/
 
