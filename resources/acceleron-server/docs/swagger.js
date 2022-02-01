@@ -2,28 +2,28 @@ const { object } = require("underscore");
 
 var responsesList = {
   200: {
-    description: "success",
+    description: "success"
   },
   201: {
-    description: "success",
+    description: "success"
   },
   400: {
-    description: "bad request",
+    description: "bad request"
   },
   401: {
-    description: "auth failure",
+    description: "auth failure"
   },
   404: {
-    description: "no record found",
+    description: "no record found"
   },
   408: {
-    description: "server timed out",
+    description: "server timed out"
   },
   409: {
-    description: "conflict",
+    description: "conflict"
   },
   500: {
-    description: "some error occurred",
+    description: "some error occurred"
   },
 };
 
@@ -34,65 +34,94 @@ var all = {
     version: "1.0.0",
     title: "Acceleron Server",
     termsOfService: "https://accelerate.net.in/acceleron-terms.html",
-    contact: { email: "support@accelerate.net.in" },
+    contact: { email: "support@accelerate.net.in" }
   },
   host: "localhost:" + process.env.PORT,
   basePath: "/",
   tags: [
     {
       name: "settings",
-      description:
-        "APIs relating to the System Settings, Contents and Personalisations",
+      description: "APIs relating to the System Settings, Contents and Personalisations"
     },
     {
       name: "table",
-      description:
-        "APIs to create the Tables and filter out them with certain conditions",
+      description: "APIs to create the Tables and filter out them with certain conditions"
     },
     {
       name: "kot",
-      description: "APIs to create and manage the KOTs",
+      description: "APIs to create and manage the KOTs"
     },
     {
       name: "user",
-      description: "APIs to create, edit, change User details",
+      description: "APIs to create, edit, change User details"
     },
     {
-      name: "manageMenu",
-      description: "APIs relating to Menu Setting and Mapped Menu",
+        name: "menu",
+        description: "APIs relating to Master Menu"
+    },
+    {
+      name: "managemenu",
+      description: "APIs relating to Menu Setting and Mapped Menu"
     },
     {
       name: "sales-summary",
-      description: "APIs to fetch sales-summary",
+      description: "APIs to fetch sales-summary"
     },
   ],
   schemes: ["http"],
   securityDefinitions: {
-    access_key: { type: "apiKey", name: "x-access-token", in: "header" },
+    access_key: { type: "apiKey", name: "x-access-token", in: "header" }
   },
   definitions: {
     Table: {
       type: "object",
       properties: {
         table: {
-          type: "string",
+          type: "string"
         },
         capacity: {
-          type: "string",
+          type: "string"
         },
         sortIndex: {
-          type: "string",
+          type: "string"
         },
         type: {
-          type: "string",
+          type: "string"
         },
+        status : {
+            type: "integer"
+        },
+        assigned : {
+            type: "string"
+        },
+        remarks : {
+            type: "string"
+        },
+        KOT : {
+            type: "string"
+        },
+        lastUpdate :{
+            type: "string"
+        },   
+        guestName : {
+            type: "string"
+        }, 
+        guestContact : {
+            type: "string"
+        }, 
+        reservationMapping : {
+            type: "string"
+        }, 
+        guestCount : {
+            type: "string"
+        }
       },
     },
     Category: {
       type: "object",
       properties: {
         categoryName: {
-          type: "string",
+          type: "string"
         },
       },
     },
@@ -100,33 +129,33 @@ var all = {
       type: "object",
       properties: {
         name: {
-          type: "string",
+          type: "string"
         },
         price: {
-          type: "string",
+          type: "string"
         },
         isCustom: {
-          type: "boolean",
+          type: "boolean"
         },
         vegFlag: {
-          type: "string",
+          type: "string"
         },
         code: {
-          type: "string",
+          type: "string"
         },
         isPackaged: {
-          type: "boolean",
+          type: "boolean"
         },
         shortCode: {
-          type: "string",
+          type: "string"
         },
         cookingTime: {
-          type: "integer",
+          type: "integer"
         },
         ingredients: {
           type: "array",
           items: {
-            type: "string",
+            type: "string"
           },
         },
         customOptions: {
@@ -135,16 +164,16 @@ var all = {
             type: "object",
             properties: {
               customName: {
-                type: "string",
+                type: "string"
               },
               customPrice: {
-                type: "string",
+                type: "string"
               },
             },
           },
         },
         isAvailable: {
-          type: "boolean",
+          type: "boolean"
         },
       },
     },
@@ -152,10 +181,10 @@ var all = {
       type: "object",
       properties: {
         code: {
-          type: "string",
+          type: "string"
         },
         data: {
-          type: "string",
+          type: "string"
         },
       },
     },
@@ -163,22 +192,22 @@ var all = {
       type: "object",
       properties: {
         mappedCode: {
-          type: "string",
+          type: "string"
         },
         mappedPrice: {
-          type: "string",
+          type: "string"
         },
         mappedVariant: {
-          type: "string",
+          type: "string"
         },
         mappedName: {
-          type: "string",
+          type: "string"
         },
         systemCode: {
-          type: "string",
+          type: "string"
         },
         systemVariant: {
-          type: "string",
+          type: "string"
         },
       },
     },
@@ -187,13 +216,13 @@ var all = {
       properties: {
         code: {
           type: "integer",
-          format: "int32",
+          format: "int32"
         },
         type: {
-          type: "string",
+          type: "string"
         },
         message: {
-          type: "string",
+          type: "string"
         },
       },
     },
@@ -212,7 +241,7 @@ var all = {
             in: "path",
             description: "Settings ID",
             required: true,
-            type: "string",
+            type: "string"
           },
         ],
         responses: responsesList,
@@ -223,8 +252,7 @@ var all = {
       post: {
         tags: ["settings"],
         summary: "To add new entry in settings",
-        description:
-          "To add new entry to the settings content against its unique id. New entry object to be passed in body.",
+        description: "To add new entry to the settings content against its unique id. New entry object to be passed in body.",
         operationId: "addNewItemToSettings",
         produces: ["application/json"],
         parameters: [
@@ -233,7 +261,7 @@ var all = {
             in: "path",
             description: "Settings ID",
             required: true,
-            type: "string",
+            type: "string"
           },
           {
             name: "body",
@@ -243,9 +271,9 @@ var all = {
             type: "object",
             properties: {
               name: {
-                type: "string",
-              },
-            },
+                type: "string"
+              }
+            }
           },
         ],
         responses: responsesList,
@@ -256,8 +284,7 @@ var all = {
       post: {
         tags: ["settings"],
         summary: "To remove entry from settings",
-        description:
-          "To remove an entry from the settings content against its unique id. Entry object to be removed to be passed in body.",
+        description: "To remove an entry from the settings content against its unique id. Entry object to be removed to be passed in body.",
         operationId: "removeEntryFromSettings",
         produces: ["application/json"],
         parameters: [
@@ -266,7 +293,7 @@ var all = {
             in: "path",
             description: "Settings ID",
             required: true,
-            type: "string",
+            type: "string"
           },
           {
             name: "body",
@@ -276,9 +303,9 @@ var all = {
             type: "object",
             properties: {
               name: {
-                type: "string",
-              },
-            },
+                type: "string"
+              }
+            }
           },
         ],
         responses: responsesList,
@@ -289,8 +316,7 @@ var all = {
       get: {
         tags: ["settings"],
         summary: "To filter from settings list",
-        description:
-          "To filter out a specific entry from the list of entries in the settings content. For eg: System options, Personalisations against given machine id",
+        description: "To filter out a specific entry from the list of entries in the settings content. For eg: System options, Personalisations against given machine id",
         operationId: "filterItemFromSettingsList",
         produces: ["application/json"],
         parameters: [
@@ -317,8 +343,7 @@ var all = {
       post: {
         tags: ["settings"],
         summary: "To update item in settings list",
-        description:
-          "To update a specific entry from the list of entries in the settings content. For eg: System options, Personalisations against given machine id",
+        description: "To update a specific entry from the list of entries in the settings content. For eg: System options, Personalisations against given machine id",
         operationId: "filterItemFromSettingsList",
         produces: ["application/json"],
         parameters: [
@@ -357,8 +382,7 @@ var all = {
       get: {
         tags: ["settings"],
         summary: "To perform quick fix",
-        description:
-          "To perform quick fix actions on KOT/Bill index and table mappings",
+        description: "To perform quick fix actions on KOT/Bill index and table mappings",
         operationId: "applyQuickFix",
         produces: ["application/json"],
         parameters: [
@@ -385,8 +409,7 @@ var all = {
       put: {
         tags: ["settings"],
         summary: "To rename a category in KOT Relaying settings",
-        description:
-          "To rename a category in the list of entries in the KOT Relaying settings.",
+        description: "To rename a category in the list of entries in the KOT Relaying settings.",
         operationId: "renameCategoryKOTRelays",
         produces: ["application/json"],
         parameters: [
@@ -420,10 +443,8 @@ var all = {
     "/settings/ACCELERATE_KOT_RELAYING/deleteCategory": {
       put: {
         tags: ["settings"],
-        summary:
-          "To delete a category related entires from KOT Relaying settings",
-        description:
-          "To delete a category in the list of entries in the KOT Relaying settings.",
+        summary: "To delete a category related entires from KOT Relaying settings",
+        description: "To delete a category in the list of entries in the KOT Relaying settings.",
         operationId: "deleteCategoryKOTRelays",
         produces: ["application/json"],
         parameters: [
@@ -475,8 +496,7 @@ var all = {
       get: {
         tags: ["table"],
         summary: "To filter tables",
-        description:
-          "To filter out a specific set of table based on some conditions. For eg. Live Tables, Reserved Tables etc.",
+        description: "To filter out a specific set of table based on some conditions. For eg. Live Tables, Reserved Tables etc.",
         operationId: "fetchTablesByFilter",
         produces: ["application/json"],
         parameters: [
@@ -532,14 +552,61 @@ var all = {
             in: "body",
             description: "Table Object",
             required: true,
-            schema: {
-              $ref: "#/definitions/Table",
-            },
+            properties: {
+                table:{
+                    type: "string"
+                },
+                capacity:{
+                    type: "string"
+                },
+                sortIndex:{
+                    type: "string"
+                },
+                type:{
+                    type: "string"
+                }
+              },
           },
         ],
         responses: responsesList,
         security: [{ access_key: [] }],
       },
+    },
+    "/table/update": {
+        post: {
+            tags: ["table"],
+            summary: "To create new table",
+            description: "To create a table to with generic contents",
+            operationId: "updateTableByFilter",
+            produces: ["application/json"],
+            parameters: [
+                {
+                    name: "key",
+                    in: "query",
+                    description: "Filter Key - all, live, name, section",
+                    required: true,
+                    type: "string"
+                },
+                {
+                    name: "uniqueId",
+                    in: "query",
+                    description: "Identifier - Table Name / Table ID etc.",
+                    required: true,
+                    type: "string"
+                },
+                {
+                    name: "body",
+                    in: "body",
+                    description: "Update Table Object",
+                    required: true,
+                    schema: {
+                        "$ref": "#/definitions/Table"
+                      }
+                }
+            ],
+            responses: responsesList,
+            security: [{"access_key": []}]
+        }
     },
     "/table/delete": {
       post: {
@@ -615,6 +682,67 @@ var all = {
         responses: responsesList,
         security: [{ access_key: [] }],
       },
+    },
+    "/table/tabletransfer": {
+        put: {
+            tags: ["table"],
+            summary: "To transfer KOT to another table",
+            description: "To transfer KOT from a table to another using the kot_id and new table number",
+            operationId: "tableTransferKOT",
+            produces: ["application/json"],
+            parameters: [
+                {
+                    name: "kotId",
+                    in: "query",
+                    description: "KOT ID of the order",
+                    required: true,
+                    type: "string"
+                },
+                {
+                    name: "newTableNumber",
+                    in: "query",
+                    description: "New Table Number",
+                    required: true,
+                    type: "string"
+                }               
+            ],
+            responses: responsesList,
+            security: [{"access_key": []}]
+        }
+    },
+    "/table/mergekot": {
+        put: {
+            tags: ["table"],
+            summary: "To merge KOTs to another table",
+            description: "To merge KOTs of a set a table to another table ",
+            operationId: "mergeKOT",
+            produces: ["application/json"],
+            parameters: [
+                {
+                    name: "body",
+                    in: "body",
+                    description: "Merge Data",
+                    required: true,
+                    type: "object",
+                    properties:{
+                        accelerateLicenceeBranch:{
+                            type : "string"
+                        },
+                        tableName:{
+                            type : "string"
+                        },
+                        tableList:{
+                            type: "array",
+                            items:{
+                                "type": "string"
+                            }           
+                        }
+                    }
+                }               
+            ],
+            responses: responsesList,
+            security: [{"access_key": []}]
+        }
     },
     "/user/{id}": {
       get: {
@@ -767,8 +895,7 @@ var all = {
       get: {
         tags: ["kot"],
         summary: "To filter KOTs",
-        description:
-          "To filter out a specific set of KOTs based on some conditions. For eg. Dine or Non-dine.",
+        description: "To filter out a specific set of KOTs based on some conditions. For eg. Dine or Non-dine.",
         operationId: "fetchKOTsByFilter",
         produces: ["application/json"],
         parameters: [
@@ -776,34 +903,6 @@ var all = {
             name: "key",
             in: "query",
             description: "Filter Key - all, dine, nondine",
-            required: true,
-            type: "string",
-          },
-        ],
-        responses: responsesList,
-        security: [{ access_key: [] }],
-      },
-    },
-    "/kot/tabletransfer": {
-      put: {
-        tags: ["kot"],
-        summary: "To transfer KOT to another table",
-        description:
-          "To transfer KOT from a table to another using the kot_id and new table number",
-        operationId: "tableTransferKOT",
-        produces: ["application/json"],
-        parameters: [
-          {
-            name: "kotId",
-            in: "query",
-            description: "KOT ID of the order",
-            required: true,
-            type: "string",
-          },
-          {
-            name: "newTableNumber",
-            in: "query",
-            description: "New Table Number",
             required: true,
             type: "string",
           },
@@ -997,8 +1096,7 @@ var all = {
       put: {
         tags: ["menu"],
         summary: "To update an item",
-        description:
-          "To update an item against given category name and item code",
+        description: "To update an item against given category name and item code",
         operationId: "updateItemByCode",
         produces: ["application/json"],
         parameters: [
@@ -1032,8 +1130,7 @@ var all = {
       delete: {
         tags: ["menu"],
         summary: "To delete an item",
-        description:
-          "To delete an item against given category name and item code",
+        description: "To delete an item against given category name and item code",
         operationId: "deleteItemByCode",
         produces: ["application/json"],
         parameters: [
@@ -1056,7 +1153,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/menu/item/{itemCode}/toggleAvailability": {
+    "/menu/item/{itemCode}/toggleavailability": {
       put: {
         tags: ["menu"],
         summary: "To toggle availability an item",
@@ -1090,7 +1187,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/menu/markAllMenuAvailable": {
+    "/menu/markallmenuavailable": {
       put: {
         tags: ["menu"],
         summary: "To mark all items in the menu available",
@@ -1102,7 +1199,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/menu/getLastItemCode": {
+    "/menu/getlastitemcode": {
       get: {
         tags: ["menu"],
         summary: "To get the last item code in the menu",
@@ -1114,7 +1211,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/menu/category/{categoryName}/markAllAvailableByCategory": {
+    "/menu/category/{categoryName}/markallavailablebycategory": {
       put: {
         tags: ["menu"],
         summary: "To mark all items in the given category as available",
@@ -1135,13 +1232,13 @@ var all = {
             description: "ALL_AVAIL or ALL_NOT_AVAIL",
             required: true,
             type: "string",
-          },
+          }
         ],
         responses: responsesList,
         security: [{ access_key: [] }],
       },
     },
-    "/menu/item/{itemCode}/moveItemToCategory": {
+    "/menu/item/{itemCode}/moveitemtocategory": {
       put: {
         tags: ["menu"],
         summary: "To move an item to a given category",
@@ -1170,7 +1267,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/menu/menuPhoto": {
+    "/menu/menuphoto": {
       post: {
         tags: ["menu"],
         summary: "To add new photo",
@@ -1192,7 +1289,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/menu/menuPhoto/{itemCode}": {
+    "/menu/menuphoto/{itemCode}": {
       get: {
         tags: ["menu"],
         summary: "To get an photo of an item",
@@ -1260,7 +1357,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/manageMenu/otherMenuMapping": {
+    "/managemenu/othermenumapping": {
       post: {
         tags: ["manageMenu"],
         summary: "To create new mapped menu",
@@ -1291,7 +1388,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/manageMenu/otherMenuMapping/{menuTypeCode}": {
+    "/managemenu/othermenumapping/{menuTypeCode}": {
       get: {
         tags: ["manageMenu"],
         summary: "To get a mapped menu",
@@ -1366,12 +1463,11 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/manageMenu/otherMenuMapping/{menuTypeCode}/createWithArray": {
+    "/managemenu/othermenumapping/{menuTypeCode}/createwitharray": {
       post: {
         tags: ["manageMenu"],
         summary: "To create an items with a list in a mapped menu",
-        description:
-          "To create an item with a list in a mapped menu against given menu type",
+        description: "To create an item with a list in a mapped menu against given menu type",
         operationId: "createMappedItemsWithArray",
         produces: ["application/json"],
         parameters: [
@@ -1397,7 +1493,7 @@ var all = {
         security: [{ access_key: [] }],
       },
     },
-    "/manageMenu/otherMenuMapping/{menuTypeCode}/item/{itemIndex}": {
+    "/manageMenu/othermenumapping/{menuTypeCode}/item/{itemIndex}": {
       put: {
         tags: ["manageMenu"],
         summary: "To update a mapped menu",

@@ -2,7 +2,6 @@
 let BaseService = ACCELERONCORE._services.BaseService;
 let CommonModel = require('../models/CommonModel');
 let KOTModel = require('../models/KOTModel');
-let SettingsService = require('./SettingsService');
 let TableService = require('./TableService');
 
 var _ = require('underscore');
@@ -14,8 +13,6 @@ class KOTService extends BaseService {
         this.request = request;
         this.CommonModel = new CommonModel(request);
         this.KOTModel = new KOTModel(request);
-        this.SettingsService = new SettingsService(request);
-        this.TableService = new TableService(request);
     }
 
     async getKOTById(kot_id) {
@@ -26,6 +23,27 @@ class KOTService extends BaseService {
         throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
       }
       return data;
+    }
+
+    async updateKOTById(kot_id, updateData) {
+      const kotData =  await this.getKOTById(kot_id).catch(error => {
+        throw error
+      }); 
+      var newData = {...kotData, ...updateData}
+
+      return await this.KOTModel.updateKOTById(kot_id, newData).catch(error => {
+        throw error
+      });
+    }
+
+    async deleteKOTById(kot_id) {
+      const kotData =  await this.getKOTById(kot_id).catch(error => {
+        throw error
+      }); 
+
+      return await this.KOTModel.deleteKOTById(kot_id, kotData._rev).catch(error => {
+        throw error
+      });
     }    
 
     async fetchKOTsByFilter(filter_key) {
@@ -61,61 +79,7 @@ class KOTService extends BaseService {
       return responseList;
     }
 
-    async tableTransferKOT(kotId, newTableNumber) {
-      var kotData = await this.getKOTById(kotId).catch(error => {
-        throw error
-      });
-
-      if(kotData.table == newTableNumber){ //same table
-        throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.same_table);
-      }
-
-      if(kotData.orderDetails.modeType != 'DINE'){
-        throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.order_not_dine);
-      }
-      var oldTableNumber = kotData.table
-      kotData.table = newTableNumber
-      await this.KOTModel.updateKOTById(kotId, kotData).catch(error => {
-        throw error
-      });
-
-      //Updating Old Table
-      var tableData = await this.TableService.fetchTablesByFilter('name', oldTableNumber).catch(error => {
-        throw error
-      });
-      tableData.status = 0;
-      tableData.assigned = "";
-      tableData.remarks = "";
-      tableData.KOT = "";
-      tableData.lastUpdate = "";
-      tableData.guestName = ""; 
-      tableData.guestContact = ""; 
-      tableData.reservationMapping = "";
-      tableData.guestCount = "";
-      await this.TableService.updateTable(oldTableNumber, tableData).catch(error => {
-        throw error
-      });
-
-      //Updating New Table
-      var newTableData = await this.TableService.fetchTablesByFilter('name', newTableNumber).catch(error => {
-        throw error
-      });
-      newTableData.status = 1;
-      newTableData.assigned = kotData.stewardName;
-      newTableData.remarks = kotData.remarks;
-      newTableData.KOT = kotData.KOTNumber;
-      newTableData.lastUpdate = (kotData.timeKOT != "" ? kotData.timeKOT : kotData.timePunch);;
-      newTableData.guestName = kotData.guestName; 
-      newTableData.guestContact = kotData.guestContact; 
-      newTableData.reservationMapping = kotData.reservationMapping;
-      newTableData.guestCount = kotData.guestCount;
-      var result = await this.TableService.updateTable(newTableNumber, newTableData).catch(error => {
-        throw error
-      });
-
-      return result
-
-    }
+    
 
 }
 

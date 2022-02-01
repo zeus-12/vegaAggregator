@@ -37,6 +37,7 @@ ErrorType.image_is_empty_or_invalid = 'Item Image is empty or invalid '
 ErrorType.settings_id_is_empty_or_invalid = 'Settings ID is empty or invalid format, please re-enter it correctly'
 ErrorType.invalid_settings_name = "Not valid settings name"
 ErrorType.invalid_fix_key = "Not valid fix key"
+ErrorType.select_one_more_key = 'Select one more key'
 
 ErrorType.session_name_empty_or_invalid = 'Session Name is empty or invalid format, please re-enter it correctly'
 ErrorType.start_time_empty_or_invalid = 'Start Time is empty or invalid format, please re-enter it correctly'
@@ -51,7 +52,29 @@ ErrorType.update_field_is_empty_or_invalid = 'Update Field is empty or invalid f
 ErrorType.system_name_is_empty_or_invalid = 'System Name is empty or invalid format, please re-enter it correctly'
 ErrorType.fix_key_is_empty_or_invalid = 'Fix Key is empty or invalid format, please re-enter it correctly'
 ErrorType.machine_name_is_empty_or_invalid = 'System Name is empty or invalid format, please re-enter it correctly'
-ErrorType.select_one_more_key = 'Select one more key'
+ErrorType.bill_param_name_empty_or_invalid = 'Billing parameter name is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_param_excludePackagedFoods_empty_or_invalid = 'Exclude packaged foods is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_param_value_empty_or_invalid = 'Billing parameter value is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_param_unit_empty_or_invalid = 'Billing parameter unit is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_param_unit_name_empty_or_invalid = 'Billing parameter unit name is empty or invalid format, please re-enter it correctly'
+ErrorType.discount_name_empty_or_invalid = 'Discount Name is empty or invalid format, please re-enter it correctly'
+ErrorType.discount_unit_empty_or_invalid = 'Discount Unit is empty or invalid format, please re-enter it correctly'
+ErrorType.discount_value_empty_or_invalid = 'Discount Value is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_mode_name_empty_or_invalid = 'Billing Mode Name is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_mode_discountable_empty_or_invalid = 'Billing Mode Name  is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_mode_type_empty_or_invalid = 'Discount Value is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_mode_discount_empty_or_invalid = 'Discount Value is empty or invalid format, please re-enter it correctly'
+ErrorType.bill_mode_discount_is_zero = 'Please set a non-zero maximum discount, as you have marked it Discountable'
+ErrorType.payment_name_empty_or_invalid = 'Payment Mode Name is empty or invalid format, please re-enter it correctly'
+ErrorType.payment_code_empty_or_invalid = 'Payment Mode Code is empty or invalid format, please re-enter it correctly'
+ErrorType.order_source_name_empty_or_invalid = 'Order Source Name is empty or invalid format, please re-enter it correctly'
+ErrorType.order_source_code_empty_or_invalid = 'Order Source Code is empty or invalid format, please re-enter it correctly'
+ErrorType.printer_name_empty_or_invalid = 'Printer name is empty or invalid format, set a name to easily identify the printer (Eg. Kitchen KOT)'
+ErrorType.printer_type_empty_or_invalid = 'Please select a Printer type'
+ErrorType.printer_width_empty_or_invalid = 'Printer width is empty or invalid format, please re-enter it correctly'
+ErrorType.printer_actions_empty_or_invalid = 'Please select atleast one action'
+
+
 
 ErrorType.table_section_already_exists = 'Table Section already exists. Please choose a different name.'
 ErrorType.ingredient_already_exists = 'Ingredient already exists. Please choose a different name.'
@@ -59,6 +82,13 @@ ErrorType.dine_session_already_exists = 'Dine Session already exists. Please cho
 ErrorType.reason_already_exists = 'Reason already exists. Please choose a different name.'
 ErrorType.comment_already_exists = 'Comment already exists. Please choose a different name.'
 ErrorType.shortcut_key_already_exists = 'Shortcut key already exists, choose a different key'
+ErrorType.billing_parameter_already_exists = 'Billing Parameter already exists with same name. Please choose a different name.'
+ErrorType.discount_name_already_exists = 'Discount Name already exists. Please set a different name.'
+ErrorType.billing_mode_already_exists = 'Billing Mode already exists with same name. Please choose a different name.'
+ErrorType.payment_mode_already_exists = 'Payment Mode already exists with same name. Please choose a different name.'
+ErrorType.order_source_name_already_exists = 'Order Source already exists with same name. Please choose a different name.'
+ErrorType.printer_name_already_exists = 'Printer Name already taken. Please set a different name.'
+
 
 
 /* Table Errors */
@@ -103,7 +133,11 @@ ErrorType.kot_id_is_empty_or_invalid = 'KOT ID is empty or invalid format, pleas
 ErrorType.order_not_dine = 'Order is not a Dine-In order'
 ErrorType.same_table = 'Same Table'
 
-/*Manage Menu*/
+/*Manage Menu Errors*/
 ErrorType.mapped_menu_type_is_empty_or_invalid = "Mapped Menu Type is empty or invalid"
+
+/*License Errors*/
+ErrorType.machine_not_in_license = "Licence Error: Machine Name not issued in Licence."
+ErrorType.license_already_used = "Activation Error: Licence already used."
 
 module.exports = ErrorType

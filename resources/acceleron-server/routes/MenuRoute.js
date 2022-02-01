@@ -101,7 +101,7 @@ router.route('/category/:categoryName')
 
 
   // Other APIs
-  router.put('/item/:itemCode/toggleAvailability', async function(req, res, next) {
+  router.put('/item/:itemCode/toggleavailability', async function(req, res, next) {
     try {
       const data = await new MenuController(req).toggleAvailability();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -110,7 +110,7 @@ router.route('/category/:categoryName')
     }
   })
 
-  router.put('/markAllMenuAvailable', async function(req, res, next) {
+  router.put('/markallmenuavailable', async function(req, res, next) {
     try {
       const data = await new MenuController(req).markAllMenuAvailable();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -119,7 +119,7 @@ router.route('/category/:categoryName')
     }
   })
 
-  router.get('/getLastItemCode', async function(req, res, next) {
+  router.get('/getlastitemcode', async function(req, res, next) {
     try {
       const data = await new MenuController(req).getLastItemCode();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -128,7 +128,7 @@ router.route('/category/:categoryName')
     }
   })
 
-  router.put('/category/:categoryName/markAllAvailableByCategory', async function(req, res, next) {
+  router.put('/category/:categoryName/markallavailablebycategory', async function(req, res, next) {
     try {
       const data = await new MenuController(req).markAllAvailableByCategory();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -137,7 +137,7 @@ router.route('/category/:categoryName')
     }
   })
 
-  router.put('/item/:itemCode/moveItemToCategory', async function(req, res, next) {
+  router.put('/item/:itemCode/moveitemtocategory', async function(req, res, next) {
     try {
       const data = await new MenuController(req).moveItemToCategory();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -148,7 +148,7 @@ router.route('/category/:categoryName')
 
   //Menu Photos
 
-  router.post('/menuPhoto', async function(req, res, next) {
+  router.post('/menuphoto', async function(req, res, next) {
     try {
       const data = await new MenuController(req).addNewPhoto();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -157,7 +157,7 @@ router.route('/category/:categoryName')
     }
   })
 
-  router.get('/menuPhoto/:itemCode', async function(req, res, next) {
+  router.get('/menuphoto/:itemCode', async function(req, res, next) {
     try {
       const data = await new MenuController(req).getPhotoByCode();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -166,7 +166,7 @@ router.route('/category/:categoryName')
     }
   })
 
-  router.put('/menuPhoto/:itemCode', async function(req, res, next) {
+  router.put('/menuphoto/:itemCode', async function(req, res, next) {
     try {
       const data = await new MenuController(req).updatePhotoByCode();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -175,7 +175,7 @@ router.route('/category/:categoryName')
     }
   })
 
-  router.delete('/menuPhoto/:itemCode', async function(req, res, next) {
+  router.delete('/menuphoto/:itemCode', async function(req, res, next) {
     try {
       const data = await new MenuController(req).deletePhotoByCode();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);

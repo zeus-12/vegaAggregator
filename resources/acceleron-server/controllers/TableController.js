@@ -31,7 +31,7 @@ class TableController extends BaseController {
             throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.filter_key_is_empty_or_invalid)
         }
 
-        let ALLOWED_FILTER_KEYS = ['all', 'live', 'name', 'section'];
+        let ALLOWED_FILTER_KEYS = ['all', 'live', 'name', 'section', 'kot'];
         if(!ALLOWED_FILTER_KEYS.includes(filter_key)){
             throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_filter)
         }
@@ -44,8 +44,48 @@ class TableController extends BaseController {
                 }
                 break;
             } 
+            case 'kot':{
+                if(_.isEmpty(unique_id)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.unique_id_is_empty_or_invalid)
+                }
+                break;
+            } 
         }
         return await this.TableService.fetchTablesByFilter(filter_key, unique_id).catch(error => {
+            throw error
+          });
+    }
+
+    async updateTableByFilter(){
+        var filter_key = this.request.query.key;
+        var unique_id = this.request.query.uniqueId;
+        var updateData = this.request.body;
+
+        if (_.isEmpty(filter_key)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.filter_key_is_empty_or_invalid)
+        }
+
+        let ALLOWED_FILTER_KEYS = [ 'name', 'kot'];
+        if(!ALLOWED_FILTER_KEYS.includes(filter_key)){
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.invalid_filter)
+        }
+
+        //Validations
+        switch(filter_key){
+            case 'name':{
+                if(_.isEmpty(unique_id)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.unique_id_is_empty_or_invalid)
+                }
+                break;
+            } 
+            case 'kot':{
+                if(_.isEmpty(unique_id)){
+                    throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.unique_id_is_empty_or_invalid)
+                }
+                break;
+            } 
+        }
+        return await this.TableService.updateTableByFilter(filter_key, unique_id, updateData).catch(error => {
             throw error
           });
     }
@@ -139,6 +179,43 @@ class TableController extends BaseController {
             throw error
           });         
     }
+
+    async tableTransferKOT() {
+        const kotId = this.request.query.kotId;
+        const newTableNumber = this.request.query.tableNumber;
+        if(_.isEmpty(kotId)){
+          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.category_name_is_empty_or_invalid)
+        }
+        if( _.isEmpty(newTableNumber) ){
+          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.item_code_is_empty_or_invalid)
+        }
+  
+        return await this.TableService.tableTransferKOT(kotId, newTableNumber)
+        .catch(error => {
+            throw error
+          });
+      }
+
+    async mergeKOT(){
+        var branch = this.request.body.accelerateLicenceeBranch
+        var finalTable = this.request.body.tableName
+        var mergeTableList = this.request.body.tableList
+
+        if (_.isEmpty(finalTable)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.table_name_empty_or_invalid)
+        }
+        for( var i=0; i<mergeTableList.length; i++){
+            if (_.isEmpty(mergeTableList[i])) {
+                throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.table_name_empty_or_invalid)
+            }
+        }
+
+        return await this.TableService.mergeKOT(branch, finalTable, mergeTableList).catch(error => {
+            throw error
+          });
+
+    }
+
 }
 
 module.exports = TableController;

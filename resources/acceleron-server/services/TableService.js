@@ -2,8 +2,8 @@
 let BaseService = ACCELERONCORE._services.BaseService;
 let CommonModel = require('../models/CommonModel');
 let TableModel = require('../models/TableModel');
-let CommonService = require('./CommonService');
 let SettingsService = require('./SettingsService');
+let KOTService = require('./KOTService');
 
 var _ = require('underscore');
 var async = require('async');
@@ -14,8 +14,8 @@ class TableService extends BaseService {
         this.request = request;
         this.CommonModel = new CommonModel(request);
         this.TableModel = new TableModel(request);
-        this.CommonService = new CommonService(request);
         this.SettingsService = new SettingsService(request);
+        this.KOTService = new KOTService(request);
     }
 
     async getTableById(table_id) {
@@ -52,6 +52,10 @@ class TableService extends BaseService {
           path = '/accelerate_tables/_design/filter-tables/_view/filterbysection?startkey=["'+unique_id+'"]&endkey=["'+unique_id+'"]';
           break;
         }
+        case 'kot':{
+          path = '/accelerate_tables/_design/filter-tables/_view/filterbyKOT?startkey=["'+unique_id+'"]&endkey=["'+unique_id+'"]';
+          break;
+        }
         default:{
           throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
         }
@@ -70,6 +74,18 @@ class TableService extends BaseService {
         return responseList;
       }
       else if(filter_key == "name"){ //Single table
+        if(_.isEmpty(result)){
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+        }
+
+        if(_.isEmpty(result.rows)){
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+        }
+        else{
+          return result.rows[0].value;
+        }
+      }
+      else if(filter_key == "kot"){ //Single table
         if(_.isEmpty(result)){
           throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
         }
@@ -103,8 +119,12 @@ class TableService extends BaseService {
       
     }
 
-    async updateTable(table_id, newData){
-      return await this.TableModel.updateTable(table_id, newData).catch(error => {
+    async updateTableByFilter(filter_key, unique_id, updateData){
+      const tableData = await this.fetchTablesByFilter(filter_key, unique_id).catch(error => {
+        throw error
+    });
+    var newData = {...tableData, ...updateData}
+      return await this.TableModel.updateTable(tableData.table, newData).catch(error => {
         throw error
       });   
     }
@@ -180,6 +200,193 @@ class TableService extends BaseService {
 
       return "Deleted successfully";
       
+    }
+    
+    async tableTransferKOT(kotId, newTableNumber) {
+      var kotData = await this.KOTService.getKOTById(kotId).catch(error => {
+        throw error
+      });
+
+      if(kotData.table == newTableNumber){ //same table
+        throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.same_table);
+      }
+
+      if(kotData.orderDetails.modeType != 'DINE'){
+        throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.order_not_dine);
+      }
+
+      var oldTableNumber = kotData.table
+      kotData.table = newTableNumber
+
+      await this.KOTService.updateKOTById(kotId, kotData).catch(error => {
+        throw error
+      });
+
+      //Updating Old Table
+      var updateData = {
+        "remarks" : "",
+        "assigned" : "",
+        "KOT" : "",
+        "status" : 0,
+        "lastUpdate" : "",   
+        "guestName" : "", 
+        "guestContact" : "", 
+        "reservationMapping" : "", 
+        "guestCount" : ""
+    }
+      await this.updateTableByFilter('name', oldTableNumber, updateData).catch(error => {
+        throw error
+      });
+
+      //Updating New Table
+      var newUpdateData = {
+        "status" : 1,
+        "assigned" : kotData.stewardName,
+        "remarks" : kotData.remarks,
+        "KOT" : kotData.KOTNumber,
+        "lastUpdate" : kotData.timeKOT != "" ? kotData.timeKOT : kotData.timePunch,   
+        "guestName" : kotData.guestName, 
+        "guestContact" : kotData.guestContact, 
+        "reservationMapping" : kotData.reservationMapping, 
+        "guestCount" : kotData.guestCount
+    }
+      var result = await this.updateTableByFilter('name', newTableNumber, newUpdateData).catch(error => {
+        throw error
+      });
+
+      return result
+
+    }
+
+    async mergeKOT(branch, finalTable, mergeTableList){
+      const tableData = await this.fetchTablesByFilter("live","").catch(error => {
+        throw error
+      });
+
+      var KOTList = []
+      var finalKOT = ""
+
+      for (var i =0; i < mergeTableList.length; i++){
+        var m = 0;
+        while(m < tableData.length){
+          if(mergeTableList[i] == tableData[m].table){
+            KOTList.push(tableData[m].KOT);
+            
+            if( mergeTableList[i] == finalTable){
+              finalKOT = tableData[m].KOT
+            }
+            else{
+              await this.resetTable(mergeTableList[i]).catch(error => {
+                throw error
+              });
+            }
+            break;
+          }
+          m++;
+        }		              	
+      }
+      var mergedCart = [];
+      var mergedExtras = [];
+      var kotCount = KOTList.length;
+      var kotCounter = 0;
+
+      var mergingBillingMode = '';
+      var freshCartIndices = 1;
+
+      while (kotCounter < kotCount) {
+        var kotId = branch +"_KOT_"+ KOTList[kotCounter];
+        var kotfile = await this.KOTService.getKOTById(kotId).catch(error => {
+          throw error
+        });
+
+        if(kotfile.KOTNumber != finalKOT){
+          await this.KOTService.deleteKOTById(kotId).catch(error => {
+            throw error
+          });
+        }
+
+        if(mergingBillingMode == ''){
+          mergingBillingMode = kotfile.orderDetails.mode;
+        }
+        else{
+          if(mergingBillingMode != kotfile.orderDetails.mode){
+            //Suspend Merge
+            throw new ErrorResponse(ResponseType.CONFLICT, 'Operation Aborted! Orders have to be billed under same mode', '#e74c3c');
+          }
+        }
+
+        kotCounter++;
+
+        /*Generate MERGED EXTRAS*/
+        var extraDuplicateFlag = false;
+        for (var g = 0; g < kotfile.extras.length; g++) {
+
+          var t = 0;
+          extraDuplicateFlag = false;
+
+          while (mergedExtras[t]) {
+            if (mergedExtras[t].name == kotfile.extras[g].name) {
+              mergedExtras[t].amount = mergedExtras[t].amount + kotfile.extras[g].amount;
+              extraDuplicateFlag = true;
+              break;
+            }
+            t++
+          }
+
+          if (!extraDuplicateFlag) { //No duplicate, push the extra wholely.
+            mergedExtras.push(kotfile.extras[g]);
+          }        
+        }
+
+        /*Generate MERGED CART*/
+        var itemDuplicateFlag = false;
+        for (var f = 0; f < kotfile.cart.length; f++) {
+          var m = 0;
+          itemDuplicateFlag = false;
+  
+          if (kotfile.cart[f].isCustom) {
+            while (mergedCart[m]) {
+              if (mergedCart[m].code == kotfile.cart[f].code && mergedCart[m].variant == kotfile.cart[f].variant) {
+                mergedCart[m].qty += kotfile.cart[f].qty;
+                itemDuplicateFlag = true;
+                break;
+              }
+              m++
+            }
+          } 
+          else {
+            while (mergedCart[m]) {
+              if (mergedCart[m].code == kotfile.cart[f].code) {
+                mergedCart[m].qty += kotfile.cart[f].qty;
+                itemDuplicateFlag = true;
+                break;
+              }
+              m++
+            }        
+          }
+  
+          if (!itemDuplicateFlag) { //No duplicate, push the item wholely.
+            kotfile.cart[f].cartIndex = freshCartIndices;
+            mergedCart.push(kotfile.cart[f]);
+            freshCartIndices++;
+          }          
+        }
+
+      }
+
+      var kotId = branch +"_KOT_"+ finalKOT;
+      var updateData = {}
+      if(mergedCart && mergedCart.length > 0){
+        updateData.cart = mergedCart;
+        updateData.discount = {};
+        updateData.customExtras = {};
+        updateData.extras = mergedExtras;
+      }
+
+      return await this.KOTService.updateKOTById(kotId, updateData).catch(error => {
+        throw error
+      });
+
     }
 
 }

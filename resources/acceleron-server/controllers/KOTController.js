@@ -12,7 +12,6 @@ class KOTController extends BaseController {
     }
 
     async getKOTById() {
-
         var kot_id = this.request.params.id;
         if (_.isEmpty(kot_id)) {
             throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.kot_id_is_empty_or_invalid);
@@ -21,6 +20,27 @@ class KOTController extends BaseController {
             throw error
           });
     }
+
+    async updateKOTById() {
+        var kot_id = this.request.params.id;
+        var updateData = this.request.body;
+        if (_.isEmpty(kot_id)) {
+            throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.kot_id_is_empty_or_invalid);
+        }
+        return await this.KOTService.updateKOTById(kot_id, updateData).catch(error => {
+            throw error
+          });
+    }
+
+    async deleteKOTById() {
+        var kot_id = this.request.params.id;  
+        if(_.isEmpty(kot_id)){
+          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.kot_id_is_empty_or_invalid)
+        }       
+        return await this.KOTService.deleteKOTById(kot_id).catch(error => {
+          throw error
+        });
+      }
 
     async fetchKOTsByFilter(){
 
@@ -38,21 +58,6 @@ class KOTController extends BaseController {
           });
     }
 
-    async tableTransferKOT() {
-        const kotId = this.request.query.kotId;
-        const newTableNumber = this.request.query.tableNumber;
-        if(_.isEmpty(kotId)){
-          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.category_name_is_empty_or_invalid)
-        }
-        if( _.isEmpty(newTableNumber) ){
-          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.item_code_is_empty_or_invalid)
-        }
-  
-        return await this.KOTService.tableTransferKOT(kotId, newTableNumber)
-        .catch(error => {
-            throw error
-          });
-      }
 
 
 }
