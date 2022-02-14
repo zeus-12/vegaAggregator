@@ -266,6 +266,10 @@ class SummaryService extends BaseService {
 
       //check for unsettled bills
 
+      //dates expected as DD-MM-YYYY
+      from_date = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
+      to_date = moment(to_date, "YYYYMMDD").format("DD-MM-YYYY");
+
       data = await self.SummaryModel.getUnbilledBills(from_date, to_date).catch(
         (error) => {
           throw error;
@@ -702,18 +706,14 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: `Sales_By_Items`,
+        type: "Sales_By_Items",
         summary: [],
       },
     ];
     let i = 0;
     let j = 0;
-    let k = 0;
-    let l = 0;
+    var itemPos = null;
     let data = {};
-    var isCategoryFound = false;
-    var isItemFound = false;
-    var isCustomOptionFound = false;
 
     data = await self.SummaryModel.getSalesByItems(from_date, to_date).catch(
       (error) => {
@@ -721,114 +721,163 @@ class SummaryService extends BaseService {
       }
     );
 
-    while (i < data.rows.length) {
-      j = 0;
-      isCategoryFound = false;
-      do {
-        if (
-          responseList[0].summary[j] &&
-          responseList[0].summary[j].category == data.rows[i].key[1]
-        ) {
-          isCategoryFound = true;
-          k = 0;
-          isItemFound = false;
-          do {
-            if (
-              responseList[0].summary[j].items[k].name == data.rows[i].key[2]
-            ) {
-              isItemFound = true;
-              if (!data.rows[i].key[3]) {
-                responseList[0].summary[j].items[k].sum +=
-                  data.rows[i].key[4] * data.rows[i].value;
-                responseList[0].summary[j].items[k].count += data.rows[i].value;
-                break;
-              } else {
-                l = 0;
-                isCustomOptionFound = false;
-                do {
-                  if (
-                    responseList[0].summary[j].items[k].customOptions[l] &&
-                    responseList[0].summary[j].items[k].customOptions[l].name ==
-                      data.rows[i].key[3]
-                  ) {
-                    isCustomOptionFound = true;
-                    responseList[0].summary[j].items[k].customOptions[l].sum +=
-                      data.rows[i].key[4] * data.rows[i].value;
-                    responseList[0].summary[j].items[k].customOptions[
-                      l
-                    ].count += data.rows[i].value;
-                    break;
-                  }
-                  l++;
-                } while (
-                  l < responseList[0].summary[j].items[k].customOptions.length
-                );
-                if (!isCustomOptionFound) {
-                  responseList[0].summary[j].items[k].customOptions.push({
-                    name: data.rows[i].key[3],
-                    sum: data.rows[i].key[4] * data.rows[i].value,
-                    count: data.rows[i].value,
-                  });
-                }
-              }
-            }
-            k++;
-          } while (k < responseList[0].summary[j].items.length);
-          if (!isItemFound) {
-            if (!data.rows[i].key[3]) {
-              responseList[0].summary[j].items.push({
-                name: data.rows[i].key[2],
-                sum: data.rows[i].key[4] * data.rows[i].value,
-                count: data.rows[i].value,
-              });
-            } else {
-              responseList[0].summary[j].items.push({
-                name: data.rows[i].key[2],
-                customOptions: [
-                  {
-                    name: data.rows[i].key[3],
-                    sum: data.rows[i].key[4] * data.rows[i].value,
-                    count: data.rows[i].value,
-                  },
-                ],
-              });
-            }
-          }
-        }
-        j++;
-      } while (j < responseList[0].summary.length);
-
-      if (!isCategoryFound) {
-        if (!data.rows[i].key[3]) {
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_matching_results
+      );
+    } else {
+      while (i < data.rows.length) {
+        if (_.isEmpty(data.rows[i])) {
           responseList[0].summary.push({
-            category: data.rows[i].key[1],
-            items: [
-              {
-                name: data.rows[i].key[2],
-                sum: data.rows[i].key[4] * data.rows[i].value,
-                count: data.rows[i].value,
-              },
-            ],
+            category: "Missing",
+            name: "Missing",
+            sum: 0,
+            count: 0,
           });
         } else {
-          responseList[0].summary.push({
-            category: data.rows[i].key[1],
-            items: [
-              {
-                name: data.rows[i].key[2],
-                customOptions: [
-                  {
-                    name: data.rows[i].key[3],
-                    sum: data.rows[i].key[4] * data.rows[i].value,
-                    count: data.rows[i].value,
-                  },
-                ],
-              },
-            ],
-          });
+          itemPos = null;
+          for (j = 0; j < responseList[0].summary.length; j++) {
+            if (
+              responseList[0].summary[j].category == data.rows[i].key[1] &&
+              responseList[0].summary[j].name == data.rows[i].key[2]
+            ) {
+              itemPos = j;
+            }
+          }
+          if (itemPos != null) {
+            responseList[0].summary[itemPos].sum =
+              parseFloat(responseList[0].summary[itemPos].sum) +
+              parseFloat(data.rows[i].key[4]);
+            responseList[0].summary[itemPos].count += data.rows[i].value;
+          } else {
+            responseList[0].summary.push({
+              category: data.rows[i].key[1],
+              name: data.rows[i].key[2],
+              sum: data.rows[i].key[4],
+              count: data.rows[i].value,
+            });
+          }
         }
+        i++;
       }
-      i++;
+    }
+    return responseList;
+  }
+
+  //For a given ITEM, the total Sales in the given DATE RANGE detailed
+  async fetchSummaryBySalesfilteredByItemsDetailed(from_date, to_date) {
+    let self = this;
+    let responseList = [
+      {
+        type: `Sales_By_Items_detailed`,
+        summary: [],
+      },
+    ];
+
+    let data = {};
+
+    data = await self.SummaryModel.getSalesByItems(from_date, to_date).catch(
+      (error) => {
+        throw error;
+      }
+    );
+
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_matching_results
+      );
+    }
+
+    var reduced_list = data.rows.reduce(function (accumulator, item) {
+      var accumulator_item_name =
+        item.key[3] && item.key[3] != ""
+          ? item.key[2] + " (" + item.key[3] + ")"
+          : item.key[2];
+
+      if (accumulator[accumulator_item_name]) {
+        accumulator[accumulator_item_name].count += item.value;
+      } else {
+        accumulator[accumulator_item_name] = {
+          category: item.key[1],
+          count: item.value,
+          price: item.key[4],
+        };
+      }
+
+      return accumulator;
+    }, {});
+
+    var formattedList = [];
+    var keysCount = Object.keys(reduced_list);
+
+    var counter = 1;
+    var x;
+    for (x in reduced_list) {
+      formattedList.push({
+        name: x,
+        count: reduced_list[x].count,
+        saleAmount: reduced_list[x].count * reduced_list[x].price,
+        category: reduced_list[x].category,
+      });
+
+      if (counter == keysCount.length) {
+        break;
+      }
+
+      counter++;
+    }
+
+    // Ascending: Sorting
+    formattedList.sort(function (obj1, obj2) {
+      return obj2.count - obj1.count;
+    });
+
+    var categorySortedList = formattedList.reduce(function (accumulator, item) {
+      if (accumulator[item.category]) {
+        accumulator[item.category].push({
+          name: item.name,
+          count: item.count,
+          saleAmount: item.saleAmount,
+        });
+      } else {
+        accumulator[item.category] = [];
+        accumulator[item.category].push({
+          name: item.name,
+          count: item.count,
+          saleAmount: item.saleAmount,
+        });
+      }
+
+      return accumulator;
+    }, {});
+
+    var categoryCount = Object.keys(categorySortedList);
+
+    counter = 1;
+    for (x in categorySortedList) {
+      var n = 0;
+      var sub_list = [];
+      while (categorySortedList[x][n]) {
+        sub_list.push({
+          name: categorySortedList[x][n].name,
+          count: categorySortedList[x][n].count,
+          saleAmount: categorySortedList[x][n].saleAmount,
+        });
+        n++;
+      }
+
+      responseList[0].summary.push({
+        category: x,
+        items: sub_list,
+      });
+
+      if (counter == categoryCount.length) {
+        break;
+      }
+
+      counter++;
     }
 
     return responseList;
@@ -1230,7 +1279,12 @@ class SummaryService extends BaseService {
   //overall quick summary
   async fetchOverAllTurnOver(from_date, to_date) {
     let self = this;
-    let responseList = [];
+    let responseList = [
+      {
+        type: "QUCK_SUMMARY",
+        summary: {},
+      },
+    ];
     let i = 0;
     let data = {};
     let grandTotalTypes = [
@@ -1257,30 +1311,21 @@ class SummaryService extends BaseService {
           ErrorType.no_matching_results
         );
       } else if (_.isEmpty(data.rows)) {
-        responseList.push({
-          type: grandTotalTypes[i],
-          summary: [
-            {
-              sum: 0,
-              count: 0,
-            },
-          ],
-        });
+        responseList[0].summary[grandTotalTypes[i]] = {
+          sum: 0,
+          count: 0,
+        };
       } else {
-        responseList.push({
-          type: grandTotalTypes[i],
-          summary: [
-            {
-              sum: data.rows[0].value.sum,
-              count: data.rows[0].value.count,
-            },
-          ],
-        });
+        responseList[0].summary[grandTotalTypes[i]] = {
+          sum: data.rows[0].value.sum,
+          count: data.rows[0].value.count,
+        };
       }
       i++;
     }
 
     var billing_parameters = [];
+    responseList[0].summary["billing_parameters"] = [];
     i = 0;
 
     try {
@@ -1304,24 +1349,16 @@ class SummaryService extends BaseService {
           ErrorType.no_matching_results
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList.push({
-          type: billing_parameters[i].name,
-          summary: [
-            {
-              sum: 0,
-              count: 0,
-            },
-          ],
+        responseList[0].summary["billing_parameters"].push({
+          name: billing_parameters[i].name,
+          sum: 0,
+          count: 0,
         });
       } else {
-        responseList.push({
-          type: billing_parameters[i].name,
-          summary: [
-            {
-              sum: data.rows[0].value.sum,
-              count: data.rows[0].value.count,
-            },
-          ],
+        responseList[0].summary["billing_parameters"].push({
+          name: billing_parameters[i].name,
+          sum: data.rows[0].value.sum,
+          count: data.rows[0].value.count,
         });
       }
 
@@ -1340,17 +1377,17 @@ class SummaryService extends BaseService {
           ErrorType.no_matching_results
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList[i + grandTotalTypes.length].summary[0] = {
-          ...responseList[i + grandTotalTypes.length].summary[0],
-          customExtrasSum: 0,
-          customExtrasCount: 0,
-        };
+        responseList[0].summary["billing_parameters"][i]["customExtrasSum"] = 0;
+        responseList[0].summary["billing_parameters"][i][
+          "customExtrasCount"
+        ] = 0;
       } else {
-        responseList[i + grandTotalTypes.length].summary[0] = {
-          ...responseList[i + grandTotalTypes.length].summary[0],
-          customExtrasSum: data.rows[0].value.sum,
-          customExtrasCount: data.rows[0].value.count,
-        };
+        responseList[0].summarysummary["billing_parameters"][i][
+          "customExtrasSum"
+        ] = data.rows[0].value.sum;
+        responseList[0].summarysummary["billing_parameters"][i][
+          "customExtrasCount"
+        ] = data.rows[0].value.count;
       }
       i++;
     }
@@ -1366,25 +1403,15 @@ class SummaryService extends BaseService {
         ErrorType.no_matching_results
       );
     } else if (_.isEmpty(data.rows)) {
-      responseList.push({
-        type: "Refunds",
-        summary: [
-          {
-            grossSum: 0,
-            grossCount: 0,
-          },
-        ],
-      });
+      responseList[0].summary["Refunds"] = {
+        grossSum: 0,
+        grossCount: 0,
+      };
     } else {
-      responseList.push({
-        type: "Refunds",
-        summary: [
-          {
-            grossSum: data.rows[0].value.sum,
-            grossCount: data.rows[0].value.count,
-          },
-        ],
-      });
+      responseList[0].summary["Refunds"] = {
+        grossSum: data.rows[0].value.sum,
+        grossCount: data.rows[0].value.count,
+      };
     }
 
     //Now check in net refunds
@@ -1400,23 +1427,11 @@ class SummaryService extends BaseService {
         ErrorType.no_matching_results
       );
     } else if (_.isEmpty(data.rows)) {
-      responseList[
-        grandTotalTypes.length + billing_parameters.length
-      ].summary[0] = {
-        ...responseList[grandTotalTypes.length + billing_parameters.length]
-          .summary[0],
-        netSum: 0,
-        netCount: 0,
-      };
+      responseList[0].summary["Refunds"].netSum = 0;
+      responseList[0].summary["Refunds"].netCount = 0;
     } else {
-      responseList[
-        grandTotalTypes.length + billing_parameters.length
-      ].summary[0] = {
-        ...responseList[grandTotalTypes.length + billing_parameters.length]
-          .summary[0],
-        netSum: data.rows[0].value.sum,
-        netCount: data.rows[0].value.count,
-      };
+      responseList[0].summary["Refunds"].netSum = data.rows[0].value.sum;
+      responseList[0].summary["Refunds"].netCount = data.rows[0].value.count;
     }
 
     return responseList;
@@ -1781,30 +1796,37 @@ class SummaryService extends BaseService {
     curr_date
   ) {
     let self = this;
-    let responseList = [];
+    let responseList = {};
     let overalSalesTrend = [];
     let i = 0;
     let data = {};
     let temp_totalPaid = 0;
 
-    if (is_super_admin_logged_in) {
-      data = await self.SummaryModel.checkForPendingBills(from_date, to_date);
-      if (data.rows.length > 0) {
+    if (!is_super_admin_logged_in) {
+      data = await self.SummaryModel.checkForRunningOrders();
+      if (data.total_rows > 0) {
         throw new ErrorResponse(
           ResponseType.CONFLICT,
-          ErrorType.bills_not_settled
+          `Please generate bills for all the ${data.rows.length} live orders to continue.`
         );
       }
     }
-    data = await self.SummaryModel.checkForRunningOrders();
-    if (data.total_rows > 0) {
+
+    data = await self.SummaryModel.checkForPendingBills(
+      moment(from_date, "YYYYMMDD").format("DD-MM-YYYY"),
+      moment(to_date, "YYYYMMDD").format("DD-MM-YYYY")
+    );
+
+    if (data.rows.length > 0) {
       throw new ErrorResponse(
         ResponseType.CONFLICT,
-        `Please generate bills for all the ${data.rows.length} live orders to continue.`
+        ErrorType.bills_not_settled
       );
     }
 
-    responseList = await self.fetchOverAllTurnOver(from_date, to_date);
+    data = await self.fetchOverAllTurnOver(from_date, to_date);
+
+    responseList = data[0].summary;
 
     if (from_date == to_date) {
       let refundList = [];
@@ -1823,10 +1845,7 @@ class SummaryService extends BaseService {
         });
         i++;
       }
-      responseList.push({
-        type: "Refunds List",
-        summary: refundList,
-      });
+      responseList["REFUNDS_LIST"] = refundList;
     }
 
     data = await self.SummaryModel.getGrandTotalByType(
@@ -1835,44 +1854,29 @@ class SummaryService extends BaseService {
       to_date
     );
 
-    responseList.push({
-      type: "Total Guests",
-      summary: [
-        {
-          sum: data.rows[0] ? data.rows[0].value.sum : 0,
-        },
-      ],
-    });
+    responseList["TOTAL_GUESTS"] = {
+      sum: data.rows[0] ? data.rows[0].value.sum : 0,
+    };
 
     data = await self.SummaryModel.getFirstAndLastInvoiceNumber(
       from_date,
       to_date
     );
 
-    responseList.push({
-      type: "First and Last Invoice Number",
-      summary: [
-        {
-          startingBillNumber: data.rows[0] ? data.rows[0].value.min : 0,
-          endingBillNumber: data.rows[0] ? data.rows[0].value.max : 0,
-        },
-      ],
-    });
+    responseList["FIRST_AND_LAST_INVOICE_NUMBER"] = {
+      startingBillNumber: data.rows[0] ? data.rows[0].value.min : 0,
+      endingBillNumber: data.rows[0] ? data.rows[0].value.max : 0,
+    };
 
     data = await self.SummaryModel.getCancelledInvoicesCount(
       from_date,
       to_date
     );
 
-    responseList.push({
-      type: "Cancelled Invoices count",
-      summary: [
-        {
-          netCancelledBills: data.rows[0] ? data.rows[0].value.count : 0,
-          netCancelledBillsSum: data.rows[0] ? data.rows[0].value.sum : 0,
-        },
-      ],
-    });
+    responseList["CANCELLED_INVOICES_COUNT"] = {
+      netCancelledBills: data.rows[0] ? data.rows[0].value.count : 0,
+      netCancelledBillsSum: data.rows[0] ? data.rows[0].value.sum : 0,
+    };
 
     if (from_date == to_date) {
       var trendDate_yesterday = moment(from_date, "YYYYMMDD")
@@ -2110,14 +2114,11 @@ class SummaryService extends BaseService {
         i++;
       }
 
-      responseList.push({
-        type: "Overall Sales Trend",
-        summary: overalSalesTrend,
-      });
+      responseList["OVERALL_SALES_TREND"] = overalSalesTrend;
     }
 
     data = await self.fetchSummaryBySalesfilteredBySessions(from_date, to_date);
-    responseList.push(data[0]);
+    responseList["SALES_BY_SESSIONS"] = data[0].summary;
 
     data = await self.SummaryModel.getHourlySalesSum(from_date, to_date);
 
@@ -2204,10 +2205,7 @@ class SummaryService extends BaseService {
       }
     }
 
-    responseList.push({
-      type: "Hourly Sales Data",
-      summary: hourlySalesSum,
-    });
+    responseList["HOURLY_SALES_DATA"] = hourlySalesSum;
 
     if (from_date == to_date) {
       j = 0;
@@ -2396,10 +2394,7 @@ class SummaryService extends BaseService {
         j++;
       } while (processing_date != from_date);
 
-      responseList.push({
-        type: "Day By Day Sales Data",
-        summary: dayByDaySalesData,
-      });
+      responseList["DAY_BY_DAY_SALES_DATA"] = dayByDaySalesData;
 
       var current_year = moment(from_date, "YYYYMMDD").format("YYYY");
       var current_month = moment(from_date, "YYYYMMDD").format("MM");
@@ -2600,16 +2595,51 @@ class SummaryService extends BaseService {
         j++;
       } while (processing_month != current_month);
 
-      responseList.push({
-        type: "Month By Month Sales Data",
-        summary: monthByMonthSalesData,
-      });
+      responseList["MONTH_BY_MONTH_SALES_DATA"] = monthByMonthSalesData;
     }
 
     data = await self.fetchSummaryByDiscounts(from_date, to_date);
-    responseList.push(data[0]);
+
+    responseList["DISCOUNTS"] = data[0].summary;
 
     data = await self.fetchSummaryBySalesfilteredByItems(from_date, to_date);
+    responseList["SALES_BY_ITEMS"] = data[0].summary;
+
+    data = await self.fetchSummaryBySalesfilteredByItemsDetailed(
+      from_date,
+      to_date
+    );
+    j = 0;
+    while (data[0].summary[j]) {
+      if (
+        data[0].summary[j].category == "MANUAL_UNKNOWN" ||
+        data[0].summary[j].category == "UNKNOWN"
+      ) {
+        data[0].summary[j].category = "Uncategorized";
+      }
+      j++;
+    }
+
+    if (data[0].summary.length > 0) {
+      var n = 0;
+      while (data[0].summary[n]) {
+        //render category
+
+        var itemsTotalSales = 0;
+        var itemsTotalCount = 0;
+
+        for (i = 0; i < data[0].summary[n].items.length; i++) {
+          itemsTotalSales += data[0].summary[n].items[i].saleAmount;
+          itemsTotalCount += data[0].summary[n].items[i].count;
+        }
+
+        data[0].summary[n].totalSales = itemsTotalSales;
+        data[0].summary[n].totalCount = itemsTotalCount;
+        delete data[0].summary[n].items;
+
+        n++;
+      }
+    }
 
     var catalogData = await self.getMenuCatalog();
     j = 0;
@@ -2630,81 +2660,81 @@ class SummaryService extends BaseService {
 
       return "Uncategorized";
     }
-    responseList.push(data[0]);
 
-    data = await self.fetchSummaryByItemCancellationsDetailed(
-      from_date,
-      to_date
-    );
-    responseList.push(data[0]);
+    responseList["SALES_BY_ITEMS_DETAILED"] = data[0].summary;
 
-    var filter_start = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
-    var cancelledOrders = [];
-    i = 0;
-    data = await self.SummaryModel.getCancelledOrdersDetailed(
-      filter_start,
-      filter_start
-    ).catch((error) => {
-      throw error;
-    });
 
-    if (_.isEmpty(data)) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
-    } else {
-      while (!_.isEmpty(data.rows) && i < data.rows.length) {
-        delete data.rows[i].value._id;
-        delete data.rows[i].value._rev;
-        cancelledOrders.push(data.rows[i].value);
-        i++;
+    if (from_date == to_date) {
+      data = await self.fetchSummaryByItemCancellationsDetailed(from_date, to_date);
+      
+      responseList["ITEM_CANCELLATIONS"] = data[0].summary;
+
+      var filter_start = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
+      var cancelledOrders = [];
+      i = 0;
+      data = await self.SummaryModel.getCancelledOrdersDetailed(
+        filter_start,
+        filter_start
+      ).catch((error) => {
+        throw error;
+      });
+
+      if (_.isEmpty(data)) {
+        throw new ErrorResponse(
+          ResponseType.NO_RECORD_FOUND,
+          ErrorType.no_matching_results
+        );
+      } else {
+        while (!_.isEmpty(data.rows) && i < data.rows.length) {
+          delete data.rows[i].value._id;
+          delete data.rows[i].value._rev;
+          cancelledOrders.push(data.rows[i].value);
+          i++;
+        }
       }
+
+      responseList["ORDER_CANCELLATIONS"] = cancelledOrders;
+
+      filter_start = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
+      var cancelledInvoices = [];
+      i = 0;
+      data = await self.SummaryModel.getCancelledInvoicesDetailed(
+        filter_start,
+        filter_start
+      ).catch((error) => {
+        throw error;
+      });
+
+      if (_.isEmpty(data)) {
+        throw new ErrorResponse(
+          ResponseType.NO_RECORD_FOUND,
+          ErrorType.no_matching_results
+        );
+      } else {
+        while (!_.isEmpty(data.rows) && i < data.rows.length) {
+          delete data.rows[i].value._id;
+          delete data.rows[i].value._rev;
+          cancelledInvoices.push(data.rows[i].value);
+          i++;
+        }
+      }
+
+      responseList["INVOICE_CANCELLATIONS"] = cancelledInvoices;
     }
 
-    responseList.push({
-      type: "Cancelled Orders",
-      summary: cancelledOrders,
-    });
-
-    filter_start = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
-    var cancelledInvoices = [];
-    i = 0;
-    data = await self.SummaryModel.getCancelledInvoicesDetailed(
-      filter_start,
-      filter_start
-    ).catch((error) => {
-      throw error;
-    });
-
-    if (_.isEmpty(data)) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
-    } else {
-      while (!_.isEmpty(data.rows) && i < data.rows.length) {
-        delete data.rows[i].value._id;
-        delete data.rows[i].value._rev;
-        cancelledInvoices.push(data.rows[i].value);
-        i++;
-      }
-    }
-
-    responseList.push({
-      type: "Cancelled Invoices",
-      summary: cancelledInvoices,
-    });
+    
 
     data = await self.fetchSummaryByBillCancellations(from_date, to_date);
-    responseList.push(data[0], data[1], data[2]);
+    responseList["BILL_CANCELLATIONS"] = data[0].summary;
+    responseList["UNPAID_BILLS"] = data[1];
+    responseList["PAID_BILLS"] = data[2];
 
     data = await self.fetchSummaryBySalesfilteredByBillingMode(
       from_date,
       to_date,
       curr_date
     );
-    responseList.push(data[0]);
+    responseList["SALES_BY_BILLING_MODE"] = data[0].summary;
 
     i = 0;
     var billing_modes = [];
@@ -2722,7 +2752,7 @@ class SummaryService extends BaseService {
         from_date,
         to_date
       );
-      responseList.push(data[0]);
+      responseList[data[0].type] = data[0].summary;
       i++;
     }
 
@@ -2730,7 +2760,7 @@ class SummaryService extends BaseService {
       from_date,
       to_date
     );
-    responseList.push(data[0]);
+    responseList["SALES_BY_PAYMENT_MODE"] = data[0].summary;
 
     i = 0;
     var payment_modes = [];
@@ -2748,7 +2778,7 @@ class SummaryService extends BaseService {
         from_date,
         to_date
       );
-      responseList.push(data[0]);
+      responseList[data[0].type] = data[0].summary;
       i++;
     }
 
@@ -2797,15 +2827,9 @@ class SummaryService extends BaseService {
       i++;
     }
 
-    responseList.push({
-      type: "Weekly Progress Lask week",
-      summary: weeklyProgressLastWeek,
-    });
+    responseList["WEEKLY_PROGRESS_LAST_WEEK"] = weeklyProgressLastWeek;
 
-    responseList.push({
-      type: "Weekly Progress This week",
-      summary: weeklyProgressThisWeek,
-    });
+    responseList["WEEKLY_PROGRESS_THIS_WEEK"] = weeklyProgressThisWeek;
 
     return responseList;
   }

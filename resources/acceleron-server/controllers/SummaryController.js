@@ -51,7 +51,7 @@ class SummaryController extends BaseController {
       "itemcancellations",
       "quicksummary",
       "salesreport",
-      "accountancyreport"
+      "accountancyreport",
     ];
 
     initialValidator(ALLOWED_TYPES, summary_type, from_date, to_date);
@@ -59,9 +59,8 @@ class SummaryController extends BaseController {
     switch (summary_type) {
       case "sales": {
         var sales_filter = self.request.query.salesfilter;
-        var detailed_by = self.request.query.detailedby;
 
-        if (_.isEmpty(sales_filter) || _.isEmpty(detailed_by)) {
+        if (_.isEmpty(sales_filter)) {
           throw new ErrorResponse(
             ResponseType.BAD_REQUEST,
             ErrorType.missing_required_parameters
@@ -81,6 +80,14 @@ class SummaryController extends BaseController {
         // Different ways in which sales summary can be fetched
         switch (sales_filter) {
           case "BILLING_MODE": {
+            var detailed_by = self.request.query.detailedby;
+
+            if (_.isEmpty(detailed_by)) {
+              throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                ErrorType.missing_required_parameters
+              );
+            }
             if (detailed_by == "false") {
               var curr_date = moment().format("YYYYMMDD");
               try {
@@ -129,6 +136,14 @@ class SummaryController extends BaseController {
           }
 
           case "PAYMENT_MODE": {
+            var detailed_by = self.request.query.detailedby;
+
+            if (_.isEmpty(detailed_by)) {
+              throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                ErrorType.missing_required_parameters
+              );
+            }
             if (detailed_by == "false") {
               try {
                 const data =
@@ -188,15 +203,42 @@ class SummaryController extends BaseController {
           }
 
           case "ITEMS": {
-            try {
-              const data =
-                await self.SummaryService.fetchSummaryBySalesfilteredByItems(
-                  from_date,
-                  to_date
-                );
-              return data;
-            } catch (error) {
-              throw error;
+            var detailed_by = self.request.query.detailedby;
+
+            if (_.isEmpty(detailed_by)) {
+              throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                ErrorType.missing_required_parameters
+              );
+            }
+
+            if (detailed_by == "false") {
+              try {
+                const data =
+                  await self.SummaryService.fetchSummaryBySalesfilteredByItems(
+                    from_date,
+                    to_date
+                  );
+                return data;
+              } catch (error) {
+                throw error;
+              }
+            } else if (detailed_by == "true") {
+              try {
+                const data =
+                  await self.SummaryService.fetchSummaryBySalesfilteredByItemsDetailed(
+                    from_date,
+                    to_date
+                  );
+                return data;
+              } catch (error) {
+                throw error;
+              }
+            } else {
+              throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                "datailed_by should be either 'true' or 'false' "
+              );
             }
           }
 
