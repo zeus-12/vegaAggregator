@@ -42,6 +42,13 @@ class CancelledOrderService extends BaseService {
           throw error;
         });
       }
+      case 'all': {
+        return this.CancelledOrderModel.getCancelledOrderByAll(filter).catch(
+          (error) => {
+            throw error;
+          },
+        );
+      }
 
       case 'session': {
         return this.CancelledOrderModel.getCancelledOrderBySession(
@@ -90,7 +97,7 @@ class CancelledOrderService extends BaseService {
     }
   }
 
-  //cancelledorder/searchbill
+  //cancelled-order/searchbill
   async searchBill(filter) {
     console.log(filter);
     return this.CancelledOrderModel.getCancelledOrderByBillNumber(filter).catch(

@@ -1,7 +1,7 @@
 let router = new ACCELERONCORE._routes.BaseRouter();
 let CancelledOrderController = require('../controllers/CancelledOrderController');
 
-//cancelledorder/search
+//cancelled-order/search
 router.get('/search', async function (req, res, next) {
   try {
     console.log('inside search route');

@@ -13,8 +13,9 @@ class CancelledOrderController extends BaseController {
   async search() {
     console.log('inside /search controller');
     var filter = {};
+    var queryParams = this.request.query;
 
-    if (this.request.query.key) filter.key = this.request.query.key;
+    if (queryParams.key) filter.key = queryParams.key;
     else {
       throw new ErrorResponse(
         ResponseType.ERROR,
@@ -22,9 +23,9 @@ class CancelledOrderController extends BaseController {
       );
     }
 
-    if (this.request.query.startkey && this.request.query.endkey) {
-      filter.startkey = this.request.query.startkey;
-      filter.endkey = this.request.query.endkey;
+    if (queryParams.startkey && queryParams.endkey) {
+      filter.startkey = queryParams.startkey;
+      filter.endkey = queryParams.endkey;
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
@@ -32,23 +33,23 @@ class CancelledOrderController extends BaseController {
       );
     }
 
-    filter.descending = this.request.query.descending
-      ? this.request.query.descending
+    filter.descending = queryParams.descending
+      ? queryParams.descending
       : 'true';
 
-    filter.include_docs = this.request.query.include_docs
-      ? this.request.query.include_docs
+    filter.include_docs = queryParams.include_docs
+      ? queryParams.include_docs
       : 'true';
 
     if (
-      parseInt(this.request.query.limit) > 10 ||
-      parseInt(this.request.query.limit) < 1 ||
-      !Number.isInteger(parseInt(this.request.query.limit))
+      parseInt(queryParams.limit) > 10 ||
+      parseInt(queryParams.limit) < 1 ||
+      !Number.isInteger(parseInt(queryParams.limit))
     )
       filter.limit = '10';
-    else filter.limit = this.request.query.limit;
+    else filter.limit = queryParams.limit;
 
-    filter.skip = this.request.query.skip ? this.request.query.skip : '0';
+    filter.skip = queryParams.skip ? queryParams.skip : '0';
 
     return await this.CancelledOrderService.search(filter).catch((error) => {
       throw error;
