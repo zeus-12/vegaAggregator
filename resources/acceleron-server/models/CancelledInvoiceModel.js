@@ -1,20 +1,19 @@
 'use strict';
 let BaseModel = ACCELERONCORE._models.BaseModel;
 
-// var _ = require('underscore');
 function format(filter, filterMethod) {
   return (
     '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterby' +
     filterMethod +
-    '?startkey=' +
-    filter.startkey +
-    '&endkey=' +
-    filter.endkey +
-    '&descending=' +
-    filter.descending +
-    '&include_docs=' +
-    filter.include_docs +
-    '&limit=' +
+    '?startkey=["' +
+    filter.searchkey +
+    '", "' +
+    filter.startdate +
+    '"]&endkey=["' +
+    filter.searchkey +
+    '", "' +
+    filter.enddate +
+    '"]&descending=false&include_docs=true&limit=' +
     filter.limit +
     '&skip=' +
     filter.skip
@@ -29,107 +28,32 @@ class CancelledInvoiceModel extends BaseModel {
 
   async getCancelledInvoiceByMobile(filter) {
     const formatLink = format(filter, 'mobile');
-    return await this.couch.get(
-      formatLink,
-
-      // '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterbymobile?startkey=' +
-      //   filter.startkey +
-      //   '&endkey=' +
-      //   filter.endkey +
-      //   '&descending=' +
-      //   filter.descending,
-      // +'&include_docs=' +
-      //   filter.include_docs +
-      //   '&limit=' +
-      //   filter.limit +
-      //   '&skip=' +
-      //   filter.skip,
-    );
+    return await this.couch.get(formatLink);
   }
   async getCancelledInvoiceByAmount(filter) {
     const formatLink = format(filter, 'amount');
-    return await this.couch.get(
-      formatLink,
-      // '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterbyamount?startkey=' +
-      //   filter.startkey +
-      //   '&endkey=' +
-      //   filter.endkey +
-      //   '&descending=' +
-      //   filter.descending,
-      // +'&include_docs=' +
-      //   filter.include_docs +
-      //   '&limit=' +
-      //   filter.limit +
-      //   '&skip=' +
-      //   filter.skip,
-    );
+    return await this.couch.get(formatLink);
   }
   async getCancelledInvoiceBySteward(filter) {
     const formatLink = format(filter, 'stewardname');
-    return await this.couch.get(
-      formatLink,
-      // '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterbystewardname?startkey=' +
-      //   filter.startkey +
-      //   '&endkey=' +
-      //   filter.endkey +
-      //   '&descending=' +
-      //   filter.descending,
-      // +'&include_docs=' +
-      //   filter.include_docs +
-      //   '&limit=' +
-      //   filter.limit +
-      //   '&skip=' +
-      //   filter.skip,
-    );
+    return await this.couch.get(formatLink);
   }
   async getCancelledInvoiceByMachine(filter) {
-    const formatLink = format(filter, 'machinename');
-    return await this.couch.get(
-      formatLink,
-      // '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterbymachinename?startkey=' +
-      //   filter.startkey +
-      //   '&endkey=' +
-      //   filter.endkey +
-      //   '&descending=' +
-      //   filter.descending,
-      // +'&include_docs=' +
-      //   filter.include_docs +
-      //   '&limit=' +
-      //   filter.limit +
-      //   '&skip=' +
-      //   filter.skip,
-    );
+    const formatLink = format(filter, 'machine');
+    return await this.couch.get(formatLink);
   }
 
   async getCancelledInvoiceBySession(filter) {
     const formatLink = format(filter, 'session');
-    return await this.couch.get(
-      formatLink,
-      // '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterbysession?startkey=' +
-      //   filter.startkey +
-      //   '&endkey=' +
-      //   filter.endkey +
-      //   '&descending=' +
-      //   filter.descending,
-      // +'&include_docs=' +
-      //   filter.include_docs +
-      //   '&limit=' +
-      //   filter.limit +
-      //   '&skip=' +
-      //   filter.skip,
-    );
+    return await this.couch.get(formatLink);
   }
-  async getCancelledOrderByAll(filter) {
+  async getCancelledInvoiceByAll(filter) {
     return await this.couch.get(
       '/accelerate_cancelled_invoices/_design/invoice-filters/_view/showall?startkey=' +
         filter.startkey +
         '&endkey=' +
         filter.endkey +
-        '&descending=' +
-        filter.descending,
-      +'&include_docs=' +
-        filter.include_docs +
-        '&limit=' +
+        '&descending=false&include_docs=true&limit=' +
         filter.limit +
         '&skip=' +
         filter.skip,
@@ -137,69 +61,44 @@ class CancelledInvoiceModel extends BaseModel {
   }
   async getCancelledInvoiceByTable(filter) {
     const formatLink = format(filter, 'table');
-    return await this.couch.get(
-      formatLink,
-      // '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterbytable?startkey=' +
-      //   filter.startkey +
-      //   '&endkey=' +
-      //   filter.endkey +
-      //   '&descending=' +
-      //   filter.descending,
-      // +'&include_docs=' +
-      //   filter.include_docs +
-      //   '&limit=' +
-      //   filter.limit +
-      //   '&skip=' +
-      //   filter.skip,
-    );
+    return await this.couch.get(formatLink);
   }
   async getCancelledInvoiceByBillingMode(filter) {
     const formatLink = format(filter, 'billingmode');
-    return await this.couch.get(
-      formatLink,
-      // '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterbybillingmode?startkey=' +
-      //   filter.startkey +
-      //   '&endkey=' +
-      //   filter.endkey +
-      //   '&descending=' +
-      //   filter.descending,
-      // +'&include_docs=' +
-      //   filter.include_docs +
-      //   '&limit=' +
-      //   filter.limit +
-      //   '&skip=' +
-      //   filter.skip,
-    );
+    return await this.couch.get(formatLink);
   }
   async getCancelledInvoiceByPayment(filter) {
     const formatLink = format(filter, 'paymentmode');
-    return await this.couch.get(
-      formatLink,
-      // '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterbypaymentmode?startkey=' +
-      //   filter.startkey +
-      //   '&endkey=' +
-      //   filter.endkey +
-      //   '&descending=' +
-      //   filter.descending,
-      // +'&include_docs=' +
-      //   filter.include_docs +
-      //   '&limit=' +
-      //   filter.limit +
-      //   '&skip=' +
-      //   filter.skip,
-    );
+    return await this.couch.get(formatLink);
   }
 
   async getCancelledInvoiceByDefault(filter) {
     return await this.couch.get(
-      '/accelerate_cancelled_invoices/_design/invoices/_view/all?descending=' +
-        filter.descending +
-        '&include_docs=' +
-        filter.include_docs +
-        '&limit=' +
+      '/accelerate_cancelled_invoices/_design/invoices/_view/all?descending=true&include_docs=true&limit=' +
         filter.limit +
         '&skip=' +
         filter.skip,
+    );
+  }
+
+  async getCancelledInvoiceByAll(filter) {
+    return await this.couch.get(
+      '/accelerate_cancelled_invoices/_design/invoice-filters/_view/showall?startkey=["' +
+        filter.startdate +
+        '"]&endkey=["' +
+        filter.enddate +
+        '"]&descending=false&include_docs=true&limit=' +
+        filter.limit +
+        '&skip=' +
+        filter.skip,
+    );
+  }
+
+  async getCancelledInvoiceByBillNumber(filter) {
+    var filterbody = {selector: {billNumber: parseInt(filter.searchkey)}};
+    return await this.couch.post(
+      '/accelerate_cancelled_invoices/_find',
+      filterbody,
     );
   }
 }

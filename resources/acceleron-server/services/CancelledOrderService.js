@@ -1,10 +1,6 @@
 'use strict';
 let CancelledOrderModel = require('../models/CancelledOrderModel');
 let BaseService = ACCELERONCORE._services.BaseService;
-
-var _ = require('underscore');
-var async = require('async');
-
 class CancelledOrderService extends BaseService {
   constructor(request) {
     super(request);
@@ -21,13 +17,7 @@ class CancelledOrderService extends BaseService {
           },
         );
       }
-      case 'amount': {
-        return this.CancelledOrderModel.getCancelledOrderByAmount(filter).catch(
-          (error) => {
-            throw error;
-          },
-        );
-      }
+
       case 'steward': {
         return this.CancelledOrderModel.getCancelledOrderBySteward(
           filter,
@@ -41,13 +31,6 @@ class CancelledOrderService extends BaseService {
         ).catch((error) => {
           throw error;
         });
-      }
-      case 'all': {
-        return this.CancelledOrderModel.getCancelledOrderByAll(filter).catch(
-          (error) => {
-            throw error;
-          },
-        );
       }
 
       case 'session': {
@@ -64,14 +47,6 @@ class CancelledOrderService extends BaseService {
           },
         );
       }
-      // case 'bill': {
-      //   return this.CancelledOrderModel.getCancelledOrderByBillNumber(
-      //     filter,
-      //   ).catch((error) => {
-      //     throw error;
-      //   });
-      // }
-
       case 'type': {
         return this.CancelledOrderModel.getCancelledOrderByBillingMode(
           filter,
@@ -97,18 +72,16 @@ class CancelledOrderService extends BaseService {
     }
   }
 
-  //cancelled-order/searchbill
-  async searchBill(filter) {
-    console.log(filter);
-    return this.CancelledOrderModel.getCancelledOrderByBillNumber(filter).catch(
+  async searchDefault(filter) {
+    return this.CancelledOrderModel.getCancelledOrderByDefault(filter).catch(
       (error) => {
         throw error;
       },
     );
   }
 
-  async searchDefault(filter) {
-    return this.CancelledOrderModel.getCancelledOrderByDefault(filter).catch(
+  async searchAll(filter) {
+    return this.CancelledOrderModel.getCancelledOrderByAll(filter).catch(
       (error) => {
         throw error;
       },

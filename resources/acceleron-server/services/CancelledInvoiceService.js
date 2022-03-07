@@ -1,10 +1,6 @@
 'use strict';
 let CancelledInvoiceModel = require('../models/CancelledInvoiceModel');
 let BaseService = ACCELERONCORE._services.BaseService;
-
-var _ = require('underscore');
-var async = require('async');
-
 class CancelledInvoiceService extends BaseService {
   constructor(request) {
     super(request);
@@ -57,23 +53,9 @@ class CancelledInvoiceService extends BaseService {
           throw error;
         });
       }
-      // case 'bill': {
-      //   return this.CancelledInvoiceModel.getCancelledInvoiceByBillNumber(
-      //     filter,
-      //   ).catch((error) => {
-      //     throw error;
-      //   });
-      // }
 
       case 'type': {
         return this.CancelledInvoiceModel.getCancelledInvoiceByBillingMode(
-          filter,
-        ).catch((error) => {
-          throw error;
-        });
-      }
-      case 'all': {
-        return this.CancelledInvoiceModel.getCancelledInvoiceByAll(
           filter,
         ).catch((error) => {
           throw error;
@@ -97,12 +79,29 @@ class CancelledInvoiceService extends BaseService {
     }
   }
 
+  //cancelled-Invoice/searchbill
+  async searchBill(filter) {
+    return this.CancelledInvoiceModel.getCancelledInvoiceByBillNumber(
+      filter,
+    ).catch((error) => {
+      throw error;
+    });
+  }
+
   async searchDefault(filter) {
     return this.CancelledInvoiceModel.getCancelledInvoiceByDefault(
       filter,
     ).catch((error) => {
       throw error;
     });
+  }
+
+  async searchAll(filter) {
+    return this.CancelledInvoiceModel.getCancelledInvoiceByAll(filter).catch(
+      (error) => {
+        throw error;
+      },
+    );
   }
 }
 module.exports = CancelledInvoiceService;
