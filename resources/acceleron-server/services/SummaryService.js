@@ -1842,8 +1842,6 @@ class SummaryService extends BaseService {
       throw error;
     }
 
-    responseList["BILLING_PARAMETERS"] = billingParameters;
-
     data = await self.SummaryModel.getAllCancelledInvoices(
       from_date,
       to_date
@@ -1851,15 +1849,15 @@ class SummaryService extends BaseService {
       throw error;
     });
 
-    if (data.rows.length == 0) {
-      return responseList;
-    }
-
     if (_.isEmpty(data)) {
       throw new ErrorResponse(
         ResponseType.NO_RECORD_FOUND,
         ErrorType.no_records_found_for_cancelled_invoices
       );
+    }
+
+    if (data.rows.length == 0) {
+      return responseList;
     }
 
     data.rows.sort(function (doc1, doc2) {
@@ -1976,6 +1974,7 @@ class SummaryService extends BaseService {
       i++;
     }
 
+    responseList["BILLING_PARAMETERS"] = billingParameters;
     responseList["INVOICE_DETAILS"] = invoiceList;
 
     return responseList;
@@ -2751,8 +2750,8 @@ class SummaryService extends BaseService {
 
         data = await self.SummaryModel.getGrandTotalByType(
           "grandtotal_paidamount",
-          processing_date,
-          processing_date
+          date_starting,
+          date_ending
         ).catch((error) => {
           throw error;
         });
@@ -2789,8 +2788,8 @@ class SummaryService extends BaseService {
 
         data = await self.SummaryModel.getGrandTotalByType(
           "grandtotal_discounts",
-          processing_date,
-          processing_date
+          date_starting,
+          date_ending
         ).catch((error) => {
           throw error;
         });
@@ -2808,8 +2807,8 @@ class SummaryService extends BaseService {
 
         data = await self.SummaryModel.getGrandTotalByType(
           "grandtotal_netamount",
-          processing_date,
-          processing_date
+          date_starting,
+          date_ending
         ).catch((error) => {
           throw error;
         });
@@ -2827,8 +2826,8 @@ class SummaryService extends BaseService {
         monthByMonthSalesData[j].grossSales = tempValue;
 
         data = await self.SummaryModel.getGrossRefunds(
-          processing_date,
-          processing_date
+          date_starting,
+          date_ending
         ).catch((error) => {
           throw error;
         });
@@ -2846,8 +2845,8 @@ class SummaryService extends BaseService {
         monthByMonthSalesData[j].netRefund = tempValue;
 
         data = await self.SummaryModel.getNetRefunds(
-          processing_date,
-          processing_date
+          date_starting,
+          date_ending
         ).catch((error) => {
           throw error;
         });
@@ -2870,8 +2869,8 @@ class SummaryService extends BaseService {
         while (i < billing_parameters.length) {
           data = await self.SummaryModel.getTotalExtrasByBillingParameter(
             billing_parameters[i].name,
-            processing_date,
-            processing_date
+            date_starting,
+            date_ending
           ).catch((error) => {
             throw error;
           });
@@ -2896,8 +2895,8 @@ class SummaryService extends BaseService {
 
           data = await self.SummaryModel.getTotalCustomExtrasByBillingParameter(
             billing_parameters[i].name,
-            processing_date,
-            processing_date
+            date_starting,
+            date_ending
           ).catch((error) => {
             throw error;
           });
@@ -2918,8 +2917,8 @@ class SummaryService extends BaseService {
 
         data = await self.SummaryModel.getGrandTotalByType(
           "totalguests",
-          processing_date,
-          processing_date
+          date_starting,
+          date_ending
         ).catch((error) => {
           throw error;
         });
