@@ -47,10 +47,11 @@ class CancelledInvoiceController extends BaseController {
   async searchBill() {
     var filter = {};
     var queryParams = this.request.query;
+    var searchkey = req.params['BILL_NUMBER'];
 
     filter = skipAndLimit(filter, queryParams);
 
-    if (queryParams.searchkey) filter.searchkey = queryParams.searchkey;
+    if (searchkey) filter.searchkey = searchkey;
     else {
       throw new ErrorResponse(ResponseType.ERROR);
     }

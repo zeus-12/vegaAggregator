@@ -1,6 +1,5 @@
 'use strict';
 let BaseModel = ACCELERONCORE._models.BaseModel;
-
 var _ = require('underscore');
 
 class MenuModel extends BaseModel {

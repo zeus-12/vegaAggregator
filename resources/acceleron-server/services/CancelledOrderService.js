@@ -9,8 +9,8 @@ class CancelledOrderService extends BaseService {
   }
 
   async search(filter) {
-    switch (filter.key) {
-      case 'customer': {
+    switch (filter.key.toUpperCase()) {
+      case 'CUSTOMER': {
         return this.CancelledOrderModel.getCancelledOrderByMobile(filter).catch(
           (error) => {
             throw error;
@@ -18,14 +18,14 @@ class CancelledOrderService extends BaseService {
         );
       }
 
-      case 'steward': {
+      case 'STEWARD': {
         return this.CancelledOrderModel.getCancelledOrderBySteward(
           filter,
         ).catch((error) => {
           throw error;
         });
       }
-      case 'machine': {
+      case 'MACHINE': {
         return this.CancelledOrderModel.getCancelledOrderByMachine(
           filter,
         ).catch((error) => {
@@ -33,21 +33,21 @@ class CancelledOrderService extends BaseService {
         });
       }
 
-      case 'session': {
+      case 'SESSION': {
         return this.CancelledOrderModel.getCancelledOrderBySession(
           filter,
         ).catch((error) => {
           throw error;
         });
       }
-      case 'table': {
+      case 'TABLE': {
         return this.CancelledOrderModel.getCancelledOrderByTable(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'type': {
+      case 'TYPE': {
         return this.CancelledOrderModel.getCancelledOrderByBillingMode(
           filter,
         ).catch((error) => {
@@ -55,7 +55,7 @@ class CancelledOrderService extends BaseService {
         });
       }
 
-      case 'payment': {
+      case 'PAYMENT': {
         return this.CancelledOrderModel.getCancelledOrderByPayment(
           filter,
         ).catch((error) => {
@@ -66,7 +66,7 @@ class CancelledOrderService extends BaseService {
       default: {
         throw new ErrorResponse(
           ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request,
+          "Filter method doesn't exist",
         );
       }
     }
