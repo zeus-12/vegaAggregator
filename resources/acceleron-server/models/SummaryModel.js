@@ -678,6 +678,68 @@ class SummaryModel extends BaseModel {
     return data;
   }
 
+  async getSalesByBillingModeAndExtras(
+    billing_mode,
+    billingParameter,
+    from_date,
+    to_date
+  ) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/invoice-summary/_view/sumbybillingmodeandextras?startkey=["' +
+          billing_mode +
+          '","' +
+          billingParameter +
+          '","' +
+          from_date +
+          '"]&endkey=["' +
+          billing_mode +
+          '","' +
+          billingParameter +
+          '","' +
+          to_date +
+          '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
+  async getCustomExtrasByBillingModeAndExtras(
+    billing_mode,
+    billingParameter,
+    from_date,
+    to_date
+  ) {
+    const data = await this.couch
+      .get(
+        "/" +
+          SELECTED_INVOICE_SOURCE_DB +
+          '/_design/invoice-summary/_view/sumbybillingmodeandextras_custom?startkey=["' +
+          billing_mode +
+          '","' +
+          billingParameter +
+          '","' +
+          from_date +
+          '"]&endkey=["' +
+          billing_mode +
+          '","' +
+          billingParameter +
+          '","' +
+          to_date +
+          '"]'
+      )
+      .catch((error) => {
+        throw error;
+      });
+
+    return data;
+  }
+
   async getSplitPaymentsByPaymentModeAndExtras(
     payment_mode,
     billingParameter,
