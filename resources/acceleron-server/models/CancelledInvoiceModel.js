@@ -1,7 +1,7 @@
 'use strict';
 let BaseModel = ACCELERONCORE._models.BaseModel;
 
-function format(filter, filterMethod) {
+function frameFilterQuery(filter, filterMethod) {
   return (
     '/accelerate_cancelled_invoices/_design/invoice-filters/_view/filterby' +
     filterMethod +
@@ -27,25 +27,25 @@ class CancelledInvoiceModel extends BaseModel {
   }
 
   async getCancelledInvoiceByMobile(filter) {
-    const formatLink = format(filter, 'mobile');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'mobile');
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledInvoiceByAmount(filter) {
-    const formatLink = format(filter, 'amount');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'amount');
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledInvoiceBySteward(filter) {
-    const formatLink = format(filter, 'stewardname');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'stewardname');
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledInvoiceByMachine(filter) {
-    const formatLink = format(filter, 'machine');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'machine');
+    return await this.couch.get(filterQueryString);
   }
 
   async getCancelledInvoiceBySession(filter) {
-    const formatLink = format(filter, 'session');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'session');
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledInvoiceByAll(filter) {
     return await this.couch.get(
@@ -60,16 +60,16 @@ class CancelledInvoiceModel extends BaseModel {
     );
   }
   async getCancelledInvoiceByTable(filter) {
-    const formatLink = format(filter, 'table');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'table');
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledInvoiceByBillingMode(filter) {
-    const formatLink = format(filter, 'billingmode');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'billingmode');
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledInvoiceByPayment(filter) {
-    const formatLink = format(filter, 'paymentmode');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'paymentmode');
+    return await this.couch.get(filterQueryString);
   }
 
   async getCancelledInvoiceByDefault(filter) {

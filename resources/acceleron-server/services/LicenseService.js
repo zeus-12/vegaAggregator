@@ -12,7 +12,7 @@ class LicenseService extends BaseService {
     this.SettingsService = new SettingsService(request);
   }
   async addNewLicense(newLicenseObject) {
-    machine = 1500;
+    machine = newLicenseObject.machineUID;
 
     await this.SettingsService.addNewEntryToSettings(
       'ACCELERATE_CONFIGURED_MACHINES',

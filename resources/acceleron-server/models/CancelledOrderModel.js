@@ -70,7 +70,7 @@ class CancelledOrderModel extends BaseModel {
   }
   async getCancelledOrderByDefault(filter) {
     return await this.couch.get(
-      '/accelerate_cancelled_orders/_design/orders/_view/all?descending=false&include_docs=true&limit=' +
+      '/accelerate_cancelled_orders/_design/orders/_view/all?descending=true&include_docs=true&limit=' +
         filter.limit +
         '&skip=' +
         filter.skip,

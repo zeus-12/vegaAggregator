@@ -2,11 +2,11 @@ let BaseController = ACCELERONCORE._controllers.BaseController;
 let CancelledInvoiceService = require('../services/CancelledInvoiceService');
 var _ = require('underscore');
 
-function skipAndLimit(filter, queryParams) {
+function populateSkipAndLimit(filter, queryParams) {
   if (
     parseInt(queryParams.limit) > 10 ||
     parseInt(queryParams.limit) < 1 ||
-    !Number.isInteger(parseInt(queryParams.limit))
+    !queryParams.limit
   )
     filter.limit = '10';
   else filter.limit = queryParams.limit;
@@ -25,19 +25,27 @@ class CancelledInvoiceController extends BaseController {
     var filter = {};
     var queryParams = this.request.query;
 
-    if (queryParams.startdate && queryParams.enddate && queryParams.key) {
-      filter.key = queryParams.key;
+    if (queryParams.startdate && queryParams.enddate) {
       filter.startdate = queryParams.startdate;
       filter.enddate = queryParams.enddate;
+    } else {
+      throw new ErrorResponse(
+        ResponseType.ERROR,
+        'Please mention Start and End dates.',
+      );
+    }
+
+    if (queryParams.searchkey && queryParams.key) {
+      filter.key = queryParams.key;
       filter.searchkey = queryParams.searchkey;
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        ErrorType.server_cannot_handle_request,
+        'Please provide filter method and search key.',
       );
     }
 
-    filter = skipAndLimit(filter, queryParams);
+    filter = populateSkipAndLimit(filter, queryParams);
 
     return await this.CancelledInvoiceService.search(filter).catch((error) => {
       throw error;
@@ -46,14 +54,15 @@ class CancelledInvoiceController extends BaseController {
 
   async searchBill() {
     var filter = {};
-    var queryParams = this.request.query;
-    var searchkey = req.params['BILL_NUMBER'];
+    var searchkey = this.request.params['BILL_NUMBER'];
 
-    filter = skipAndLimit(filter, queryParams);
-
-    if (searchkey) filter.searchkey = searchkey;
-    else {
-      throw new ErrorResponse(ResponseType.ERROR);
+    if (searchkey) {
+      filter.searchkey = searchkey;
+    } else {
+      throw new ErrorResponse(
+        ResponseType.ERROR,
+        'Please provide the Bill number to be searched.',
+      );
     }
 
     return await this.CancelledInvoiceService.searchBill(filter).catch(
@@ -67,7 +76,7 @@ class CancelledInvoiceController extends BaseController {
     var filter = {};
     var queryParams = this.request.query;
 
-    filter = skipAndLimit(filter, queryParams);
+    filter = populateSkipAndLimit(filter, queryParams);
 
     return await this.CancelledInvoiceService.searchDefault(filter).catch(
       (error) => {
@@ -86,11 +95,11 @@ class CancelledInvoiceController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        ErrorType.server_cannot_handle_request,
+        'Please mention Start and End dates.',
       );
     }
 
-    filter = skipAndLimit(filter, queryParams);
+    filter = populateSkipAndLimit(filter, queryParams);
 
     return await this.CancelledInvoiceService.searchAll(filter).catch(
       (error) => {

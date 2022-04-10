@@ -13,7 +13,6 @@ function populateSkipAndLimit(filter, queryParams) {
   else filter.limit = queryParams.limit;
 
   filter.skip = queryParams.skip ? queryParams.skip : '0';
-
   return filter;
 }
 class CancelledOrderController extends BaseController {

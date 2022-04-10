@@ -9,29 +9,29 @@ class CancelledInvoiceService extends BaseService {
   }
 
   async search(filter) {
-    switch (filter.key) {
-      case 'customer': {
+    switch (filter.key.toUpperCase()) {
+      case 'CUSTOMER': {
         return this.CancelledInvoiceModel.getCancelledInvoiceByMobile(
           filter,
         ).catch((error) => {
           throw error;
         });
       }
-      case 'amount': {
+      case 'AMOUNT': {
         return this.CancelledInvoiceModel.getCancelledInvoiceByAmount(
           filter,
         ).catch((error) => {
           throw error;
         });
       }
-      case 'steward': {
+      case 'STEWARD': {
         return this.CancelledInvoiceModel.getCancelledInvoiceBySteward(
           filter,
         ).catch((error) => {
           throw error;
         });
       }
-      case 'machine': {
+      case 'MACHINE': {
         return this.CancelledInvoiceModel.getCancelledInvoiceByMachine(
           filter,
         ).catch((error) => {
@@ -39,14 +39,14 @@ class CancelledInvoiceService extends BaseService {
         });
       }
 
-      case 'session': {
+      case 'SESSION': {
         return this.CancelledInvoiceModel.getCancelledInvoiceBySession(
           filter,
         ).catch((error) => {
           throw error;
         });
       }
-      case 'table': {
+      case 'TABLE': {
         return this.CancelledInvoiceModel.getCancelledInvoiceByTable(
           filter,
         ).catch((error) => {
@@ -54,7 +54,7 @@ class CancelledInvoiceService extends BaseService {
         });
       }
 
-      case 'type': {
+      case 'TYPE': {
         return this.CancelledInvoiceModel.getCancelledInvoiceByBillingMode(
           filter,
         ).catch((error) => {
@@ -62,7 +62,7 @@ class CancelledInvoiceService extends BaseService {
         });
       }
 
-      case 'payment': {
+      case 'PAYMENT': {
         return this.CancelledInvoiceModel.getCancelledInvoiceByPayment(
           filter,
         ).catch((error) => {
@@ -73,7 +73,7 @@ class CancelledInvoiceService extends BaseService {
       default: {
         throw new ErrorResponse(
           ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request,
+          "Filter method doesn't exist",
         );
       }
     }
