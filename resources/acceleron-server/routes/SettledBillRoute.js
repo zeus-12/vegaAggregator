@@ -10,7 +10,7 @@ router.get('/search', async function (req, res, next) {
   }
 });
 
-router.get('/searchbill', async function (req, res, next) {
+router.get('/search/:BILL_NUMBER', async function (req, res, next) {
   try {
     const data = await new SettledBillController(req).searchBill();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -19,7 +19,7 @@ router.get('/searchbill', async function (req, res, next) {
   }
 });
 
-router.get('/searchdefault', async function (req, res, next) {
+router.get('/', async function (req, res, next) {
   try {
     const data = await new SettledBillController(req).searchDefault();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -27,7 +27,7 @@ router.get('/searchdefault', async function (req, res, next) {
     return next(error);
   }
 });
-router.get('/searchall', async function (req, res, next) {
+router.get('/filter', async function (req, res, next) {
   try {
     const data = await new SettledBillController(req).searchAll();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -35,5 +35,7 @@ router.get('/searchall', async function (req, res, next) {
     return next(error);
   }
 });
+
+//TODO:add new route
 
 module.exports = router;

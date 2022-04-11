@@ -9,29 +9,29 @@ class SettledBillService extends BaseService {
   }
 
   async search(filter) {
-    switch (filter.key) {
-      case 'customer': {
+    switch (filter.key.toUpperCase()) {
+      case 'CUSTOMER': {
         return this.SettledBillModel.getSettledBillByMobile(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'amount': {
+      case 'AMOUNT': {
         return this.SettledBillModel.getSettledBillByAmount(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'steward': {
+      case 'STEWARD': {
         return this.SettledBillModel.getSettledBillBySteward(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'payment': {
+      case 'PAYMENT': {
         return this.SettledBillModel.getSettledBillByPayment(filter).catch(
           (error) => {
             throw error;
@@ -39,7 +39,7 @@ class SettledBillService extends BaseService {
         );
       }
 
-      case 'machine': {
+      case 'MACHINE': {
         return this.SettledBillModel.getSettledBillByMachine(filter).catch(
           (error) => {
             throw error;
@@ -47,28 +47,28 @@ class SettledBillService extends BaseService {
         );
       }
 
-      case 'session': {
+      case 'SESSION': {
         return this.SettledBillModel.getSettledBillBySession(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'discount': {
+      case 'DISCOUNT': {
         return this.SettledBillModel.getSettledBillByDiscount(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'refund': {
+      case 'REFUND': {
         return this.SettledBillModel.getSettledBillByRefund(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'table': {
+      case 'TABLE': {
         return this.SettledBillModel.getSettledBillByTable(filter).catch(
           (error) => {
             throw error;
@@ -76,7 +76,7 @@ class SettledBillService extends BaseService {
         );
       }
 
-      case 'type': {
+      case 'TYPE': {
         return this.SettledBillModel.getSettledBillByBillingMode(filter).catch(
           (error) => {
             throw error;
@@ -87,7 +87,7 @@ class SettledBillService extends BaseService {
       default: {
         throw new ErrorResponse(
           ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request,
+          "Filter method doesn't exist",
         );
       }
     }

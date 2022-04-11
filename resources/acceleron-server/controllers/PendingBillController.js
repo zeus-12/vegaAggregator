@@ -2,11 +2,11 @@ let BaseController = ACCELERONCORE._controllers.BaseController;
 let PendingBillService = require('../services/PendingBillService');
 var _ = require('underscore');
 
-function skipAndLimit(filter, queryParams) {
+function populateSkipAndLimit(filter, queryParams) {
   if (
     parseInt(queryParams.limit) > 10 ||
     parseInt(queryParams.limit) < 1 ||
-    !Number.isInteger(parseInt(queryParams.limit))
+    !queryParams.limit
   )
     filter.limit = '10';
   else filter.limit = queryParams.limit;
@@ -25,19 +25,26 @@ class PendingBillController extends BaseController {
     var filter = {};
     var queryParams = this.request.query;
 
-    if (queryParams.startdate && queryParams.enddate && queryParams.key) {
-      filter.key = queryParams.key;
+    if (queryParams.startdate && queryParams.enddate) {
       filter.startdate = queryParams.startdate;
       filter.enddate = queryParams.enddate;
+    } else {
+      throw new ErrorResponse(
+        ResponseType.ERROR,
+        'Please mention Start and End dates.',
+      );
+    }
+    if (queryParams.searchkey && queryParams.key) {
+      filter.key = queryParams.key;
       filter.searchkey = queryParams.searchkey;
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        ErrorType.server_cannot_handle_request,
+        'Please provide filter method and search key.',
       );
     }
 
-    filter = skipAndLimit(filter, queryParams);
+    filter = populateSkipAndLimit(filter, queryParams);
 
     return await this.PendingBillService.search(filter).catch((error) => {
       throw error;
@@ -46,13 +53,16 @@ class PendingBillController extends BaseController {
 
   async searchBill() {
     var filter = {};
-    var queryParams = this.request.query;
-    filter = skipAndLimit(filter, queryParams);
-    if (queryParams.searchkey) filter.searchkey = queryParams.searchkey;
-    else {
-      throw new ErrorResponse(ResponseType.ERROR);
-    }
+    var searchkey = this.request.params['BILL_NUMBER'];
 
+    if (searchkey) {
+      filter.searchkey = searchkey;
+    } else {
+      throw new ErrorResponse(
+        ResponseType.ERROR,
+        'Please provide the Bill number to be searched.',
+      );
+    }
     return await this.PendingBillService.searchBill(filter).catch((error) => {
       throw error;
     });
@@ -61,7 +71,8 @@ class PendingBillController extends BaseController {
   async searchDefault() {
     var filter = {};
     var queryParams = this.request.query;
-    filter = skipAndLimit(filter, queryParams);
+
+    filter = populateSkipAndLimit(filter, queryParams);
 
     return await this.PendingBillService.searchDefault(filter).catch(
       (error) => {
@@ -84,14 +95,50 @@ class PendingBillController extends BaseController {
       );
     }
 
-    filter = skipAndLimit(filter, queryParams);
+    filter = populateSkipAndLimit(filter, queryParams);
 
     return await this.PendingBillService.searchAll(filter).catch((error) => {
       throw error;
     });
   }
 
-  async updateBill() {
+  async applyDiscount() {
+    var filter = {};
+    if (this.request.body && this.request.query.bill_id) {
+      filter.file = this.request.body;
+      filter.bill_id = this.request.query.bill_id;
+    }
+
+    return await this.PendingBillService.updateBill(filter).catch((error) => {
+      throw error;
+    });
+  }
+
+  async addItem() {
+    var filter = {};
+    if (this.request.body && this.request.query.bill_id) {
+      filter.file = this.request.body;
+      filter.bill_id = this.request.query.bill_id;
+    }
+
+    return await this.PendingBillService.updateBill(filter).catch((error) => {
+      throw error;
+    });
+  }
+
+  async updateDeliveryAgent() {
+    var filter = {};
+    if (this.request.body && this.request.query.bill_id) {
+      filter.file = this.request.body;
+      filter.bill_id = this.request.query.bill_id;
+    }
+
+    return await this.PendingBillService.updateBill(filter).catch((error) => {
+      throw error;
+    });
+  }
+
+  async settleBill() {
     var filter = {};
     if (this.request.body && this.request.query.bill_id) {
       filter.file = this.request.body;

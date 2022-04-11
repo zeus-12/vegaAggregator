@@ -9,29 +9,29 @@ class PendingBillService extends BaseService {
   }
 
   async search(filter) {
-    switch (filter.key) {
-      case 'customer': {
+    switch (filter.key.toUpperCase()) {
+      case 'CUSTOMER': {
         return this.PendingBillModel.getPendingBillByMobile(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'amount': {
+      case 'AMOUNT': {
         return this.PendingBillModel.getPendingBillByAmount(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'steward': {
+      case 'STEWARD': {
         return this.PendingBillModel.getPendingBillBySteward(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'machine': {
+      case 'MACHINE': {
         return this.PendingBillModel.getPendingBillByMachine(filter).catch(
           (error) => {
             throw error;
@@ -39,28 +39,28 @@ class PendingBillService extends BaseService {
         );
       }
 
-      case 'session': {
+      case 'SESSION': {
         return this.PendingBillModel.getPendingBillBySession(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'discount': {
+      case 'DISCOUNT': {
         return this.PendingBillModel.getPendingBillByDiscount(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'refund': {
+      case 'REFUND': {
         return this.PendingBillModel.getPendingBillByDiscount(filter).catch(
           (error) => {
             throw error;
           },
         );
       }
-      case 'table': {
+      case 'TABLE': {
         return this.PendingBillModel.getPendingBillByTable(filter).catch(
           (error) => {
             throw error;
@@ -68,7 +68,7 @@ class PendingBillService extends BaseService {
         );
       }
 
-      case 'type': {
+      case 'TYPE': {
         return this.PendingBillModel.getPendingBillByBillingMode(filter).catch(
           (error) => {
             throw error;
@@ -76,7 +76,7 @@ class PendingBillService extends BaseService {
         );
       }
 
-      case 'payment': {
+      case 'PAYMENT': {
         return this.PendingBillModel.getPendingBillByPayment(filter).catch(
           (error) => {
             throw error;
@@ -87,7 +87,7 @@ class PendingBillService extends BaseService {
       default: {
         throw new ErrorResponse(
           ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request,
+          "Filter method doesn't exist",
         );
       }
     }
@@ -111,6 +111,30 @@ class PendingBillService extends BaseService {
 
   async searchAll(filter) {
     return this.PendingBillModel.getPendingBillByAll(filter).catch((error) => {
+      throw error;
+    });
+  }
+
+  async updateBill(filter) {
+    return this.PendingBillModel.updateBill(filter).catch((error) => {
+      throw error;
+    });
+  }
+
+  async updateBill(filter) {
+    return this.PendingBillModel.updateBill(filter).catch((error) => {
+      throw error;
+    });
+  }
+
+  async updateBill(filter) {
+    return this.PendingBillModel.updateBill(filter).catch((error) => {
+      throw error;
+    });
+  }
+
+  async updateBill(filter) {
+    return this.PendingBillModel.updateBill(filter).catch((error) => {
       throw error;
     });
   }

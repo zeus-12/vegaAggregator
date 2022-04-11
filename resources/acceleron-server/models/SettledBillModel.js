@@ -1,7 +1,7 @@
 'use strict';
 let BaseModel = ACCELERONCORE._models.BaseModel;
 
-function format(filter, filterMethod) {
+function frameFilterQuery(filter, filterMethod) {
   return (
     '/accelerate_invoices/_design/invoice-filters/_view/filterby' +
     filterMethod +
@@ -27,50 +27,50 @@ class SettledBillModel extends BaseModel {
   }
 
   async getSettledBillByMobile(filter) {
-    const formatLink = format(filter, 'mobile');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'mobile');
+    return await this.couch.get(filterQueryString);
   }
   async getSettledBillByAmount(filter) {
-    const formatLink = format(filter, 'amount');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'amount');
+    return await this.couch.get(filterQueryString);
   }
   async getSettledBillBySteward(filter) {
-    const formatLink = format(filter, 'stewardname');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'stewardname');
+    return await this.couch.get(filterQueryString);
   }
   async getSettledBillByMachine(filter) {
-    const formatLink = format(filter, 'machine');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'machine');
+    return await this.couch.get(filterQueryString);
   }
 
   async getSettledBillBySession(filter) {
-    const formatLink = format(filter, 'session');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'session');
+    return await this.couch.get(filterQueryString);
   }
   async getSettledBillByDiscount(filter) {
-    const formatLink = format(filter, 'discount');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'discount');
+    return await this.couch.get(filterQueryString);
   }
   async getSettledBillByRefund(filter) {
-    const formatLink = format(filter, 'refund');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'refund');
+    return await this.couch.get(filterQueryString);
   }
   async getSettledBillByTable(filter) {
-    const formatLink = format(filter, 'table');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'table');
+    return await this.couch.get(filterQueryString);
   }
   async getSettledBillByBillingMode(filter) {
-    const formatLink = format(filter, 'billingmode');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'billingmode');
+    return await this.couch.get(filterQueryString);
   }
   async getSettledBillByPayment(filter) {
-    const formatLink = format(filter, 'paymentmode');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'paymentmode');
+    return await this.couch.get(filterQueryString);
   }
 
   async getSettledBillByDefault(filter) {
     return await this.couch.get(
-      '/accelerate_invoices/_design/invoices/_view/all?descending=false&include_docs=true&limit=' +
+      '/accelerate_invoices/_design/invoices/_view/all?descending=true&include_docs=true&limit=' +
         filter.limit +
         '&skip=' +
         filter.skip,

@@ -1,7 +1,7 @@
 'use strict';
 let BaseModel = ACCELERONCORE._models.BaseModel;
 
-function format(filter, filterMethod) {
+function frameFilterQuery(filter, filterMethod) {
   return (
     '/accelerate_bills/_design/bill-filters/_view/filterby' +
     filterMethod +
@@ -27,51 +27,51 @@ class PendingBillModel extends BaseModel {
   }
 
   async getPendingBillByMobile(filter) {
-    const formatLink = format(filter, 'mobile');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'mobile');
+    return await this.couch.get(filterQueryString);
   }
   async getPendingBillByAmount(filter) {
-    const formatLink = format(filter, 'amount');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'amount');
+    return await this.couch.get(filterQueryString);
   }
   async getPendingBillBySteward(filter) {
-    const formatLink = format(filter, 'stewardname');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'stewardname');
+    return await this.couch.get(filterQueryString);
   }
   async getPendingBillByMachine(filter) {
-    const formatLink = format(filter, 'machine');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'machine');
+    return await this.couch.get(filterQueryString);
   }
 
   async getPendingBillBySession(filter) {
-    const formatLink = format(filter, 'session');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'session');
+    return await this.couch.get(filterQueryString);
   }
   async getPendingBillByDiscount(filter) {
-    const formatLink = format(filter, 'discount');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'discount');
+    return await this.couch.get(filterQueryString);
   }
   async getPendingBillByRefund(filter) {
-    const formatLink = format(filter, 'refund');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'refund');
+    return await this.couch.get(filterQueryString);
   }
 
   async getPendingBillByTable(filter) {
-    const formatLink = format(filter, 'table');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'table');
+    return await this.couch.get(filterQueryString);
   }
   async getPendingBillByBillingMode(filter) {
-    const formatLink = format(filter, 'billingmode');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'billingmode');
+    return await this.couch.get(filterQueryString);
   }
   async getPendingBillByPayment(filter) {
-    const formatLink = format(filter, 'paymentmode');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, 'paymentmode');
+    return await this.couch.get(filterQueryString);
   }
 
   async getPendingBillByDefault(filter) {
     return await this.couch.get(
-      '/accelerate_bills/_design/bills/_view/all?descending=false&include_docs=true&limit=' +
+      '/accelerate_bills/_design/bills/_view/all?descending=true&include_docs=true&limit=' +
         filter.limit +
         '&skip=' +
         filter.skip,
