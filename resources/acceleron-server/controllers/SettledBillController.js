@@ -1,12 +1,13 @@
 let BaseController = ACCELERONCORE._controllers.BaseController;
 let SettledBillService = require('../services/SettledBillService');
 var _ = require('underscore');
+const {isNumber} = require('underscore');
 
 function populateSkipAndLimit(filter, queryParams) {
   if (
+    !queryParams.limit ||
     parseInt(queryParams.limit) > 10 ||
-    parseInt(queryParams.limit) < 1 ||
-    !queryParams.limit
+    parseInt(queryParams.limit) < 1
   )
     filter.limit = '10';
   else filter.limit = queryParams.limit;
@@ -31,7 +32,7 @@ class SettledBillController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        'Please mention Start and End dates.',
+        ErrorType.start_and_end_date_empty,
       );
     }
 
@@ -41,7 +42,7 @@ class SettledBillController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        'Please provide filter method and search key.',
+        ErrorType.filter_key_and_filter_method_empty,
       );
     }
 
@@ -56,13 +57,10 @@ class SettledBillController extends BaseController {
     var filter = {};
     var searchkey = this.request.params['BILL_NUMBER'];
 
-    if (searchkey) {
+    if (searchkey && isNumber(parseInt(searchkey))) {
       filter.searchkey = searchkey;
     } else {
-      throw new ErrorResponse(
-        ResponseType.ERROR,
-        'Please provide the Bill number to be searched.',
-      );
+      throw new ErrorResponse(ResponseType.ERROR, ErrorType.bill_number_empty);
     }
 
     return await this.SettledBillService.searchBill(filter).catch((error) => {
@@ -70,20 +68,18 @@ class SettledBillController extends BaseController {
     });
   }
 
-  async searchDefault() {
+  async fetchDefault() {
     var filter = {};
     var queryParams = this.request.query;
 
     filter = populateSkipAndLimit(filter, queryParams);
 
-    return await this.SettledBillService.searchDefault(filter).catch(
-      (error) => {
-        throw error;
-      },
-    );
+    return await this.SettledBillService.fetchDefault(filter).catch((error) => {
+      throw error;
+    });
   }
 
-  async searchAll() {
+  async filterByDateRange() {
     var filter = {};
     var queryParams = this.request.query;
 
@@ -93,15 +89,17 @@ class SettledBillController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        ErrorType.server_cannot_handle_request,
+        ErrorType.start_and_end_date_empty,
       );
     }
 
     filter = populateSkipAndLimit(filter, queryParams);
 
-    return await this.SettledBillService.searchAll(filter).catch((error) => {
-      throw error;
-    });
+    return await this.SettledBillService.filterByDateRange(filter).catch(
+      (error) => {
+        throw error;
+      },
+    );
   }
 }
 module.exports = SettledBillController;

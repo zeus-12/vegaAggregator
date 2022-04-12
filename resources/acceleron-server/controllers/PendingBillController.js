@@ -1,12 +1,13 @@
 let BaseController = ACCELERONCORE._controllers.BaseController;
 let PendingBillService = require('../services/PendingBillService');
 var _ = require('underscore');
+const {isNumber} = require('underscore');
 
 function populateSkipAndLimit(filter, queryParams) {
   if (
+    !queryParams.limit ||
     parseInt(queryParams.limit) > 10 ||
-    parseInt(queryParams.limit) < 1 ||
-    !queryParams.limit
+    parseInt(queryParams.limit) < 1
   )
     filter.limit = '10';
   else filter.limit = queryParams.limit;
@@ -31,7 +32,7 @@ class PendingBillController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        'Please mention Start and End dates.',
+        ErrorType.start_and_end_date_empty,
       );
     }
     if (queryParams.searchkey && queryParams.key) {
@@ -40,7 +41,7 @@ class PendingBillController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        'Please provide filter method and search key.',
+        ErrorType.filter_key_and_filter_method_empty,
       );
     }
 
@@ -53,35 +54,30 @@ class PendingBillController extends BaseController {
 
   async searchBill() {
     var filter = {};
-    var searchkey = this.request.params['BILL_NUMBER'];
+    var searchkey = this.request.params.BILL_NUMBER;
 
-    if (searchkey) {
+    if (searchkey && isNumber(parseInt(searchkey))) {
       filter.searchkey = searchkey;
     } else {
-      throw new ErrorResponse(
-        ResponseType.ERROR,
-        'Please provide the Bill number to be searched.',
-      );
+      throw new ErrorResponse(ResponseType.ERROR, ErrorType.bill_number_empty);
     }
     return await this.PendingBillService.searchBill(filter).catch((error) => {
       throw error;
     });
   }
 
-  async searchDefault() {
+  async fetchDefault() {
     var filter = {};
     var queryParams = this.request.query;
 
     filter = populateSkipAndLimit(filter, queryParams);
 
-    return await this.PendingBillService.searchDefault(filter).catch(
-      (error) => {
-        throw error;
-      },
-    );
+    return await this.PendingBillService.fetchDefault(filter).catch((error) => {
+      throw error;
+    });
   }
 
-  async searchAll() {
+  async filterByDateRange() {
     var filter = {};
     var queryParams = this.request.query;
 
@@ -91,61 +87,68 @@ class PendingBillController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        ErrorType.server_cannot_handle_request,
+        ErrorType.start_and_end_date_empty,
       );
     }
 
     filter = populateSkipAndLimit(filter, queryParams);
 
-    return await this.PendingBillService.searchAll(filter).catch((error) => {
-      throw error;
-    });
+    return await this.PendingBillService.filterByDateRange(filter).catch(
+      (error) => {
+        throw error;
+      },
+    );
   }
 
   async applyDiscount() {
     var filter = {};
-    if (this.request.body && this.request.query.bill_id) {
+    var queryParams = this.request.query;
+
+    filter = populateSkipAndLimit(filter, queryParams);
+    var bill_id = this.request.params.BILL_NUMBER;
+
+    if (this.request.body && bill_id) {
       filter.file = this.request.body;
-      filter.bill_id = this.request.query.bill_id;
+      filter.bill_id = bill_id;
     }
 
-    return await this.PendingBillService.updateBill(filter).catch((error) => {
-      throw error;
-    });
+    return await this.PendingBillService.applyDiscount(filter).catch(
+      (error) => {
+        throw error;
+      },
+    );
+  }
+  async updateDeliveryAgent() {
+    var filter = {};
+    var queryParams = this.request.query;
+
+    filter = populateSkipAndLimit(filter, queryParams);
+    var bill_id = this.request.params.BILL_NUMBER;
+
+    if (this.request.body && bill_id) {
+      filter.file = this.request.body;
+      filter.bill_id = bill_id;
+    }
+    return await this.PendingBillService.updateDeliveryAgent(filter).catch(
+      (error) => {
+        throw error;
+      },
+    );
   }
 
   async addItem() {
     var filter = {};
-    if (this.request.body && this.request.query.bill_id) {
+    var queryParams = this.request.query;
+
+    filter = populateSkipAndLimit(filter, queryParams);
+    var bill_id = this.request.params.BILL_NUMBER;
+
+    if (this.request.body && bill_id) {
       filter.file = this.request.body;
-      filter.bill_id = this.request.query.bill_id;
+      filter.bill_id = bill_id;
     }
 
-    return await this.PendingBillService.updateBill(filter).catch((error) => {
-      throw error;
-    });
-  }
-
-  async updateDeliveryAgent() {
-    var filter = {};
-    if (this.request.body && this.request.query.bill_id) {
-      filter.file = this.request.body;
-      filter.bill_id = this.request.query.bill_id;
-    }
-
-    return await this.PendingBillService.updateBill(filter).catch((error) => {
-      throw error;
-    });
-  }
-
-  async settleBill() {
-    var filter = {};
-    if (this.request.body && this.request.query.bill_id) {
-      filter.file = this.request.body;
-      filter.bill_id = this.request.query.bill_id;
-    }
-
-    return await this.PendingBillService.updateBill(filter).catch((error) => {
+    return await this.PendingBillService.addItem(filter).catch((error) => {
       throw error;
     });
   }

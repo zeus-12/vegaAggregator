@@ -96,10 +96,26 @@ class PendingBillModel extends BaseModel {
     return await this.couch.get('/accelerate_bills/' + filterbody);
   }
 
-  async updateBill(filter) {
+  async applyDiscount({bill_id, file, maximumReached, totalDiscount}) {
+    var data = await this.couch.put(
+      '/accelerate_bills/ADYAR_BILL_' + bill_id,
+      file,
+    );
+    var result = {data, maximumReached, totalDiscount};
+    return result;
+  }
+
+  async updateDeliveryAgent({data, bill_id}) {
     return await this.couch.put(
-      '/accelerate_bills/' + filter.bill_id,
-      filter.file,
+      '/accelerate_bills/ADYAR_BILL_' + bill_id,
+      data,
+    );
+  }
+
+  async addItem({data, bill_id}) {
+    return await this.couch.put(
+      '/accelerate_bills/ADYAR_BILL_' + bill_id,
+      data,
     );
   }
 }

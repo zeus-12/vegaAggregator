@@ -15,7 +15,7 @@ class PendingBillController extends BaseController {
       filter.bill_id = this.request.query.bill_id;
     }
 
-    return await this.PendingBillService.updateBill(filter).catch((error) => {
+    return await this.PendingBillService.cancelBill(filter).catch((error) => {
       throw error;
     });
   }

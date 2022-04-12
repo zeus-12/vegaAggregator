@@ -101,7 +101,7 @@ class SettledBillService extends BaseService {
     );
   }
 
-  async searchDefault(filter) {
+  async fetchDefault(filter) {
     return this.SettledBillModel.getSettledBillByDefault(filter).catch(
       (error) => {
         throw error;
@@ -109,7 +109,7 @@ class SettledBillService extends BaseService {
     );
   }
 
-  async searchAll(filter) {
+  async filterByDateRange(filter) {
     return this.SettledBillModel.getSettledBillByAll(filter).catch((error) => {
       throw error;
     });

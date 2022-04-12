@@ -30,5 +30,6 @@ router.use('/managemenu', require('./ManageMenuRoute'));
 router.use('/license', require('./LicenseRoute'));
 router.use('/pending-bill', require('./PendingBillRoute'));
 router.use('/settled-bill', require('./SettledBillRoute'));
+router.use('/billing', require('./BillingModuleRoute'));
 
 module.exports = router;
