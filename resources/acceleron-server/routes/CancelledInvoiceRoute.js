@@ -3,7 +3,7 @@ let CancelledInvoiceController = require('../controllers/CancelledInvoiceControl
 
 router.get('/', async function (req, res, next) {
   try {
-    const data = await new CancelledInvoiceController(req).searchDefault();
+    const data = await new CancelledInvoiceController(req).fetchDefault();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
   } catch (error) {
     return next(error);
@@ -12,7 +12,7 @@ router.get('/', async function (req, res, next) {
 
 router.get('/filter', async function (req, res, next) {
   try {
-    const data = await new CancelledInvoiceController(req).searchAll();
+    const data = await new CancelledInvoiceController(req).filterByDateRange();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
   } catch (error) {
     return next(error);

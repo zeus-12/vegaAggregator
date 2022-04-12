@@ -5,9 +5,9 @@ var _ = require('underscore');
 
 function populateSkipAndLimit(filter, queryParams) {
   if (
+    !queryParams.limit ||
     parseInt(queryParams.limit) > 10 ||
-    parseInt(queryParams.limit) < 1 ||
-    !queryParams.limit
+    parseInt(queryParams.limit) < 1
   )
     filter.limit = '10';
   else filter.limit = queryParams.limit;
@@ -32,7 +32,7 @@ class CancelledOrderController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        'Please mention Start and End dates.',
+        ErrorType.start_and_end_date_empty,
       );
     }
 
@@ -42,7 +42,7 @@ class CancelledOrderController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        'Please provide filter method and search key.',
+        ErrorType.filter_key_and_filter_method_empty,
       );
     }
 
@@ -53,21 +53,21 @@ class CancelledOrderController extends BaseController {
     });
   }
 
-  async searchDefault() {
+  async fetchDefault() {
     //limit,skip
     var filter = {};
     var queryParams = this.request.query;
 
     filter = populateSkipAndLimit(filter, queryParams);
 
-    return await this.CancelledOrderService.searchDefault(filter).catch(
+    return await this.CancelledOrderService.fetchDefault(filter).catch(
       (error) => {
         throw error;
       },
     );
   }
 
-  async searchAll() {
+  async filterByDateRange() {
     var filter = {};
     var queryParams = this.request.query;
 
@@ -77,15 +77,17 @@ class CancelledOrderController extends BaseController {
     } else {
       throw new ErrorResponse(
         ResponseType.ERROR,
-        'Please mention Start and End dates.',
+        ErrorType.start_and_end_date_empty,
       );
     }
 
     filter = populateSkipAndLimit(filter, queryParams);
 
-    return await this.CancelledOrderService.searchAll(filter).catch((error) => {
-      throw error;
-    });
+    return await this.CancelledOrderService.filterByDateRange(filter).catch(
+      (error) => {
+        throw error;
+      },
+    );
   }
 }
 

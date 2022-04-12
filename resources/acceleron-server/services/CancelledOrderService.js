@@ -66,13 +66,13 @@ class CancelledOrderService extends BaseService {
       default: {
         throw new ErrorResponse(
           ResponseType.ERROR,
-          "Filter method doesn't exist",
+          ErrorType.invalid_filter_method,
         );
       }
     }
   }
 
-  async searchDefault(filter) {
+  async fetchDefault(filter) {
     return this.CancelledOrderModel.getCancelledOrderByDefault(filter).catch(
       (error) => {
         throw error;
@@ -80,7 +80,7 @@ class CancelledOrderService extends BaseService {
     );
   }
 
-  async searchAll(filter) {
+  async filterByDateRange(filter) {
     return this.CancelledOrderModel.getCancelledOrderByAll(filter).catch(
       (error) => {
         throw error;

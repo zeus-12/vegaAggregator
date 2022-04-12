@@ -73,7 +73,7 @@ class CancelledInvoiceService extends BaseService {
       default: {
         throw new ErrorResponse(
           ResponseType.ERROR,
-          "Filter method doesn't exist",
+          ErrorType.invalid_filter_method,
         );
       }
     }
@@ -88,7 +88,7 @@ class CancelledInvoiceService extends BaseService {
     });
   }
 
-  async searchDefault(filter) {
+  async fetchDefault(filter) {
     return this.CancelledInvoiceModel.getCancelledInvoiceByDefault(
       filter,
     ).catch((error) => {
@@ -96,7 +96,7 @@ class CancelledInvoiceService extends BaseService {
     });
   }
 
-  async searchAll(filter) {
+  async filterByDateRange(filter) {
     return this.CancelledInvoiceModel.getCancelledInvoiceByAll(filter).catch(
       (error) => {
         throw error;
