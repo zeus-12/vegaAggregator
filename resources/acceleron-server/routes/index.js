@@ -28,5 +28,6 @@ router.use('/summary', require('./SummaryRoute'));
 router.use('/menu', require('./MenuRoute'));
 router.use('/managemenu', require('./ManageMenuRoute'));
 router.use('/license', require('./LicenseRoute'));
+router.use('/order', require('./OrderRoute'));
 
 module.exports = router;

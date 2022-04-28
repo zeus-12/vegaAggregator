@@ -19,6 +19,15 @@ router.get('/:id', async function (req, res, next) {
       }
 })
 
+router.post("/", async function (req, res, next) {
+  try {
+    const data = await new KOTController(req).createNewKOT();
+    return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.put('/:id', async function (req, res, next) {
   try {
       const data = await new KOTController(req).updateKOTById();

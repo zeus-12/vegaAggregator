@@ -20,6 +20,15 @@ router.get('/:id',async function(req, res, next) {
     }
 })
 
+router.put("/:id", async function (req, res, next) {
+  try {
+    const data = await new SettingsController(req).updateSettingsById();
+    return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.post('/:id/newentry',async function(req, res, next) {
     try {
       const data = await new SettingsController(req).addNewEntryToSettings();
