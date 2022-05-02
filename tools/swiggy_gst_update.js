@@ -60,7 +60,7 @@ function trigger(round){
 
   var config = {
     method: 'get',
-    url: 'http://127.0.0.1:5984/accelerate_invoices/_design/invoice-filters/_view/filterbypaymentmode?startkey=[%22SWIGGY%22,%20%2201-01-2022%22]&endkey=[%22SWIGGY%22,%20%2202-05-2022%22]&descending=false&include_docs=false&limit='+limit+'&skip='+skip,
+    url: 'http://127.0.0.1:5984/accelerate_invoices/_design/invoice-filters/_view/filterbypaymentmode?startkey=[%22SWIGGY%22,%20%2201-05-2022%22]&endkey=[%22SWIGGY%22,%20%2202-05-2022%22]&descending=false&include_docs=false&limit='+limit+'&skip='+skip,
     headers: { 
       'Accept': '*/*', 
       'Connection': 'keep-alive', 
