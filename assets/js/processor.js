@@ -1059,20 +1059,33 @@ function initialiseProcessing(){
                             var tempExtrasList = selectedBillingMode.extras;
                             var selectedModeExtras = [];
 
-                            var a = 0;
-                            var b = 0;
-                            while(tempExtrasList[a]){
-                                b = 0;
-                                while(billingParametersData[b]){     
-                                    if(tempExtrasList[a].name == billingParametersData[b].name){  
-                                        billingParametersData[a].value = parseFloat(tempExtrasList[b].value);              
-                                        selectedModeExtras.push(billingParametersData[a]);
-                                    }
-                                    
-                                    b++;
+
+                            for(var a = 0; a < tempExtrasList.length; a++) {
+                              var applicableMode = tempExtrasList[a];
+                              for(var b = 0; b < billingParametersData.length; b++){
+                                if(billingParametersData[b].name == applicableMode.name){
+                                  var formattedMode = billingParametersData[b];
+                                  formattedMode.value = parseFloat(applicableMode.value);
+                                  selectedModeExtras.push(formattedMode);
                                 }
-                                a++;
+                              }
                             }
+
+
+                            // var a = 0;
+                            // var b = 0;
+                            // while(tempExtrasList[a]){
+                            //     b = 0;
+                            //     while(billingParametersData[b]){     
+                            //         if(tempExtrasList[a].name == billingParametersData[b].name){  
+                            //             billingParametersData[a].value = parseFloat(tempExtrasList[b].value);              
+                            //             selectedModeExtras.push(billingParametersData[a]);
+                            //         }
+                                    
+                            //         b++;
+                            //     }
+                            //     a++;
+                            // }
 
 
 
