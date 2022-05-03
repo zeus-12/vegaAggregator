@@ -1,23 +1,38 @@
 var axios = require('axios');
 
 
+const myArgs = process.argv.slice(2);
+var BRANCH = myArgs[0];
+var STARTING_BILL = parseInt(myArgs[1]);
+var ENDING_BILL = parseInt(myArgs[2]);
 
-var BATCH_SIZE = 100;
-var MAX_ROUNDS = 50;
 
 
-function processInvoiceNow(invoiceNumbers, index, max, round) {
 
-    if(index > max) {
-      console.log(" ====== Round "+(round + 1)+" Finished ====== ");
-      trigger(round + 1);
-      return;
-    }
 
-    console.log(">> Processing " + invoiceNumbers[index]);
+function processBill(billNumber) {
+
+
+  if(billNumber > ENDING_BILL) {
+    console.log(" === FINISHED === ");
+    return;
+  }
+
+
+  if(!billNumber) {
+    console.log("************** ERROR: Unknown bill number");
+    return;
+  }
+
+
+  var formattedBillNumber = BRANCH + "_INVOICE_" + billNumber;
+
+
+
+    console.log(">> Processing " + formattedBillNumber);
     var config = {
       method: 'get',
-      url: 'http://127.0.0.1:5984/accelerate_invoices/'+invoiceNumbers[index],
+      url: 'http://127.0.0.1:5984/accelerate_invoices/'+formattedBillNumber,
       headers: { 
         'Accept': '*/*', 
         'Connection': 'keep-alive', 
@@ -27,75 +42,139 @@ function processInvoiceNow(invoiceNumbers, index, max, round) {
 
     axios(config)
     .then(function (response) {
-      console.log(JSON.stringify(response.data));
-      processInvoiceNow(invoiceNumbers, index + 1, max, round)
+      var billData = response.data;
+
+      if(billData.orderDetails.mode.toUpperCase() == "SWIGGY") {
+
+          console.log('Bill READ success. SWIGGY BILL.', formattedBillNumber);
+      
+          var modifiedExtras = [];
+          var modifiedExtrasAmount = 0;
+          for(var e = 0; e < billData.extras.length; e++){
+            if(billData.extras[e].name == 'Container Charges') {
+              modifiedExtras.push(billData.extras[e]);
+              modifiedExtrasAmount = billData.extras[e].amount;
+            }
+          }
+
+
+          var grossCartAmount = billData.grossCartAmount;
+          var grandPayableBill = grossCartAmount + modifiedExtrasAmount;
+          grandPayableBill= parseFloat(grandPayableBill).toFixed(2);   
+          grandPayableBillRounded = Math.round(grandPayableBill);   
+          var calculatedRoundOff = Math.round((grandPayableBillRounded - grandPayableBill) * 100) / 100;
+
+
+          billData.extras = modifiedExtras;
+
+          billData.payableAmount = grandPayableBillRounded;
+          billData.totalAmountPaid = grandPayableBillRounded;
+          billData.calculatedRoundOff = calculatedRoundOff;
+
+          var config = {
+            method: 'put',
+            url: 'http://127.0.0.1:5984/accelerate_invoices/'+formattedBillNumber+'/',
+            headers: { 
+              'Origin': 'file://', 
+              'Accept-Encoding': 'gzip, deflate', 
+              'Content-Type': 'application/json', 
+              'Accept': 'application/json, text/javascript, */*; q=0.01'
+            },
+            data : JSON.stringify(billData)
+          };
+
+          axios(config)
+          .then(function (response) {
+            console.log("Successfully updated ====== " + formattedBillNumber);
+            processBill(billNumber + 1)
+          })
+          .catch(function (error) {
+            console.log("************** FAILED TO UPDATE " + formattedBillNumber, error);
+            processBill(billNumber + 1)
+          });
+
+      } else {
+        console.log('Bill READ. not swiggy', formattedBillNumber);
+        processBill(billNumber + 1)
+      }
     })
     .catch(function (error) {
-      console.log("ERROR FINDING INVOICE " + invoiceId, error);
+      console.log("************** ERROR FINDING INVOICE " + formattedBillNumber);
+      processBill(billNumber + 1)
     });
 }
 
 
 
-function processList(invoiceNumbers, round) {
-  console.log("ROUND "+round+" : Processing " + invoiceNumbers.length + " records");
-  processInvoiceNow(invoiceNumbers, 0, invoiceNumbers.length - 1, round);
+
+function updateBillingModes() {
+
+    var data = JSON.stringify({
+      "selector": {
+        "identifierTag": "ACCELERATE_BILLING_MODES"
+      },
+      "fields": [
+        "identifierTag",
+        "value",
+        "_rev"
+      ]
+    });
+
+    var config = {
+      method: 'post',
+      url: 'http://127.0.0.1:5984//accelerate_settings/_find',
+      headers: { 
+        'Origin': 'file://', 
+        'Accept-Encoding': 'gzip, deflate', 
+        'Content-Type': 'application/json', 
+        'Accept': 'application/json, text/javascript, */*; q=0.01'
+      },
+      data : data
+    };
+
+    axios(config)
+    .then(function (response) {
+      var newData = response.data.docs[0];
+      var billModes = newData.value;
+      for(var i = 0; i < billModes.length; i++){
+        if(billModes[i].name.toUpperCase() == "SWIGGY") {
+          billModes[i].extras = [{"name":"Container Charges","value":"5.00"}];
+          break;
+        }
+      }
+
+      newData.value = billModes;
+
+      var config = {
+        method: 'put',
+        url: 'http://127.0.0.1:5984/accelerate_settings/ACCELERATE_BILLING_MODES/',
+        headers: { 
+          'Origin': 'file://', 
+          'Accept-Encoding': 'gzip, deflate', 
+          'Content-Type': 'application/json', 
+          'Accept': 'application/json, text/javascript, */*; q=0.01',
+        },
+        data : JSON.stringify(newData)
+      };
+
+      axios(config)
+      .then(function (response) {
+        console.log("Swiggy GST set to 0%. Container Charges to 5%");
+        console.log("........ Starting to process previous bills.");
+        processBill(STARTING_BILL);
+      })
+      .catch(function (error) {
+        console.log("************** Error: failed to UPDATE Swiggy mode", error);
+      });
+    })
+    .catch(function (error) {
+      console.log("************** Error: failed to READ Swiggy mode", error);
+    });
 }
 
 
+updateBillingModes();
 
 
-function trigger(round){
-
-  if(round == MAX_ROUNDS) {
-    console.log("--- MAX_ROUNDS reached ---");
-    return;
-  }
-
-
-
-  console.log(" ====== Round "+(round + 1)+" Starting ====== ");
-  var skip = round * BATCH_SIZE;
-  var limit = BATCH_SIZE;
-
-  var config = {
-    method: 'get',
-    url: 'http://127.0.0.1:5984/accelerate_invoices/_design/invoice-filters/_view/filterbypaymentmode?startkey=[%22SWIGGY%22,%20%2201-05-2022%22]&endkey=[%22SWIGGY%22,%20%2202-05-2022%22]&descending=false&include_docs=false&limit='+limit+'&skip='+skip,
-    headers: { 
-      'Accept': '*/*', 
-      'Connection': 'keep-alive', 
-      'Accept-Encoding': 'gzip, deflate'
-    }
-  };
-
-
-  var invoiceList = [];
-  axios(config)
-  .then(function (response) {
-    var list = response.data.rows;
-    if(list.length < 1) {
-      console.log(" ====== Round "+(round + 1)+" Finished ====== ");
-      console.log("********** PROCESSING COMPLETED **********");
-      return;
-    }
-
-
-    for(var i = 0; i < list.length; i++) {
-      if(list[i].value.orderDetails.mode == "Swiggy")
-        invoiceList.push(list[i].id)
-      else
-        console.log("mode mismatch :: " + list[i].value.orderDetails.mode)
-    }
-
-    if(invoiceList.length > 0)
-      processList(invoiceList, round);
-  })
-  .catch(function (error) {
-    console.log(error);
-  });
-}
-
-
-trigger(0);
 
 
