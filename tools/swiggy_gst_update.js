@@ -47,21 +47,18 @@ function processBill(billNumber) {
       if(billData.orderDetails.mode.toUpperCase() == "SWIGGY") {
 
           console.log('Bill READ success. SWIGGY BILL.', formattedBillNumber);
-
-          var grossCartAmount = billData.grossCartAmount;
       
           var modifiedExtras = [];
-          var modifiedExtrasAmount = billData.grossCartAmount * .05;
-          modifiedExtrasAmount = Math.round(modifiedExtrasAmount * 100) / 100; 
+          var modifiedExtrasAmount = 0;
+          for(var e = 0; e < billData.extras.length; e++){
+            if(billData.extras[e].name == 'Container Charges') {
+              modifiedExtras.push(billData.extras[e]);
+              modifiedExtrasAmount = billData.extras[e].amount;
+            }
+          }
 
-          modifiedExtras.push({
-            "name": "Parcel Charges",
-            "value": 5,
-            "unit": "PERCENTAGE",
-            "amount": modifiedExtrasAmount,
-            "isPackagedExcluded": false
-          });
 
+          var grossCartAmount = billData.grossCartAmount;
           var grandPayableBill = grossCartAmount + modifiedExtrasAmount;
           grandPayableBill= parseFloat(grandPayableBill).toFixed(2);   
           grandPayableBillRounded = Math.round(grandPayableBill);   
@@ -141,7 +138,7 @@ function updateBillingModes() {
       var billModes = newData.value;
       for(var i = 0; i < billModes.length; i++){
         if(billModes[i].name.toUpperCase() == "SWIGGY") {
-          billModes[i].extras = [{"name":"Parcel Charges","value":"5.00"}];
+          billModes[i].extras = [{"name":"Container Charges","value":"5.00"}];
           break;
         }
       }
