@@ -53,14 +53,15 @@ function processBill(billNumber) {
           var modifiedExtras = [];
           var modifiedExtrasAmount = billData.grossCartAmount * .05;
           modifiedExtrasAmount = Math.round(modifiedExtrasAmount * 100) / 100; 
-          for(var e = 0; e < billData.extras.length; e++){
-            if(billData.extras[e].name == 'Parcel Charges') {
-              billData.extras[e].amount = modifiedExtrasAmount;
-              modifiedExtras.push(billData.extras[e]);
-              
-            }
-          }
-          
+
+          modifiedExtras.push({
+            "name": "Parcel Charges",
+            "value": 5,
+            "unit": "PERCENTAGE",
+            "amount": modifiedExtrasAmount,
+            "isPackagedExcluded": false
+          });
+
           var grandPayableBill = grossCartAmount + modifiedExtrasAmount;
           grandPayableBill= parseFloat(grandPayableBill).toFixed(2);   
           grandPayableBillRounded = Math.round(grandPayableBill);   
