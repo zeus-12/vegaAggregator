@@ -897,6 +897,49 @@ class SettingsService extends BaseService {
       }
     }
   }
+  async generateNextIndex(settings_id) {
+    const settingsData = await this.getSettingsById(settings_id).catch(
+      (error) => {
+        throw error;
+      }
+    );
+
+    if (_.isEmpty(settingsData)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_record_found_for_the_billing_index
+      );
+    }
+    var value = settingsData.value;
+    var memory_revID = settingsData._rev;
+    //check bill and kot
+    if (settings_id === "ACCELERATE_BILL_INDEX") {
+      settingsData.value += 1;
+
+      await this.SettingsModel.updateNewSettingsData("ACCELERATE_BILL_INDEX", {
+        ...settingsData,
+        _rev: memory_revID,
+      }).catch((error) => {
+        throw error;
+      });
+      return settingsData.value;
+    } else if (settings_id === "ACCELERATE_KOT_INDEX") {
+      settingsData.value += 1;
+
+      await this.SettingsModel.updateNewSettingsData("ACCELERATE_KOT_INDEX", {
+        ...settingsData,
+        _rev: memory_revID,
+      }).catch((error) => {
+        throw error;
+      });
+      return settingsData.value;
+    } else {
+      throw new ErrorResponse(
+        ResponseType.ERROR,
+        ErrorType.server_cannot_handle_request
+      );
+    }
+  }
 }
 
 module.exports = SettingsService;
