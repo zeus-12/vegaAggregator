@@ -1,9 +1,9 @@
-'use strict';
+"use strict";
 let BaseModel = ACCELERONCORE._models.BaseModel;
 
-function format(filter, filterMethod) {
+function frameFilterQuery(filter, filterMethod) {
   return (
-    '/accelerate_cancelled_orders/_design/order-filters/_view/filterby' +
+    "/accelerate_cancelled_orders/_design/order-filters/_view/filterby" +
     filterMethod +
     '?startkey=["' +
     filter.searchkey +
@@ -15,7 +15,7 @@ function format(filter, filterMethod) {
     filter.enddate +
     '"]&descending=false&include_docs=true&limit=' +
     filter.limit +
-    '&skip=' +
+    "&skip=" +
     filter.skip
   );
 }
@@ -27,34 +27,34 @@ class CancelledOrderModel extends BaseModel {
   }
 
   async getCancelledOrderByMobile(filter) {
-    const formatLink = format(filter, 'mobile');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, "mobile");
+    return await this.couch.get(filterQueryString);
   }
 
   async getCancelledOrderBySteward(filter) {
-    const formatLink = format(filter, 'stewardname');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, "stewardname");
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledOrderByMachine(filter) {
-    const formatLink = format(filter, 'machine');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, "machine");
+    return await this.couch.get(filterQueryString);
   }
 
   async getCancelledOrderBySession(filter) {
-    const formatLink = format(filter, 'session');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, "session");
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledOrderByTable(filter) {
-    const formatLink = format(filter, 'table');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, "table");
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledOrderByBillingMode(filter) {
-    const formatLink = format(filter, 'billingmode');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, "billingmode");
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledOrderByPayment(filter) {
-    const formatLink = format(filter, 'paymentmode');
-    return await this.couch.get(formatLink);
+    const filterQueryString = frameFilterQuery(filter, "paymentmode");
+    return await this.couch.get(filterQueryString);
   }
   async getCancelledOrderByAll(filter) {
     return await this.couch.get(
@@ -64,16 +64,16 @@ class CancelledOrderModel extends BaseModel {
         filter.enddate +
         '"]&descending=false&include_docs=true&limit=' +
         filter.limit +
-        '&skip=' +
-        filter.skip,
+        "&skip=" +
+        filter.skip
     );
   }
   async getCancelledOrderByDefault(filter) {
     return await this.couch.get(
-      '/accelerate_cancelled_orders/_design/orders/_view/all?descending=true&include_docs=true&limit=' +
+      "/accelerate_cancelled_orders/_design/orders/_view/all?descending=true&include_docs=true&limit=" +
         filter.limit +
-        '&skip=' +
-        filter.skip,
+        "&skip=" +
+        filter.skip
     );
   }
 }
