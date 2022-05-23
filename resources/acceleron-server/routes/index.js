@@ -31,5 +31,7 @@ router.use('/license', require('./LicenseRoute'));
 router.use('/pending-bill', require('./PendingBillRoute'));
 router.use('/settled-bill', require('./SettledBillRoute'));
 router.use('/billing', require('./BillingModuleRoute'));
+router.use('/cancelled-order', require('./CancelledOrderRoute'));
+router.use('/cancelled-invoice', require('./CancelledInvoiceRoute'));
 
 module.exports = router;

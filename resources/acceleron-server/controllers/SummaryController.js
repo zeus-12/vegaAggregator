@@ -51,7 +51,7 @@ class SummaryController extends BaseController {
       "itemcancellations",
       "quicksummary",
       "salesreport",
-      "accountancyreport"
+      "accountancyreport",
     ];
 
     initialValidator(ALLOWED_TYPES, summary_type, from_date, to_date);
@@ -59,9 +59,8 @@ class SummaryController extends BaseController {
     switch (summary_type) {
       case "sales": {
         var sales_filter = self.request.query.salesfilter;
-        var detailed_by = self.request.query.detailedby;
 
-        if (_.isEmpty(sales_filter) || _.isEmpty(detailed_by)) {
+        if (_.isEmpty(sales_filter)) {
           throw new ErrorResponse(
             ResponseType.BAD_REQUEST,
             ErrorType.missing_required_parameters
@@ -81,6 +80,14 @@ class SummaryController extends BaseController {
         // Different ways in which sales summary can be fetched
         switch (sales_filter) {
           case "BILLING_MODE": {
+            var detailed_by = self.request.query.detailedby;
+
+            if (_.isEmpty(detailed_by)) {
+              throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                ErrorType.missing_required_parameters
+              );
+            }
             if (detailed_by == "false") {
               var curr_date = moment().format("YYYYMMDD");
               try {
@@ -129,6 +136,14 @@ class SummaryController extends BaseController {
           }
 
           case "PAYMENT_MODE": {
+            var detailed_by = self.request.query.detailedby;
+
+            if (_.isEmpty(detailed_by)) {
+              throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                ErrorType.missing_required_parameters
+              );
+            }
             if (detailed_by == "false") {
               try {
                 const data =
@@ -188,20 +203,47 @@ class SummaryController extends BaseController {
           }
 
           case "ITEMS": {
-            try {
-              const data =
-                await self.SummaryService.fetchSummaryBySalesfilteredByItems(
-                  from_date,
-                  to_date
-                );
-              return data;
-            } catch (error) {
-              throw error;
+            var detailed = self.request.query.detailed;
+
+            if (_.isEmpty(detailed)) {
+              throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                ErrorType.missing_required_parameters
+              );
+            }
+
+            if (detailed == "false") {
+              try {
+                const data =
+                  await self.SummaryService.fetchSummaryBySalesfilteredByItems(
+                    from_date,
+                    to_date
+                  );
+                return data;
+              } catch (error) {
+                throw error;
+              }
+            } else if (detailed == "true") {
+              try {
+                const data =
+                  await self.SummaryService.fetchSummaryBySalesfilteredByItemsDetailed(
+                    from_date,
+                    to_date
+                  );
+                return data;
+              } catch (error) {
+                throw error;
+              }
+            } else {
+              throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                "datailed_by should be either 'true' or 'false' "
+              );
             }
           }
 
           case "HOUR": {
-            var filter_type = self.request.query.filterType;
+            var filter_type = self.request.query.filtertype;
             var ALLOWED_FILTER_TYPES = [];
             try {
               const data = await self.SummaryService.getAllBillingModes();
@@ -279,16 +321,16 @@ class SummaryController extends BaseController {
       }
 
       case "itemcancellations": {
-        var detailed_by = self.request.query.detailedby;
+        var detailed = self.request.query.detailed;
 
-        if (_.isEmpty(detailed_by)) {
+        if (_.isEmpty(detailed)) {
           throw new ErrorResponse(
             ResponseType.BAD_REQUEST,
             ErrorType.missing_required_parameters
           );
         }
 
-        if (detailed_by == "false") {
+        if (detailed == "false") {
           try {
             const data =
               await self.SummaryService.fetchSummaryByItemCancellations(
@@ -299,7 +341,7 @@ class SummaryController extends BaseController {
           } catch (error) {
             throw error;
           }
-        } else if (detailed_by == "true") {
+        } else if (detailed == "true") {
           try {
             const data =
               await self.SummaryService.fetchSummaryByItemCancellationsDetailed(
@@ -331,7 +373,7 @@ class SummaryController extends BaseController {
       }
 
       case "salesreport": {
-        var is_super_admin_logged_in = self.request.query.isSuperAdminLoggedIn;
+        var is_super_admin_logged_in = self.request.query.issuperadminloggedin;
         var curr_date = moment().format("YYYYMMDD");
         if (_.isEmpty(is_super_admin_logged_in)) {
           throw new ErrorResponse(
@@ -353,7 +395,7 @@ class SummaryController extends BaseController {
       }
 
       case "accountancyreport": {
-        var report_type = self.request.query.reportType;
+        var report_type = self.request.query.reporttype;
 
         if (_.isEmpty(report_type)) {
           throw new ErrorResponse(
