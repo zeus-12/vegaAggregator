@@ -146,12 +146,7 @@ class SummaryService extends BaseService {
     curr_date
   ) {
     let self = this;
-    let responseList = [
-      {
-        type: `Sales_By_Billing_Mode`,
-        summary: [],
-      },
-    ];
+    let responseList = {};
     let i = 0;
     let data = {};
     var filter_parameters = [];
@@ -162,7 +157,10 @@ class SummaryService extends BaseService {
     } catch (error) {
       throw error;
     }
-
+    responseList["SALES_BY_BILLING_MODE"] = {};
+    responseList["SALES_BY_BILLING_MODE"]["grandSum"] = 0;
+    responseList["SALES_BY_BILLING_MODE"]["grandCount"] = 0;
+    responseList["SALES_BY_BILLING_MODE"]["summary"] = [];
     while (i < filter_parameters.length) {
       data = await self.SummaryModel.getSalesByBillingMode(
         filter_parameters[i].name,
@@ -174,22 +172,26 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_record_found_for_a_billing_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList[0].summary.push({
+        responseList["SALES_BY_BILLING_MODE"]["summary"].push({
           mode: filter_parameters[i].type,
           name: filter_parameters[i].name,
           sum: 0,
           count: 0,
         });
       } else {
-        responseList[0].summary.push({
+        responseList["SALES_BY_BILLING_MODE"]["summary"].push({
           mode: filter_parameters[i].type,
           name: filter_parameters[i].name,
           sum: data.rows[0].value.sum,
           count: data.rows[0].value.count,
         });
+        responseList["SALES_BY_BILLING_MODE"]["grandSum"] +=
+          data.rows[0].value.sum;
+        responseList["SALES_BY_BILLING_MODE"]["grandCount"] +=
+          data.rows[0].value.count;
       }
 
       //Check for any refunds in this mode.
@@ -204,18 +206,15 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_refund_record_found_for_a_billing_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList[0].summary[i] = {
-          ...responseList[0].summary[i],
-          refunds: 0,
-        };
+        responseList["SALES_BY_BILLING_MODE"]["summary"][i]["refunds"] = 0;
       } else {
-        responseList[0].summary[i] = {
-          ...responseList[0].summary[i],
-          refunds: data.rows[0].value.sum,
-        };
+        responseList["SALES_BY_BILLING_MODE"]["summary"][i]["refunds"] =
+          data.rows[0].value.sum;
+        responseList["SALES_BY_BILLING_MODE"]["grandSum"] -=
+          data.rows[0].value.sum;
       }
       i++;
     }
@@ -229,20 +228,18 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_record_found_for_live_orders
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList.push({
-          type: "Live_Orders",
+        responseList["LIVE_ORDERS"] = {
           sum: 0,
           count: 0,
-        });
+        };
       } else {
-        responseList.push({
-          type: "Live_Orders",
+        responseList["LIVE_ORDERS"] = {
           sum: data.rows[0].value.sum,
           count: data.rows[0].value.count,
-        });
+        };
       }
 
       //Check for any extras
@@ -253,18 +250,19 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_extras_record_found_for_live_orders
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList[1] = { ...responseList[1], extras: 0 };
+        responseList["LIVE_ORDERS"]["extras"] = 0;
       } else {
-        responseList[1] = {
-          ...responseList[1],
-          extras: data.rows[0].value.sum,
-        };
+        responseList["LIVE_ORDERS"]["extras"] = data.rows[0].value.sum;
       }
 
       //check for unsettled bills
+
+      //dates expected as DD-MM-YYYY
+      from_date = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
+      to_date = moment(to_date, "YYYYMMDD").format("DD-MM-YYYY");
 
       data = await self.SummaryModel.getUnbilledBills(from_date, to_date).catch(
         (error) => {
@@ -274,20 +272,18 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_record_found_for_unsettled_bills
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList.push({
-          type: "Pending_Settlement",
+        responseList["PENDING_SETTLEMENT"] = {
           sum: 0,
           count: 0,
-        });
+        };
       } else {
-        responseList.push({
-          type: "Pending_Settlement",
+        responseList["PENDING_SETTLEMENT"] = {
           sum: data.rows[0].value.sum,
           count: data.rows[0].value.count,
-        });
+        };
       }
       return responseList;
     } else {
@@ -304,7 +300,9 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: `datailed_sales_of_${detailed_by}`,
+        type: `DETAILED_SALES_OF_${detailed_by
+          .toUpperCase()
+          .replace(/ /g, "_")}`,
         summary: [],
       },
     ];
@@ -332,7 +330,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_record_found_for_a_billing_parameter
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary.push({
@@ -364,7 +362,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_split_payments_record_found_for_a_billing_parameter
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary[i] = {
@@ -384,12 +382,99 @@ class SummaryService extends BaseService {
     return responseList;
   }
 
+  //For a given EXTRAS and BILLING MODE, the total Sales in the given DATE RANGE
+  async fetchSummaryBySalesfilteredByBillingModeDetailedByExtras(
+    detailed_by,
+    from_date,
+    to_date
+  ) {
+    let self = this;
+    let responseList = [
+      {
+        type: `DETAILED_SALES_OF_${detailed_by
+          .toUpperCase()
+          .replace(/ /g, "_")}`,
+        summary: [],
+      },
+    ];
+    let i = 0;
+    let data = {};
+    var filter_parameters = [];
+
+    try {
+      data = await self.getAllBillingParameters();
+      filter_parameters = data.value;
+    } catch (error) {
+      throw error;
+    }
+
+    while (i < filter_parameters.length) {
+      data = await self.SummaryModel.getSalesByBillingModeAndExtras(
+        detailed_by,
+        filter_parameters[i].name,
+        from_date,
+        to_date
+      ).catch((error) => {
+        throw error;
+      });
+      if (_.isEmpty(data)) {
+        throw new ErrorResponse(
+          ResponseType.NO_RECORD_FOUND,
+          ErrorType.no_extras_record_found_for_a_billing_mode
+        );
+      } else if (_.isEmpty(data.rows[0])) {
+        responseList[0].summary.push({
+          name: filter_parameters[i].name,
+          sum: 0,
+          count: 0,
+        });
+      } else {
+        responseList[0].summary.push({
+          name: filter_parameters[i].name,
+          sum: data.rows[0].value.sum,
+          count: data.rows[0].value.count,
+        });
+      }
+
+      //Now check in custom Extras
+
+      data = await self.SummaryModel.getCustomExtrasByBillingModeAndExtras(
+        detailed_by,
+        filter_parameters[i].name,
+        from_date,
+        to_date
+      ).catch((error) => {
+        throw error;
+      });
+      if (_.isEmpty(data)) {
+        throw new ErrorResponse(
+          ResponseType.NO_RECORD_FOUND,
+          ErrorType.no_custom_extras_record_found_for_a_billing_mode
+        );
+      } else if (_.isEmpty(data.rows[0])) {
+        responseList[0].summary[i] = {
+          ...responseList[0].summary[i],
+          customExtrasSum: 0,
+          customExtrasCount: 0,
+        };
+      } else {
+        responseList[0].summary[i] = {
+          ...responseList[0].summary[i],
+          customExtrasSum: data.rows[0].value.sum,
+          customExtrasCount: data.rows[0].value.count,
+        };
+      }
+      i++;
+    }
+    return responseList;
+  }
+
   //For a given PAYMENT MODE, the total Sales in the given DATE RANGE
   async fetchSummaryBySalesfilteredByPaymentMode(from_date, to_date) {
     let self = this;
     let responseList = [
       {
-        type: `Sales_By_Payment_Mode`,
+        type: "SALES_BY_PAYMENT_MODE",
         summary: [],
       },
     ];
@@ -416,7 +501,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_record_found_for_a_payment_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary.push({
@@ -446,7 +531,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_split_payments_record_found_for_a_payment_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary[i] = {
@@ -474,7 +559,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_refunds_record_found_for_a_payment_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary[i] = {
@@ -501,7 +586,9 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: `datailed_sales_of_${detailed_by}`,
+        type: `DETAILED_SALES_OF_${detailed_by
+          .toUpperCase()
+          .replace(/ /g, "_")}`,
         summary: [],
       },
     ];
@@ -528,7 +615,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_extras_record_found_for_a_payment_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary.push({
@@ -557,7 +644,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_custom_extras_record_found_for_a_payment_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary[i] = {
@@ -586,7 +673,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_splt_payments_record_found_for_a_payment_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary[i] = {
@@ -614,7 +701,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_split_payments_with_custom_extras_record_found_for_a_payment_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary[i] = {
@@ -637,29 +724,88 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: `Sales_By_Sesssions`,
+        type: `SALES_BY_SESSIONS`,
         summary: [],
       },
     ];
     let i = 0;
     let data = {};
-    var filter_parameters = [];
-
-    try {
-      data = await self.getAllDiningSessions();
-      filter_parameters = data.value;
-    } catch (error) {
-      throw error;
-    }
-
-    let j = 0;
-    var tempSum;
-    var tempCount;
-    var tempGuests;
-
-    filter_parameters.push({ name: "Unknown" });
 
     data = await self.SummaryModel.getSalesBySessions(from_date, to_date).catch(
+      (error) => {
+        throw error;
+      }
+    );
+
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_record_found_for_sales_by_sessions
+      );
+    } else if (_.isEmpty(data.rows[0])) {
+      return responseList;
+    } else {
+      var reduced_list = data.rows.reduce(function (accumulator, item) {
+        if (accumulator[item.key[1]]) {
+          accumulator[item.key[1]].amount += item.value; //total amount
+          accumulator[item.key[1]].number_of_guests += item.key[2]; //number of guests
+          accumulator[item.key[1]].count++; //number of orders
+        } else {
+          accumulator[item.key[1]] = {
+            session: item.key[1],
+            amount: item.value,
+            count: 1,
+            number_of_guests: item.key[2],
+          };
+        }
+
+        return accumulator;
+      }, {});
+
+      var formattedList = [];
+      var keysCount = Object.keys(reduced_list);
+
+      var counter = 1;
+      for (var x in reduced_list) {
+        formattedList.push({
+          number_of_guests: reduced_list[x].number_of_guests,
+          count: reduced_list[x].count,
+          amount: reduced_list[x].amount,
+          session: reduced_list[x].session,
+        });
+
+        if (counter == keysCount.length) {
+          //last iteration
+          // Ascending: Sorting
+          formattedList.sort(function (obj1, obj2) {
+            return obj2.count - obj1.count;
+          });
+
+          responseList[0].summary = formattedList;
+
+          return responseList;
+        }
+
+        counter++;
+      }
+    }
+  }
+
+  //For a given ITEM, the total Sales in the given DATE RANGE
+  async fetchSummaryBySalesfilteredByItems(from_date, to_date) {
+    let self = this;
+    let responseList = [
+      {
+        type: "SALES_BY_ITEMS",
+        summary: [],
+      },
+    ];
+    let i = 0;
+    let j = 0;
+    var itemPos = null;
+    let data = {};
+
+    data = await self.SummaryModel.getSalesByItems(from_date, to_date).catch(
       (error) => {
         throw error;
       }
@@ -671,49 +817,60 @@ class SummaryService extends BaseService {
         ErrorType.no_matching_results
       );
     } else {
-      while (i < filter_parameters.length) {
-        tempSum = 0;
-        tempCount = 0;
-        tempGuests = 0;
-        j = 0;
-
-        while (j < data.rows.length) {
-          if (filter_parameters[i].name == data.rows[j].key[1]) {
-            tempSum = tempSum + data.rows[j].value;
-            tempCount = tempCount + 1;
-            tempGuests = tempGuests + data.rows[j].key[2];
+      while (i < data.rows.length) {
+        if (_.isEmpty(data.rows[i])) {
+          responseList[0].summary.push({
+            category: "Missing",
+            name: "Missing",
+            sum: 0,
+            count: 0,
+          });
+        } else {
+          itemPos = null;
+          for (j = 0; j < responseList[0].summary.length; j++) {
+            if (
+              responseList[0].summary[j].category == data.rows[i].key[1] &&
+              responseList[0].summary[j].name == data.rows[i].key[2]
+            ) {
+              itemPos = j;
+            }
           }
-          j++;
+          if (itemPos != null) {
+            responseList[0].summary[itemPos].sum =
+              parseFloat(responseList[0].summary[itemPos].sum) +
+              parseFloat(data.rows[i].key[4]);
+            responseList[0].summary[itemPos].count += data.rows[i].value;
+          } else {
+            responseList[0].summary.push({
+              category: data.rows[i].key[1],
+              name: data.rows[i].key[2],
+              sum: data.rows[i].key[4],
+              count: data.rows[i].value,
+            });
+          }
         }
-        responseList[0].summary.push({
-          session: filter_parameters[i].name,
-          sum: tempSum,
-          count: tempCount,
-          guests: tempGuests,
-        });
         i++;
       }
+
+      // Ascending: Sorting
+      responseList[0].summary.sort(function (obj1, obj2) {
+        return obj2.count - obj1.count;
+      });
     }
     return responseList;
   }
 
-  //For a given ITEM, the total Sales in the given DATE RANGE
-  async fetchSummaryBySalesfilteredByItems(from_date, to_date) {
+  //For a given ITEM, the total Sales in the given DATE RANGE detailed
+  async fetchSummaryBySalesfilteredByItemsDetailed(from_date, to_date) {
     let self = this;
     let responseList = [
       {
-        type: `Sales_By_Items`,
+        type: `SALES_BY_ITEMS_DETAILED`,
         summary: [],
       },
     ];
-    let i = 0;
-    let j = 0;
-    let k = 0;
-    let l = 0;
+
     let data = {};
-    var isCategoryFound = false;
-    var isItemFound = false;
-    var isCustomOptionFound = false;
 
     data = await self.SummaryModel.getSalesByItems(from_date, to_date).catch(
       (error) => {
@@ -721,114 +878,101 @@ class SummaryService extends BaseService {
       }
     );
 
-    while (i < data.rows.length) {
-      j = 0;
-      isCategoryFound = false;
-      do {
-        if (
-          responseList[0].summary[j] &&
-          responseList[0].summary[j].category == data.rows[i].key[1]
-        ) {
-          isCategoryFound = true;
-          k = 0;
-          isItemFound = false;
-          do {
-            if (
-              responseList[0].summary[j].items[k].name == data.rows[i].key[2]
-            ) {
-              isItemFound = true;
-              if (!data.rows[i].key[3]) {
-                responseList[0].summary[j].items[k].sum +=
-                  data.rows[i].key[4] * data.rows[i].value;
-                responseList[0].summary[j].items[k].count += data.rows[i].value;
-                break;
-              } else {
-                l = 0;
-                isCustomOptionFound = false;
-                do {
-                  if (
-                    responseList[0].summary[j].items[k].customOptions[l] &&
-                    responseList[0].summary[j].items[k].customOptions[l].name ==
-                      data.rows[i].key[3]
-                  ) {
-                    isCustomOptionFound = true;
-                    responseList[0].summary[j].items[k].customOptions[l].sum +=
-                      data.rows[i].key[4] * data.rows[i].value;
-                    responseList[0].summary[j].items[k].customOptions[
-                      l
-                    ].count += data.rows[i].value;
-                    break;
-                  }
-                  l++;
-                } while (
-                  l < responseList[0].summary[j].items[k].customOptions.length
-                );
-                if (!isCustomOptionFound) {
-                  responseList[0].summary[j].items[k].customOptions.push({
-                    name: data.rows[i].key[3],
-                    sum: data.rows[i].key[4] * data.rows[i].value,
-                    count: data.rows[i].value,
-                  });
-                }
-              }
-            }
-            k++;
-          } while (k < responseList[0].summary[j].items.length);
-          if (!isItemFound) {
-            if (!data.rows[i].key[3]) {
-              responseList[0].summary[j].items.push({
-                name: data.rows[i].key[2],
-                sum: data.rows[i].key[4] * data.rows[i].value,
-                count: data.rows[i].value,
-              });
-            } else {
-              responseList[0].summary[j].items.push({
-                name: data.rows[i].key[2],
-                customOptions: [
-                  {
-                    name: data.rows[i].key[3],
-                    sum: data.rows[i].key[4] * data.rows[i].value,
-                    count: data.rows[i].value,
-                  },
-                ],
-              });
-            }
-          }
-        }
-        j++;
-      } while (j < responseList[0].summary.length);
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_matching_results
+      );
+    }
 
-      if (!isCategoryFound) {
-        if (!data.rows[i].key[3]) {
-          responseList[0].summary.push({
-            category: data.rows[i].key[1],
-            items: [
-              {
-                name: data.rows[i].key[2],
-                sum: data.rows[i].key[4] * data.rows[i].value,
-                count: data.rows[i].value,
-              },
-            ],
-          });
-        } else {
-          responseList[0].summary.push({
-            category: data.rows[i].key[1],
-            items: [
-              {
-                name: data.rows[i].key[2],
-                customOptions: [
-                  {
-                    name: data.rows[i].key[3],
-                    sum: data.rows[i].key[4] * data.rows[i].value,
-                    count: data.rows[i].value,
-                  },
-                ],
-              },
-            ],
-          });
-        }
+    var reduced_list = data.rows.reduce(function (accumulator, item) {
+      var accumulator_item_name =
+        item.key[3] && item.key[3] != ""
+          ? item.key[2] + " (" + item.key[3] + ")"
+          : item.key[2];
+
+      if (accumulator[accumulator_item_name]) {
+        accumulator[accumulator_item_name].count += item.value;
+      } else {
+        accumulator[accumulator_item_name] = {
+          category: item.key[1],
+          count: item.value,
+          price: item.key[4],
+        };
       }
-      i++;
+
+      return accumulator;
+    }, {});
+
+    var formattedList = [];
+    var keysCount = Object.keys(reduced_list);
+
+    var counter = 1;
+    var x;
+    for (x in reduced_list) {
+      formattedList.push({
+        name: x,
+        count: reduced_list[x].count,
+        saleAmount: reduced_list[x].count * reduced_list[x].price,
+        category: reduced_list[x].category,
+      });
+
+      if (counter == keysCount.length) {
+        break;
+      }
+
+      counter++;
+    }
+
+    // Ascending: Sorting
+    formattedList.sort(function (obj1, obj2) {
+      return obj2.count - obj1.count;
+    });
+
+    var categorySortedList = formattedList.reduce(function (accumulator, item) {
+      if (accumulator[item.category]) {
+        accumulator[item.category].push({
+          name: item.name,
+          count: item.count,
+          saleAmount: item.saleAmount,
+        });
+      } else {
+        accumulator[item.category] = [];
+        accumulator[item.category].push({
+          name: item.name,
+          count: item.count,
+          saleAmount: item.saleAmount,
+        });
+      }
+
+      return accumulator;
+    }, {});
+
+    var categoryCount = Object.keys(categorySortedList);
+
+    counter = 1;
+    for (x in categorySortedList) {
+      var n = 0;
+      var sub_list = [];
+      while (categorySortedList[x][n]) {
+        sub_list.push({
+          name: categorySortedList[x][n].name,
+          count: categorySortedList[x][n].count,
+          saleAmount: categorySortedList[x][n].saleAmount,
+        });
+        n++;
+      }
+
+      responseList[0].summary.push({
+        category: x,
+        items: sub_list,
+      });
+
+      if (counter == categoryCount.length) {
+        break;
+      }
+
+      counter++;
     }
 
     return responseList;
@@ -839,7 +983,7 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: `${filter_type}_Sales_By_Hour`,
+        type: `${filter_type.toUpperCase().replace(/ /g, "_")}_SALES_BY_HOUR`,
         summary: [],
       },
     ];
@@ -856,54 +1000,75 @@ class SummaryService extends BaseService {
       throw error;
     });
 
-    while (i < data.rows.length) {
-      j = 0;
-      isFound = false;
-      do {
-        if (
-          responseList[0].summary[j] &&
-          responseList[0].summary[j].hour == data.rows[i].key[2]
-        ) {
-          responseList[0].summary[j].count++;
-          responseList[0].summary[j].noOfGuests += data.rows[i].value;
-          isFound = true;
-          break;
-        }
-        j++;
-      } while (j < responseList[0].summary.length);
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_record_found_for_hourly_sales
+      );
+    } else {
+      while (i < data.rows.length) {
+        j = 0;
+        isFound = false;
+        do {
+          if (
+            responseList[0].summary[j] &&
+            responseList[0].summary[j].hour_slot == data.rows[i].key[2]
+          ) {
+            responseList[0].summary[j].count++;
+            responseList[0].summary[j].number_of_guests += data.rows[i].value;
+            isFound = true;
+            break;
+          }
+          j++;
+        } while (j < responseList[0].summary.length);
 
-      if (!isFound) {
-        responseList[0].summary.push({
-          hour: data.rows[i].key[2],
-          count: 1,
-          noOfGuests: data.rows[i].value,
-        });
-      }
-      i++;
-    }
-
-    for (i = 0; i < 24; i++) {
-      j = 0;
-      while (responseList[0].summary[j]) {
-        if (responseList[0].summary[j].hour == i) {
-          break;
-        }
-
-        if (j == responseList[0].summary.length - 1) {
+        if (!isFound) {
           responseList[0].summary.push({
-            hour: i,
-            count: 0,
-            noOfGuests: 0,
+            hour_slot: data.rows[i].key[2],
+            count: 1,
+            number_of_guests: data.rows[i].value,
           });
         }
+        i++;
+      }
+      for (i = 0; i < 24; i++) {
+        j = 0;
+        while (responseList[0].summary[j]) {
+          if (responseList[0].summary[j].hour_slot == i) {
+            break;
+          }
 
-        j++;
+          if (j == responseList[0].summary.length - 1) {
+            responseList[0].summary.push({
+              hour_slot: i,
+              count: 0,
+              number_of_guests: 0,
+            });
+          }
+
+          j++;
+        }
+      }
+
+      responseList[0].summary.sort(function (obj1, obj2) {
+        return obj1.hour_slot - obj2.hour_slot;
+      });
+
+      //Remove 12:00 Midnight to 11:00 Midnight (if all zeros in between)
+      var midnightEmptyCheck = true;
+      var m = 0;
+      while (responseList[0].summary[m] && m <= 11) {
+        if (responseList[0].summary[m].count != 0) {
+          midnightEmptyCheck = false;
+          break;
+        }
+        m++;
+      }
+
+      if (midnightEmptyCheck) {
+        responseList[0].summary = responseList[0].summary.splice(11, 23);
       }
     }
-
-    responseList[0].summary.sort(function (obj1, obj2) {
-      return obj1.hour - obj2.hour;
-    });
     return responseList;
   }
 
@@ -912,7 +1077,7 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: "Discounts",
+        type: "DISCOUNTS",
         summary: [],
       },
     ];
@@ -964,20 +1129,37 @@ class SummaryService extends BaseService {
         throw error;
       });
 
+      //beautify name
+      if (filter_parameters[i].name == "COUPON") {
+        filter_parameters[i].name = "Coupons";
+      }
+      if (filter_parameters[i].name == "VOUCHER") {
+        filter_parameters[i].name = "Vouchers";
+      }
+      if (filter_parameters[i].name == "REWARDS") {
+        filter_parameters[i].name = "Reward Points";
+      }
+      if (filter_parameters[i].name == "NOCOSTBILL") {
+        filter_parameters[i].name = "No Cost Bill";
+      }
+      if (filter_parameters[i].name == "ONLINE") {
+        filter_parameters[i].name = "Pre-applied Online Discounts";
+      }
+
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_record_found_for_the_discounts_of_a_discount_type
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary.push({
-          type: filter_parameters[i].name,
+          name: filter_parameters[i].name,
           sum: 0,
           count: 0,
         });
       } else {
         responseList[0].summary.push({
-          type: filter_parameters[i].name,
+          name: filter_parameters[i].name,
           sum: data.rows[0].value.sum,
           count: data.rows[0].value.count,
         });
@@ -992,7 +1174,7 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: "Refunds",
+        type: "REFUNDS",
         summary: [],
       },
     ];
@@ -1019,7 +1201,7 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_refunds_record_found_for_a_payment_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
         responseList[0].summary.push({
@@ -1044,15 +1226,15 @@ class SummaryService extends BaseService {
   //summary of cancelled bills in the given DATE RANGE
   async fetchSummaryByBillCancellations(from_date, to_date) {
     let self = this;
-    let responseList = [
-      {
-        type: "Bill_Cancellations",
-        summary: [],
-      },
-    ];
+    let responseList = {};
     let i = 0;
     let data = {};
     var filter_parameters = [];
+
+    responseList["BILL_CANCELLATIONS"] = {};
+    responseList["BILL_CANCELLATIONS"]["grandSum"] = 0;
+    responseList["BILL_CANCELLATIONS"]["grandCount"] = 0;
+    responseList["BILL_CANCELLATIONS"]["summary"] = [];
 
     try {
       data = await self.getAllBillingModes();
@@ -1072,22 +1254,27 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_cancelled_bills_recors_found_for_a_billing_mode
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList[0].summary.push({
+        responseList["BILL_CANCELLATIONS"]["summary"].push({
           mode: filter_parameters[i].type,
           name: filter_parameters[i].name,
           sum: 0,
           count: 0,
         });
       } else {
-        responseList[0].summary.push({
+        responseList["BILL_CANCELLATIONS"]["summary"].push({
           mode: filter_parameters[i].type,
           name: filter_parameters[i].name,
           sum: data.rows[0].value.sum,
           count: data.rows[0].value.count,
         });
+
+        responseList["BILL_CANCELLATIONS"]["grandSum"] +=
+          data.rows[0].value.sum;
+        responseList["BILL_CANCELLATIONS"]["grandCount"] +=
+          data.rows[0].value.count;
       }
       i++;
     }
@@ -1106,20 +1293,18 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_records_found_for_paid_or_unpaid_bills
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList.push({
-          type: `${payment_status[i]}_BILLS`,
+        responseList[`${payment_status[i]}_BILLS`] = {
           sum: 0,
           count: 0,
-        });
+        };
       } else {
-        responseList.push({
-          type: `${payment_status[i]}_BILLS`,
+        responseList[`${payment_status[i]}_BILLS`] = {
           sum: data.rows[0].value.sum,
           count: data.rows[0].value.count,
-        });
+        };
       }
       i++;
     }
@@ -1131,7 +1316,7 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: "Item_Cancellations",
+        type: "ITEM_CANCELLATIONS",
         summary: [],
       },
     ];
@@ -1149,7 +1334,7 @@ class SummaryService extends BaseService {
     if (_.isEmpty(data)) {
       throw new ErrorResponse(
         ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
+        ErrorType.no_record_found_for_cancelled_items
       );
     } else {
       while (i < data.rows.length) {
@@ -1186,6 +1371,10 @@ class SummaryService extends BaseService {
         }
         i++;
       }
+      // Ascending: Sorting
+      responseList[0].summary.sort(function (obj1, obj2) {
+        return obj2.count - obj1.count;
+      });
     }
     return responseList;
   }
@@ -1195,7 +1384,7 @@ class SummaryService extends BaseService {
     let self = this;
     let responseList = [
       {
-        type: "Item_Cancellations_detailed",
+        type: "ITEM_CANCELLATIONS_DETAILED",
         summary: [],
       },
     ];
@@ -1212,7 +1401,7 @@ class SummaryService extends BaseService {
     if (_.isEmpty(data)) {
       throw new ErrorResponse(
         ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
+        ErrorType.no_record_found_for_cancelled_items
       );
     } else if (_.isEmpty(data.rows)) {
       return responseList;
@@ -1230,7 +1419,7 @@ class SummaryService extends BaseService {
   //overall quick summary
   async fetchOverAllTurnOver(from_date, to_date) {
     let self = this;
-    let responseList = [];
+    let responseList = {};
     let i = 0;
     let data = {};
     let grandTotalTypes = [
@@ -1254,33 +1443,25 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_records_found_for_a_grand_total_type
         );
       } else if (_.isEmpty(data.rows)) {
-        responseList.push({
-          type: grandTotalTypes[i],
-          summary: [
-            {
-              sum: 0,
-              count: 0,
-            },
-          ],
-        });
+        responseList[grandTotalTypes[i].toUpperCase()] = {
+          sum: 0,
+          count: 0,
+        };
       } else {
-        responseList.push({
-          type: grandTotalTypes[i],
-          summary: [
-            {
-              sum: data.rows[0].value.sum,
-              count: data.rows[0].value.count,
-            },
-          ],
-        });
+        responseList[grandTotalTypes[i].toUpperCase()] = {
+          sum: data.rows[0].value.sum,
+          count: data.rows[0].value.count,
+        };
       }
       i++;
     }
 
     var billing_parameters = [];
+    responseList["BILLING_PARAMETERS"] = {};
+    responseList["BILLING_PARAMETERS"]["summary"] = [];
     i = 0;
 
     try {
@@ -1301,27 +1482,19 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_record_found_for_a_billing_parameter
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList.push({
-          type: billing_parameters[i].name,
-          summary: [
-            {
-              sum: 0,
-              count: 0,
-            },
-          ],
+        responseList["BILLING_PARAMETERS"]["summary"].push({
+          name: billing_parameters[i].name,
+          sum: 0,
+          count: 0,
         });
       } else {
-        responseList.push({
-          type: billing_parameters[i].name,
-          summary: [
-            {
-              sum: data.rows[0].value.sum,
-              count: data.rows[0].value.count,
-            },
-          ],
+        responseList["BILLING_PARAMETERS"]["summary"].push({
+          name: billing_parameters[i].name,
+          sum: data.rows[0].value.sum,
+          count: data.rows[0].value.count,
         });
       }
 
@@ -1337,20 +1510,18 @@ class SummaryService extends BaseService {
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
-          ErrorType.no_matching_results
+          ErrorType.no_custom_extras_record_found_for_a_billing_parameter
         );
       } else if (_.isEmpty(data.rows[0])) {
-        responseList[i + grandTotalTypes.length].summary[0] = {
-          ...responseList[i + grandTotalTypes.length].summary[0],
-          customExtrasSum: 0,
-          customExtrasCount: 0,
-        };
+        responseList["BILLING_PARAMETERS"]["summary"][i]["customExtrasSum"] = 0;
+        responseList["BILLING_PARAMETERS"]["summary"][i][
+          "customExtrasCount"
+        ] = 0;
       } else {
-        responseList[i + grandTotalTypes.length].summary[0] = {
-          ...responseList[i + grandTotalTypes.length].summary[0],
-          customExtrasSum: data.rows[0].value.sum,
-          customExtrasCount: data.rows[0].value.count,
-        };
+        responseList["BILLING_PARAMETERS"]["summary"][i]["customExtrasSum"] =
+          data.rows[0].value.sum;
+        responseList["BILLING_PARAMETERS"]["summary"][i]["customExtrasCount"] =
+          data.rows[0].value.count;
       }
       i++;
     }
@@ -1363,28 +1534,18 @@ class SummaryService extends BaseService {
     if (_.isEmpty(data)) {
       throw new ErrorResponse(
         ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
+        ErrorType.no_records_found_for_gross_refunds
       );
     } else if (_.isEmpty(data.rows)) {
-      responseList.push({
-        type: "Refunds",
-        summary: [
-          {
-            grossSum: 0,
-            grossCount: 0,
-          },
-        ],
-      });
+      responseList["REFUNDS"] = {
+        grossSum: 0,
+        grossCount: 0,
+      };
     } else {
-      responseList.push({
-        type: "Refunds",
-        summary: [
-          {
-            grossSum: data.rows[0].value.sum,
-            grossCount: data.rows[0].value.count,
-          },
-        ],
-      });
+      responseList["REFUNDS"] = {
+        grossSum: data.rows[0].value.sum,
+        grossCount: data.rows[0].value.count,
+      };
     }
 
     //Now check in net refunds
@@ -1397,26 +1558,14 @@ class SummaryService extends BaseService {
     if (_.isEmpty(data)) {
       throw new ErrorResponse(
         ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
+        ErrorType.no_records_found_for_net_refunds
       );
     } else if (_.isEmpty(data.rows)) {
-      responseList[
-        grandTotalTypes.length + billing_parameters.length
-      ].summary[0] = {
-        ...responseList[grandTotalTypes.length + billing_parameters.length]
-          .summary[0],
-        netSum: 0,
-        netCount: 0,
-      };
+      responseList["REFUNDS"].netSum = 0;
+      responseList["REFUNDS"].netCount = 0;
     } else {
-      responseList[
-        grandTotalTypes.length + billing_parameters.length
-      ].summary[0] = {
-        ...responseList[grandTotalTypes.length + billing_parameters.length]
-          .summary[0],
-        netSum: data.rows[0].value.sum,
-        netCount: data.rows[0].value.count,
-      };
+      responseList["REFUNDS"].netSum = data.rows[0].value.sum;
+      responseList["REFUNDS"].netCount = data.rows[0].value.count;
     }
 
     return responseList;
@@ -1428,22 +1577,112 @@ class SummaryService extends BaseService {
     let responseList = [];
     let data = {};
 
-    responseList = await self.fetchOverAllTurnOver(from_date, to_date);
+    responseList = await self
+      .fetchOverAllTurnOver(from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
 
-    data = await self.fetchSummaryBySalesfilteredByBillingMode(
-      from_date,
-      to_date,
-      curr_date
-    );
+    data = await self
+      .fetchSummaryBySalesfilteredByBillingMode(from_date, to_date, curr_date)
+      .catch((error) => {
+        throw error;
+      });
+    var originalBillingModesList = [];
+    responseList["SALES_BY_BILLING_MODE"] = [];
 
-    responseList.push(data[0]);
+    var billingGrandTotal = 0;
+    for (var i = 0; i < data.SALES_BY_BILLING_MODE.summary.length; i++) {
+      billingGrandTotal +=
+        data.SALES_BY_BILLING_MODE.summary[i].sum -
+        data.SALES_BY_BILLING_MODE.summary[i].refunds;
 
-    data = await self.fetchSummaryBySalesfilteredByPaymentMode(
-      from_date,
-      to_date
-    );
+      originalBillingModesList.push({
+        name: data.SALES_BY_BILLING_MODE.summary[i].name,
+        type: data.SALES_BY_BILLING_MODE.summary[i].mode,
+        value:
+          data.SALES_BY_BILLING_MODE.summary[i].sum -
+          data.SALES_BY_BILLING_MODE.summary[i].refunds,
+        count: data.SALES_BY_BILLING_MODE.summary[i].count,
+      });
+      responseList["SALES_BY_BILLING_MODE"].push({
+        name: data.SALES_BY_BILLING_MODE.summary[i].name,
+        type: data.SALES_BY_BILLING_MODE.summary[i].mode,
+        value:
+          data.SALES_BY_BILLING_MODE.summary[i].sum -
+          data.SALES_BY_BILLING_MODE.summary[i].refunds,
+        count: data.SALES_BY_BILLING_MODE.summary[i].count,
+      });
+    }
 
-    responseList.push(data[0]);
+    responseList["SALES_BY_BILLING_TYPE"] = [];
+
+    var reducedBillingModesList = originalBillingModesList.reduce(function (
+      accumulator,
+      item
+    ) {
+      if (accumulator[item.type]) {
+        accumulator[item.type].value += item.value;
+        accumulator[item.type].count += item.count;
+      } else {
+        accumulator[item.type] = item;
+      }
+
+      return accumulator;
+    },
+    {});
+
+    for (var key in reducedBillingModesList) {
+      reducedBillingModesList[key].type = getFancyNameForBillingType(
+        reducedBillingModesList[key].type
+      );
+      responseList["SALES_BY_BILLING_TYPE"].push(reducedBillingModesList[key]);
+    }
+
+    responseList["SALES_BY_BILLING_MODE"].push({
+      name: "Total by Billing Modes",
+      value: billingGrandTotal,
+    });
+
+    function getFancyNameForBillingType(type) {
+      if (type == "DELIVERY") {
+        return "Home Delivery";
+      } else if (type == "PARCEL") {
+        return "Takeaway";
+      } else if (type == "TOKEN") {
+        return "Token Based";
+      } else if (type == "DINE") {
+        return "Dine In";
+      }
+    }
+
+    data = await self
+      .fetchSummaryBySalesfilteredByPaymentMode(from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
+
+    var paymentGrandTotal = 0;
+    var temp_sum = 0;
+    responseList["SALES_BY_PAYMENT_MODE"] = [];
+
+    for (var i = 0; i < data[0].summary.length; i++) {
+      temp_sum =
+        data[0].summary[i].sum +
+        data[0].summary[i].splitSum -
+        data[0].summary[i].refunds;
+      paymentGrandTotal += temp_sum;
+
+      responseList["SALES_BY_PAYMENT_MODE"].push({
+        name: data[0].summary[i].name,
+        value: temp_sum,
+      });
+    }
+
+    responseList["SALES_BY_PAYMENT_MODE"].push({
+      name: "Total by Payment Modes",
+      value: paymentGrandTotal,
+    });
 
     return responseList;
   }
@@ -1451,17 +1690,30 @@ class SummaryService extends BaseService {
   // excel invoice report
   async excelInvoiceReport(from_date, to_date) {
     let self = this;
-    let responseList = [];
+    let responseList = {};
     let data = {};
     let i = 0;
-    data = await self.getAllBillingParameters();
-    let billingParameters = data.value;
-    responseList.push({
-      type: "billing_parameters",
-      value: billingParameters,
-    });
+    let billingParameters = {};
+    try {
+      data = await self.getAllBillingParameters();
+      billingParameters = data.value;
+    } catch (error) {
+      throw error;
+    }
+    responseList["BILLING_PARAMETERS"] = billingParameters;
 
-    data = await self.SummaryModel.getAllInvoices(from_date, to_date);
+    data = await self.SummaryModel.getAllInvoices(from_date, to_date).catch(
+      (error) => {
+        throw error;
+      }
+    );
+
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_records_found_for_invoices
+      );
+    }
 
     if (data.rows.length == 0) {
       return responseList;
@@ -1571,27 +1823,38 @@ class SummaryService extends BaseService {
       i++;
     }
 
-    responseList.push({
-      type: "invoice_details",
-      value: invoiceList,
-    });
+    responseList["INVOICE_DETAILS"] = invoiceList;
+
     return responseList;
   }
 
   // excel bill cancellations report
   async excelBillCancellationsReport(from_date, to_date) {
     let self = this;
-    let responseList = [];
+    let responseList = {};
     let data = {};
     let i = 0;
-    data = await self.getAllBillingParameters();
-    let billingParameters = data.value;
-    responseList.push({
-      type: "billing_parameters",
-      value: billingParameters,
+    let billingParameters = {};
+    try {
+      data = await self.getAllBillingParameters();
+      billingParameters = data.value;
+    } catch (error) {
+      throw error;
+    }
+
+    data = await self.SummaryModel.getAllCancelledInvoices(
+      from_date,
+      to_date
+    ).catch((error) => {
+      throw error;
     });
 
-    data = await self.SummaryModel.getAllCancelledInvoices(from_date, to_date);
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_records_found_for_cancelled_invoices
+      );
+    }
 
     if (data.rows.length == 0) {
       return responseList;
@@ -1711,10 +1974,9 @@ class SummaryService extends BaseService {
       i++;
     }
 
-    responseList.push({
-      type: "invoice_details",
-      value: invoiceList,
-    });
+    responseList["BILLING_PARAMETERS"] = billingParameters;
+    responseList["INVOICE_DETAILS"] = invoiceList;
+
     return responseList;
   }
 
@@ -1728,7 +1990,16 @@ class SummaryService extends BaseService {
     data = await self.SummaryModel.getCancelledItemsDetailed(
       from_date,
       to_date
-    );
+    ).catch((error) => {
+      throw error;
+    });
+
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_records_found_for_cancelled_items
+      );
+    }
 
     if (data.rows.length == 0) {
       return responseList;
@@ -1740,34 +2011,33 @@ class SummaryService extends BaseService {
       var cancelledItem = data.rows[i].value;
 
       for (var j = 0; j < cancelledItem.itemsRemoved.length; j++) {
-        cancelledItemsList.push({
-          slNo: itemCounter, //Sl No.
-          date: cancelledItem.date, //Date
-          time: moment(cancelledItem.time, "hhmm").format("hh:mm A"), //Time
-          billingMode: cancelledItem.mode, //Billing Mode
-          modeType: cancelledItem.modeType, //Type of Mode (DINE, PARCEL etc.)
-          itemName:
-            cancelledItem.itemsRemoved[j].name +
+        cancelledItemsList.push([
+          itemCounter, //Sl No.
+          cancelledItem.date, //Date
+          moment(cancelledItem.time, "hhmm").format("hh:mm A"), //Time
+          cancelledItem.mode, //Billing Mode
+          cancelledItem.modeType, //Type of Mode (DINE, PARCEL etc.)
+          cancelledItem.itemsRemoved[j].name +
             (cancelledItem.itemsRemoved[j].isCustom
               ? " (" + cancelledItem.itemsRemoved[j].variant + ")"
               : ""), //item
-          itemQty: cancelledItem.itemsRemoved[j].qty,
-          stewardName: cancelledItem.stewardName, //requested by
-          comments: cancelledItem.itemsRemoved[j].comments, // reason for cancellation
-          adminName: cancelledItem.adminName, //approved by
-          customerName: cancelledItem.customerName,
-          customerMobile: cancelledItem.customerMobile,
-          guestCount: cancelledItem.guestCount,
-          KOTNumber: cancelledItem.KOTNumber,
-          table: cancelledItem.modeType == "DINE" ? cancelledItem.table : "",
-        });
+          cancelledItem.itemsRemoved[j].qty,
+          cancelledItem.stewardName, //requested by
+          cancelledItem.itemsRemoved[j].comments, // reason for cancellation
+          cancelledItem.adminName, //approved by
+          cancelledItem.customerName,
+          cancelledItem.customerMobile,
+          cancelledItem.guestCount,
+          cancelledItem.KOTNumber,
+          cancelledItem.modeType == "DINE" ? cancelledItem.table : "",
+        ]);
         itemCounter++;
       }
       i++;
     }
 
     responseList.push({
-      type: "cancelled_items_details",
+      type: "CANCELLED_ITEMS_DETAILS",
       value: cancelledItemsList,
     });
     return responseList;
@@ -1781,34 +2051,58 @@ class SummaryService extends BaseService {
     curr_date
   ) {
     let self = this;
-    let responseList = [];
+    let responseList = {};
     let overalSalesTrend = [];
     let i = 0;
     let data = {};
     let temp_totalPaid = 0;
 
-    if (is_super_admin_logged_in) {
-      data = await self.SummaryModel.checkForPendingBills(from_date, to_date);
-      if (data.rows.length > 0) {
+    if (!is_super_admin_logged_in) {
+      data = await self.SummaryModel.checkForRunningOrders().catch((error) => {
+        throw error;
+      });
+      if (data.total_rows > 0) {
         throw new ErrorResponse(
           ResponseType.CONFLICT,
-          ErrorType.bills_not_settled
+          `Please generate bills for all the ${data.rows.length} live orders to continue.`
         );
       }
     }
-    data = await self.SummaryModel.checkForRunningOrders();
-    if (data.total_rows > 0) {
+
+    data = await self.SummaryModel.checkForPendingBills(
+      moment(from_date, "YYYYMMDD").format("DD-MM-YYYY"),
+      moment(to_date, "YYYYMMDD").format("DD-MM-YYYY")
+    );
+
+    if (data.rows.length > 0) {
       throw new ErrorResponse(
         ResponseType.CONFLICT,
-        `Please generate bills for all the ${data.rows.length} live orders to continue.`
+        ErrorType.bills_not_settled
       );
     }
 
-    responseList = await self.fetchOverAllTurnOver(from_date, to_date);
+    data = await self
+      .fetchOverAllTurnOver(from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
+
+    responseList = data;
 
     if (from_date == to_date) {
       let refundList = [];
-      data = await self.SummaryModel.getRefundsList(from_date, to_date);
+      data = await self.SummaryModel.getRefundsList(from_date, to_date).catch(
+        (error) => {
+          throw error;
+        }
+      );
+
+      if (_.isEmpty(data)) {
+        throw new ErrorResponse(
+          ResponseType.NO_RECORD_FOUND,
+          ErrorType.no_refunds_list_record_found
+        );
+      }
 
       while (i < data.rows.length) {
         refundList.push({
@@ -1823,56 +2117,65 @@ class SummaryService extends BaseService {
         });
         i++;
       }
-      responseList.push({
-        type: "Refunds List",
-        summary: refundList,
-      });
+      responseList["REFUNDS_LIST"] = refundList;
     }
 
     data = await self.SummaryModel.getGrandTotalByType(
       "totalguests",
       from_date,
       to_date
-    );
-
-    responseList.push({
-      type: "Total Guests",
-      summary: [
-        {
-          sum: data.rows[0] ? data.rows[0].value.sum : 0,
-        },
-      ],
+    ).catch((error) => {
+      throw error;
     });
+
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_records_found_for_total_guests
+      );
+    }
+
+    responseList["TOTAL_GUESTS"] = {
+      sum: data.rows[0] ? data.rows[0].value.sum : 0,
+    };
 
     data = await self.SummaryModel.getFirstAndLastInvoiceNumber(
       from_date,
       to_date
-    );
-
-    responseList.push({
-      type: "First and Last Invoice Number",
-      summary: [
-        {
-          startingBillNumber: data.rows[0] ? data.rows[0].value.min : 0,
-          endingBillNumber: data.rows[0] ? data.rows[0].value.max : 0,
-        },
-      ],
+    ).catch((error) => {
+      throw error;
     });
+
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_records_found_for_first_and_last_invoice_number
+      );
+    }
+
+    responseList["FIRST_AND_LAST_INVOICE_NUMBER"] = {
+      startingBillNumber: data.rows[0] ? data.rows[0].value.min : 0,
+      endingBillNumber: data.rows[0] ? data.rows[0].value.max : 0,
+    };
 
     data = await self.SummaryModel.getCancelledInvoicesCount(
       from_date,
       to_date
-    );
-
-    responseList.push({
-      type: "Cancelled Invoices count",
-      summary: [
-        {
-          netCancelledBills: data.rows[0] ? data.rows[0].value.count : 0,
-          netCancelledBillsSum: data.rows[0] ? data.rows[0].value.sum : 0,
-        },
-      ],
+    ).catch((error) => {
+      throw error;
     });
+
+    if (_.isEmpty(data)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_records_found_for_cancelled_invoices_count
+      );
+    }
+
+    responseList["CANCELLED_INVOICES_COUNT"] = {
+      netCancelledBills: data.rows[0] ? data.rows[0].value.count : 0,
+      netCancelledBillsSum: data.rows[0] ? data.rows[0].value.sum : 0,
+    };
 
     if (from_date == to_date) {
       var trendDate_yesterday = moment(from_date, "YYYYMMDD")
@@ -2094,7 +2397,16 @@ class SummaryService extends BaseService {
           "grandtotal_paidamount",
           overalSalesTrend[i].dateFrom,
           overalSalesTrend[i].dateTo
-        );
+        ).catch((error) => {
+          throw error;
+        });
+
+        if (_.isEmpty(data)) {
+          throw new ErrorResponse(
+            ResponseType.NO_RECORD_FOUND,
+            ErrorType.no_records_found_for_grandtotal_paidamount
+          );
+        }
 
         temp_totalPaid = data.rows[0] ? data.rows[0].value.sum : 0;
         overalSalesTrend[i].count = data.rows[0] ? data.rows[0].value.count : 0;
@@ -2102,7 +2414,9 @@ class SummaryService extends BaseService {
         data = await self.SummaryModel.getGrossRefunds(
           overalSalesTrend[i].dateFrom,
           overalSalesTrend[i].dateTo
-        );
+        ).catch((error) => {
+          throw error;
+        });
 
         overalSalesTrend[i].amount =
           temp_totalPaid - (data.rows[0] ? data.rows[0].value.sum : 0);
@@ -2110,16 +2424,21 @@ class SummaryService extends BaseService {
         i++;
       }
 
-      responseList.push({
-        type: "Overall Sales Trend",
-        summary: overalSalesTrend,
-      });
+      responseList["OVERALL_SALES_TREND"] = overalSalesTrend;
     }
 
-    data = await self.fetchSummaryBySalesfilteredBySessions(from_date, to_date);
-    responseList.push(data[0]);
+    data = await self
+      .fetchSummaryBySalesfilteredBySessions(from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
+    responseList["SALES_BY_SESSIONS"] = data[0].summary;
 
-    data = await self.SummaryModel.getHourlySalesSum(from_date, to_date);
+    data = await self.SummaryModel.getHourlySalesSum(from_date, to_date).catch(
+      (error) => {
+        throw error;
+      }
+    );
 
     i = 0;
     let j = 0;
@@ -2132,7 +2451,7 @@ class SummaryService extends BaseService {
       do {
         if (
           hourlySalesSum[j] &&
-          hourlySalesSum[j].hour == data.rows[i].key[2]
+          hourlySalesSum[j].hour_slot == data.rows[i].key[2]
         ) {
           hourlySalesSum[j].count++;
           hourlySalesSum[j].amount += data.rows[i].value;
@@ -2144,7 +2463,7 @@ class SummaryService extends BaseService {
 
       if (!isFound) {
         hourlySalesSum.push({
-          hour: data.rows[i].key[2],
+          hour_slot: data.rows[i].key[2],
           count: 1,
           amount: data.rows[i].value,
         });
@@ -2155,13 +2474,13 @@ class SummaryService extends BaseService {
     for (i = 0; i < 24; i++) {
       j = 0;
       while (hourlySalesSum[j]) {
-        if (hourlySalesSum[j].hour == i) {
+        if (hourlySalesSum[j].hour_slot == i) {
           break;
         }
 
         if (j == hourlySalesSum.length - 1) {
           hourlySalesSum.push({
-            hour: i,
+            hour_slot: i,
             count: 0,
             amount: 0,
           });
@@ -2172,7 +2491,7 @@ class SummaryService extends BaseService {
     }
 
     hourlySalesSum.sort(function (obj1, obj2) {
-      return obj1.hour - obj2.hour;
+      return obj1.hour_slot - obj2.hour_slot;
     });
 
     var midnightEmptyCheck = true;
@@ -2189,25 +2508,23 @@ class SummaryService extends BaseService {
       hourlySalesSum = hourlySalesSum.splice(11, 23);
     }
 
-    data = await self.fetchSummaryBySalesfilteredByHour(
-      "All Orders",
-      from_date,
-      to_date
-    );
+    data = await self
+      .fetchSummaryBySalesfilteredByHour("All Orders", from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
 
     for (i = 0; i < data[0].summary.length; i++) {
       for (j = 0; j < hourlySalesSum.length; j++) {
-        if (data[0].summary[i].hour == hourlySalesSum[j].hour) {
-          hourlySalesSum[j].noOfGuests = data[0].summary[i].noOfGuests;
+        if (data[0].summary[i].hour_slot == hourlySalesSum[j].hour_slot) {
+          hourlySalesSum[j].number_of_guests =
+            data[0].summary[i].number_of_guests;
           break;
         }
       }
     }
 
-    responseList.push({
-      type: "Hourly Sales Data",
-      summary: hourlySalesSum,
-    });
+    responseList["HOURLY_SALES_DATA"] = hourlySalesSum;
 
     if (from_date == to_date) {
       j = 0;
@@ -2223,7 +2540,9 @@ class SummaryService extends BaseService {
           "grandtotal_paidamount",
           processing_date,
           processing_date
-        );
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2249,7 +2568,9 @@ class SummaryService extends BaseService {
           "grandtotal_discounts",
           processing_date,
           processing_date
-        );
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2266,7 +2587,9 @@ class SummaryService extends BaseService {
           "grandtotal_netamount",
           processing_date,
           processing_date
-        );
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2283,7 +2606,9 @@ class SummaryService extends BaseService {
         data = await self.SummaryModel.getGrossRefunds(
           processing_date,
           processing_date
-        );
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2300,7 +2625,9 @@ class SummaryService extends BaseService {
         data = await self.SummaryModel.getNetRefunds(
           processing_date,
           processing_date
-        );
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2379,7 +2706,9 @@ class SummaryService extends BaseService {
           "totalguests",
           processing_date,
           processing_date
-        );
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2396,10 +2725,7 @@ class SummaryService extends BaseService {
         j++;
       } while (processing_date != from_date);
 
-      responseList.push({
-        type: "Day By Day Sales Data",
-        summary: dayByDaySalesData,
-      });
+      responseList["DAY_BY_DAY_SALES_DATA"] = dayByDaySalesData;
 
       var current_year = moment(from_date, "YYYYMMDD").format("YYYY");
       var current_month = moment(from_date, "YYYYMMDD").format("MM");
@@ -2424,9 +2750,11 @@ class SummaryService extends BaseService {
 
         data = await self.SummaryModel.getGrandTotalByType(
           "grandtotal_paidamount",
-          processing_date,
-          processing_date
-        );
+          date_starting,
+          date_ending
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2460,9 +2788,11 @@ class SummaryService extends BaseService {
 
         data = await self.SummaryModel.getGrandTotalByType(
           "grandtotal_discounts",
-          processing_date,
-          processing_date
-        );
+          date_starting,
+          date_ending
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2477,9 +2807,11 @@ class SummaryService extends BaseService {
 
         data = await self.SummaryModel.getGrandTotalByType(
           "grandtotal_netamount",
-          processing_date,
-          processing_date
-        );
+          date_starting,
+          date_ending
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2494,9 +2826,11 @@ class SummaryService extends BaseService {
         monthByMonthSalesData[j].grossSales = tempValue;
 
         data = await self.SummaryModel.getGrossRefunds(
-          processing_date,
-          processing_date
-        );
+          date_starting,
+          date_ending
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2511,9 +2845,11 @@ class SummaryService extends BaseService {
         monthByMonthSalesData[j].netRefund = tempValue;
 
         data = await self.SummaryModel.getNetRefunds(
-          processing_date,
-          processing_date
-        );
+          date_starting,
+          date_ending
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2533,8 +2869,8 @@ class SummaryService extends BaseService {
         while (i < billing_parameters.length) {
           data = await self.SummaryModel.getTotalExtrasByBillingParameter(
             billing_parameters[i].name,
-            processing_date,
-            processing_date
+            date_starting,
+            date_ending
           ).catch((error) => {
             throw error;
           });
@@ -2559,8 +2895,8 @@ class SummaryService extends BaseService {
 
           data = await self.SummaryModel.getTotalCustomExtrasByBillingParameter(
             billing_parameters[i].name,
-            processing_date,
-            processing_date
+            date_starting,
+            date_ending
           ).catch((error) => {
             throw error;
           });
@@ -2581,9 +2917,11 @@ class SummaryService extends BaseService {
 
         data = await self.SummaryModel.getGrandTotalByType(
           "totalguests",
-          processing_date,
-          processing_date
-        );
+          date_starting,
+          date_ending
+        ).catch((error) => {
+          throw error;
+        });
         if (_.isEmpty(data)) {
           throw new ErrorResponse(
             ResponseType.NO_RECORD_FOUND,
@@ -2600,18 +2938,67 @@ class SummaryService extends BaseService {
         j++;
       } while (processing_month != current_month);
 
-      responseList.push({
-        type: "Month By Month Sales Data",
-        summary: monthByMonthSalesData,
-      });
+      responseList["MONTH_BY_MONTH_SALES_DATA"] = monthByMonthSalesData;
     }
 
     data = await self.fetchSummaryByDiscounts(from_date, to_date);
-    responseList.push(data[0]);
 
-    data = await self.fetchSummaryBySalesfilteredByItems(from_date, to_date);
+    responseList["DISCOUNTS"] = [];
+    j = 0;
+    while (data[0].summary[j]) {
+      if (data[0].summary[j].sum > 0) {
+        responseList["DISCOUNTS"].push(data[0].summary[j]);
+      }
+      j++;
+    }
 
-    var catalogData = await self.getMenuCatalog();
+    data = await self
+      .fetchSummaryBySalesfilteredByItems(from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
+    responseList["SALES_BY_ITEMS"] = data[0].summary.slice(0, 20);
+
+    data = await self
+      .fetchSummaryBySalesfilteredByItemsDetailed(from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
+    j = 0;
+    while (data[0].summary[j]) {
+      if (
+        data[0].summary[j].category == "MANUAL_UNKNOWN" ||
+        data[0].summary[j].category == "UNKNOWN"
+      ) {
+        data[0].summary[j].category = "Uncategorized";
+      }
+      j++;
+    }
+
+    if (data[0].summary.length > 0) {
+      var n = 0;
+      while (data[0].summary[n]) {
+        //render category
+
+        var itemsTotalSales = 0;
+        var itemsTotalCount = 0;
+
+        for (i = 0; i < data[0].summary[n].items.length; i++) {
+          itemsTotalSales += data[0].summary[n].items[i].saleAmount;
+          itemsTotalCount += data[0].summary[n].items[i].count;
+        }
+
+        data[0].summary[n].totalSales = itemsTotalSales;
+        data[0].summary[n].totalCount = itemsTotalCount;
+        delete data[0].summary[n].items;
+
+        n++;
+      }
+    }
+
+    var catalogData = await self.getMenuCatalog().catch((error) => {
+      throw error;
+    });
     j = 0;
     while (data[0].summary[j]) {
       data[0].summary[j].topCategory = getTopLevelCategory(
@@ -2630,81 +3017,86 @@ class SummaryService extends BaseService {
 
       return "Uncategorized";
     }
-    responseList.push(data[0]);
 
-    data = await self.fetchSummaryByItemCancellationsDetailed(
-      from_date,
-      to_date
-    );
-    responseList.push(data[0]);
+    responseList["SALES_BY_ITEMS_DETAILED"] = data[0].summary;
 
-    var filter_start = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
-    var cancelledOrders = [];
-    i = 0;
-    data = await self.SummaryModel.getCancelledOrdersDetailed(
-      filter_start,
-      filter_start
-    ).catch((error) => {
-      throw error;
-    });
+    if (from_date == to_date) {
+      data = await self
+        .fetchSummaryByItemCancellationsDetailed(from_date, to_date)
+        .catch((error) => {
+          throw error;
+        });
 
-    if (_.isEmpty(data)) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
-    } else {
-      while (!_.isEmpty(data.rows) && i < data.rows.length) {
-        delete data.rows[i].value._id;
-        delete data.rows[i].value._rev;
-        cancelledOrders.push(data.rows[i].value);
-        i++;
+      responseList["ITEM_CANCELLATIONS"] = data[0].summary;
+
+      var filter_start = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
+      var cancelledOrders = [];
+      i = 0;
+      data = await self.SummaryModel.getCancelledOrdersDetailed(
+        filter_start,
+        filter_start
+      ).catch((error) => {
+        throw error;
+      });
+
+      if (_.isEmpty(data)) {
+        throw new ErrorResponse(
+          ResponseType.NO_RECORD_FOUND,
+          ErrorType.no_matching_results
+        );
+      } else {
+        while (!_.isEmpty(data.rows) && i < data.rows.length) {
+          delete data.rows[i].value._id;
+          delete data.rows[i].value._rev;
+          cancelledOrders.push(data.rows[i].value);
+          i++;
+        }
       }
+
+      responseList["ORDER_CANCELLATIONS"] = cancelledOrders;
+
+      filter_start = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
+      var cancelledInvoices = [];
+      i = 0;
+      data = await self.SummaryModel.getCancelledInvoicesDetailed(
+        filter_start,
+        filter_start
+      ).catch((error) => {
+        throw error;
+      });
+
+      if (_.isEmpty(data)) {
+        throw new ErrorResponse(
+          ResponseType.NO_RECORD_FOUND,
+          ErrorType.no_matching_results
+        );
+      } else {
+        while (!_.isEmpty(data.rows) && i < data.rows.length) {
+          delete data.rows[i].value._id;
+          delete data.rows[i].value._rev;
+          cancelledInvoices.push(data.rows[i].value);
+          i++;
+        }
+      }
+
+      responseList["INVOICE_CANCELLATIONS"] = cancelledInvoices;
     }
 
-    responseList.push({
-      type: "Cancelled Orders",
-      summary: cancelledOrders,
-    });
+    data = await self
+      .fetchSummaryByBillCancellations(from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
+    responseList["BILL_CANCELLATIONS"] = data.BILL_CANCELLATIONS;
+    responseList["UNPAID_BILLS"] = data.UNPAID_BILLS;
+    responseList["PAID_BILLS"] = data.PAID_BILLS;
 
-    filter_start = moment(from_date, "YYYYMMDD").format("DD-MM-YYYY");
-    var cancelledInvoices = [];
-    i = 0;
-    data = await self.SummaryModel.getCancelledInvoicesDetailed(
-      filter_start,
-      filter_start
-    ).catch((error) => {
-      throw error;
-    });
-
-    if (_.isEmpty(data)) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
-    } else {
-      while (!_.isEmpty(data.rows) && i < data.rows.length) {
-        delete data.rows[i].value._id;
-        delete data.rows[i].value._rev;
-        cancelledInvoices.push(data.rows[i].value);
-        i++;
-      }
-    }
-
-    responseList.push({
-      type: "Cancelled Invoices",
-      summary: cancelledInvoices,
-    });
-
-    data = await self.fetchSummaryByBillCancellations(from_date, to_date);
-    responseList.push(data[0], data[1], data[2]);
-
-    data = await self.fetchSummaryBySalesfilteredByBillingMode(
-      from_date,
-      to_date,
-      curr_date
-    );
-    responseList.push(data[0]);
+    data = await self
+      .fetchSummaryBySalesfilteredByBillingMode(from_date, to_date, curr_date)
+      .catch((error) => {
+        throw error;
+      });
+    responseList["SALES_BY_BILLING_MODE"] = data.SALES_BY_BILLING_MODE;
 
     i = 0;
     var billing_modes = [];
@@ -2717,20 +3109,25 @@ class SummaryService extends BaseService {
     }
 
     while (i < billing_modes.length) {
-      data = await self.fetchSummaryBySalesfilteredByBillingModeDetailed(
-        billing_modes[i].name,
-        from_date,
-        to_date
-      );
-      responseList.push(data[0]);
+      data = await self
+        .fetchSummaryBySalesfilteredByBillingModeDetailedByExtras(
+          billing_modes[i].name,
+          from_date,
+          to_date
+        )
+        .catch((error) => {
+          throw error;
+        });
+      responseList[data[0].type + "_BILLING_MODE"] = data[0].summary;
       i++;
     }
 
-    data = await self.fetchSummaryBySalesfilteredByPaymentMode(
-      from_date,
-      to_date
-    );
-    responseList.push(data[0]);
+    data = await self
+      .fetchSummaryBySalesfilteredByPaymentMode(from_date, to_date)
+      .catch((error) => {
+        throw error;
+      });
+    responseList["SALES_BY_PAYMENT_MODE"] = data[0].summary;
 
     i = 0;
     var payment_modes = [];
@@ -2743,12 +3140,16 @@ class SummaryService extends BaseService {
     }
 
     while (i < payment_modes.length) {
-      data = await self.fetchSummaryBySalesfilteredByPaymentModeDetailed(
-        payment_modes[i].code,
-        from_date,
-        to_date
-      );
-      responseList.push(data[0]);
+      data = await self
+        .fetchSummaryBySalesfilteredByPaymentModeDetailed(
+          payment_modes[i].code,
+          from_date,
+          to_date
+        )
+        .catch((error) => {
+          throw error;
+        });
+      responseList[data[0].type + "_PAYMENT_MODE"] = data[0].summary;
       i++;
     }
 
@@ -2765,7 +3166,9 @@ class SummaryService extends BaseService {
         "grandtotal_paidamount",
         my_date,
         my_date
-      );
+      ).catch((error) => {
+        throw error;
+      });
       if (_.isEmpty(data)) {
         throw new ErrorResponse(
           ResponseType.NO_RECORD_FOUND,
@@ -2797,15 +3200,9 @@ class SummaryService extends BaseService {
       i++;
     }
 
-    responseList.push({
-      type: "Weekly Progress Lask week",
-      summary: weeklyProgressLastWeek,
-    });
+    responseList["WEEKLY_PROGRESS_LAST_WEEK"] = weeklyProgressLastWeek;
 
-    responseList.push({
-      type: "Weekly Progress This week",
-      summary: weeklyProgressThisWeek,
-    });
+    responseList["WEEKLY_PROGRESS_THIS_WEEK"] = weeklyProgressThisWeek;
 
     return responseList;
   }

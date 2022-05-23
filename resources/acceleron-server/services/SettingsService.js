@@ -1,10 +1,10 @@
- "use strict";
+"use strict";
 let BaseService = ACCELERONCORE._services.BaseService;
-let SettingsModel = require('../models/SettingsModel');
+let SettingsModel = require("../models/SettingsModel");
 
-var _ = require('underscore');
-var async = require('async');
-const ErrorType = require('../utils/errorConstants');
+var _ = require("underscore");
+var async = require("async");
+const ErrorType = require("../utils/errorConstants");
 
 class SettingsService extends BaseService {
   constructor(request) {
@@ -37,7 +37,7 @@ class SettingsService extends BaseService {
     }
   }
 
-  async updateSettingsById(settings_id, new_entry) {
+    async updateSettingsById(settings_id, new_entry) {
     const data = await this.SettingsModel.updateNewSettingsData(
       settings_id,
       new_entry
@@ -854,6 +854,56 @@ class SettingsService extends BaseService {
       ).catch((error) => {
         throw error;
       });
+    }
+  }
+
+  async resetBillingIndex(settings_id) {
+    const settingsData = await this.getSettingsById(settings_id).catch(
+      (error) => {
+        throw error;
+      }
+    );
+
+    if (_.isEmpty(settingsData)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_record_found_for_the_billing_index
+      );
+    }
+    var value = settingsData.value;
+    var memory_revID = settingsData._rev;
+    switch (settings_id) {
+      case "ACCELERATE_KOT_INDEX": {
+        //TWEAK
+        /* to be safe with KOT number. 2 different KOTs with same KOTNumber should not exists at a time */
+        /* assuming a max of 100 KOTs active at a time */
+        if (value >= 100) {
+          settingsData.value = 1;
+          return await this.SettingsModel.updateNewSettingsData(settings_id, {
+            ...settingsData,
+            _rev: memory_revID,
+          }).catch((error) => {
+            throw error;
+          });
+        }
+        break;
+      }
+      case "ACCELERATE_TOKEN_INDEX": {
+        settingsData.value = 2;
+        return await this.SettingsModel.updateNewSettingsData(settings_id, {
+          ...settingsData,
+          _rev: memory_revID,
+        }).catch((error) => {
+          throw error;
+        });
+        break;
+      }
+      default: {
+        throw new ErrorResponse(
+          ResponseType.ERROR,
+          ErrorType.server_cannot_handle_request
+        );
+      }
     }
   }
 }

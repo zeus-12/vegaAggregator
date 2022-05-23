@@ -94,3 +94,6 @@ class KOTController extends BaseController {
     );
   }
 }
+
+module.exports = KOTController;
+

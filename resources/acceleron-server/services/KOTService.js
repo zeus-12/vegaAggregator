@@ -59,7 +59,6 @@ class KOTService extends BaseService {
 
   async fetchKOTsByFilter(filter_key) {
     let path = "";
-
     switch (filter_key) {
       case "all": {
         path = "/accelerate_kot/_design/kot-fetch/_view/fetchall";
