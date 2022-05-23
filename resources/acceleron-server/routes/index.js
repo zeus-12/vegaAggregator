@@ -28,6 +28,9 @@ router.use('/summary', require('./SummaryRoute'));
 router.use('/menu', require('./MenuRoute'));
 router.use('/managemenu', require('./ManageMenuRoute'));
 router.use('/license', require('./LicenseRoute'));
+router.use('/pending-bill', require('./PendingBillRoute'));
+router.use('/settled-bill', require('./SettledBillRoute'));
+router.use('/billing', require('./BillingModuleRoute'));
 router.use('/cancelled-order', require('./CancelledOrderRoute'));
 router.use('/cancelled-invoice', require('./CancelledInvoiceRoute'));
 
