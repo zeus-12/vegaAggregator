@@ -1,6 +1,5 @@
 "use strict";
 let BaseService = ACCELERONCORE._services.BaseService;
-let LoginModel = require("../models/LoginModel");
 let SettingsService = require("./SettingsService");
 let AuthService = require("./common/AuthService");
 
@@ -11,7 +10,6 @@ class LoginService extends BaseService {
   constructor(request) {
     super(request);
     this.request = request;
-    this.LoginModel = new LoginModel(request);
     this.SettingsService = new SettingsService(request);
     this.AuthService = new AuthService(request);
   }
@@ -26,7 +24,7 @@ class LoginService extends BaseService {
     });
     let staff_profiles = data.value;
     console.log(staff_profiles);
-    let USER = staff_profiles.find((staff) => {
+    let user = staff_profiles.find((staff) => {
       return (
         (staff.name === username &&
           staff.role === role &&
@@ -36,15 +34,19 @@ class LoginService extends BaseService {
       );
     });
 
-    if (USER === undefined) {
+    if (user === undefined) {
       throw new ErrorResponse(
         ResponseType.NO_RECORD_FOUND,
         ErrorType.no_matching_results
       );
     }
 
-    const token = await this.AuthService.createToken(USER);
-    return token;
+    const token = await this.AuthService.createToken(user);
+
+    const userData = await this.AuthService.validateToken(token);
+
+    console.log(typeof userData);
+    return userData;
   }
 }
 
