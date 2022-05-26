@@ -1,14 +1,29 @@
 "use strict";
 let BaseController = ACCELERONCORE._controllers.BaseController;
-let CustomerManangementService = require("../services/CustomerManangementService");
+let CustomerManagementService = require("../services/CustomerManagementService");
 
 var _ = require("underscore");
 
-class CustomerManangementController extends BaseController {
+class CustomerManagementController extends BaseController {
   constructor(request) {
     super(request);
-    this.CustomerManangementService = new CustomerManangementService(request);
+    this.CustomerManagementService = new CustomerManagementService(request);
   }
+
+  async getCustomerData() {
+    var mobile = this.request.params.id;
+
+    if (_.isEmpty(mobile)) {
+      throw new ErrorResponse(
+        ResponseType.BAD_REQUEST,
+        ErrorType.mobile_number_is_missing
+      );
+    }
+      return await this.CustomerManagementService.getCustomerData(mobile).catch((error) => {
+        throw error;
+      });
+    }
+
   async addNewCustomer() {
     var new_customer_data = this.request.body.new_customer_data;
     var accelerate_licencee_branch =
@@ -21,7 +36,7 @@ class CustomerManangementController extends BaseController {
       );
     }
 
-    return await this.CustomerManangementService.addNewCustomer(
+    return await this.CustomerManagementService.addNewCustomer(
       accelerate_licencee_branch,
       new_customer_data
     ).catch((error) => {
@@ -31,7 +46,7 @@ class CustomerManangementController extends BaseController {
 
   async updateCustomerAddress() {
     var newAddress = this.request.body;
-    var mobile = this.request.query.id;
+    var mobile = this.request.params.id;
 
     if (_.isEmpty(newAddress) || _.isEmpty(mobile)) {
       throw new ErrorResponse(
@@ -40,7 +55,7 @@ class CustomerManangementController extends BaseController {
       );
     }
 
-    return await this.CustomerManangementService.updateCustomerAddress(
+    return await this.CustomerManagementService.updateCustomerAddress(
       mobile,
       newAddress
     ).catch((error) => {
@@ -49,4 +64,4 @@ class CustomerManangementController extends BaseController {
   }
 }
 
-module.exports = CustomerManangementController;
+module.exports = CustomerManagementController;

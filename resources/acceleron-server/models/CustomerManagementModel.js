@@ -3,7 +3,7 @@ let BaseModel = ACCELERONCORE._models.BaseModel;
 
 var _ = require("underscore");
 
-class CustomerManangementModel extends BaseModel {
+class CustomerManagementModel extends BaseModel {
   constructor(request) {
     super(request);
     this.couch = ACCELERONCORE._connectors.CouchDBAsync;
@@ -36,4 +36,4 @@ class CustomerManangementModel extends BaseModel {
   }
 }
 
-module.exports = CustomerManangementModel;
+module.exports = CustomerManagementModel;

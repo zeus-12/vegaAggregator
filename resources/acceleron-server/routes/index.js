@@ -29,5 +29,6 @@ router.use('/menu', require('./MenuRoute'));
 router.use('/managemenu', require('./ManageMenuRoute'));
 router.use('/license', require('./LicenseRoute'));
 router.use('/order', require('./OrderRoute'));
+router.use("/customer", require("./CustomerManagementRoute"));
 
 module.exports = router;

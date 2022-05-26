@@ -29,10 +29,6 @@ class OrderController extends BaseController {
       throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_customer_info);
     }
 
-    if (_.isEmpty(newOrderData.isUserAutoFind)) {
-      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_user_found);
-    }
-
     return await this.OrderService.generateNewKOT(newOrderData).catch((error) => {
       throw error;
     });

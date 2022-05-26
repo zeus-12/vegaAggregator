@@ -5,7 +5,7 @@ let OrderModel = require("../models/OrderModel");
 let SettingsService = require("./SettingsService");
 let SummaryService = require("./SummaryService");
 let KOTService = require("./KOTService");
-let CustomerManangementService = require("./CustomerManangementService");
+let CustomerManagementService = require("./CustomerManagementService");
 var moment = require("moment");
 
 var _ = require("underscore");
@@ -21,7 +21,7 @@ class OrderService extends BaseService {
     this.OrderModel = new OrderModel(request);
     this.SettingsService = new SettingsService(request);
     this.SummaryService = new SummaryService(request);
-    this.CustomerManangementService = new CustomerManangementService(request);
+    this.CustomerManagementService = new CustomerManagementService(request);
     this.KOTService = new KOTService(request);
   }
 
@@ -41,7 +41,7 @@ class OrderService extends BaseService {
       throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.bill_param_data_not_found);
     }
 
-    var params = data.docs[0].value;
+    var params = data.value;
 
     var selectedModeExtrasList = newOrderData.selectedBillingModeInfo.extras;
     var cartExtrasList = [];
@@ -97,22 +97,22 @@ class OrderService extends BaseService {
     var otherCharges = [];
     var k = 0;
 
-    if (selectedModeExtras.length > 0) {
-      for (k = 0; k < selectedModeExtras.length; k++) {
+    if (cartExtrasList.length > 0) {
+      for (k = 0; k < cartExtrasList.length; k++) {
         var tempExtraTotal = 0;
 
-        if (selectedModeExtras[k].value != 0) {
-          if (selectedModeExtras[k].excludePackagedFoods) {
-            if (selectedModeExtras[k].unit == "PERCENTAGE") {
-              tempExtraTotal = (selectedModeExtras[k].value * (subTotal - packagedSubTotal)) / 100;
-            } else if (selectedModeExtras[k].unit == "FIXED") {
-              tempExtraTotal = selectedModeExtras[k].value;
+        if (cartExtrasList[k].value != 0) {
+          if (cartExtrasList[k].excludePackagedFoods) {
+            if (cartExtrasList[k].unit == "PERCENTAGE") {
+              tempExtraTotal = (cartExtrasList[k].value * (subTotal - packagedSubTotal)) / 100;
+            } else if (cartExtrasList[k].unit == "FIXED") {
+              tempExtraTotal = cartExtrasList[k].value;
             }
           } else {
-            if (selectedModeExtras[k].unit == "PERCENTAGE") {
-              tempExtraTotal = (selectedModeExtras[k].value * subTotal) / 100;
-            } else if (selectedModeExtras[k].unit == "FIXED") {
-              tempExtraTotal = selectedModeExtras[k].value;
+            if (cartExtrasList[k].unit == "PERCENTAGE") {
+              tempExtraTotal = (cartExtrasList[k].value * subTotal) / 100;
+            } else if (cartExtrasList[k].unit == "FIXED") {
+              tempExtraTotal = cartExtrasList[k].value;
             }
           }
         }
@@ -120,11 +120,11 @@ class OrderService extends BaseService {
         tempExtraTotal = Math.round(tempExtraTotal * 100) / 100;
 
         otherCharges.push({
-          name: selectedModeExtras[k].name,
-          value: selectedModeExtras[k].value,
-          unit: selectedModeExtras[k].unit,
+          name: cartExtrasList[k].name,
+          value: cartExtrasList[k].value,
+          unit: cartExtrasList[k].unit,
           amount: tempExtraTotal,
-          isPackagedExcluded: selectedModeExtras[k].excludePackagedFoods,
+          isPackagedExcluded: cartExtrasList[k].excludePackagedFoods,
         });
       }
     }
@@ -173,7 +173,9 @@ class OrderService extends BaseService {
     orderMetaInfo.isOnline = customerInfo.isOnline;
 
     //User not found in DB ==> Add USER to DB
-    if (!newOrderData.isUserAutoFind) {
+    var isUserFound = await this.CustomerManagementService.isCustomerExists(customerInfo.mobile);
+
+    if (!isUserFound) {
       if (customerInfo.mobile != "") {
         var customerObject = {
           name: customerInfo.name,
@@ -197,7 +199,7 @@ class OrderService extends BaseService {
 
         // addCustomerToDatabase
         try {
-          await this.CustomerManangementService.addCustomerToDatabase(customerObject);
+          await this.CustomerManagementService.addNewCustomer(customerObject);
         } catch (error) {
           throw error;
         }
@@ -209,7 +211,7 @@ class OrderService extends BaseService {
       var table_req = customerInfo.mappedAddress;
 
       if (table_req != "" && table_req != "None") {
-        data = await self.OrderModel.getTableStatus(table_req).catch((error) => {
+        data = await this.OrderModel.getTableStatus(table_req).catch((error) => {
           throw error;
         });
         if (_.isEmpty(data)) {
@@ -249,7 +251,6 @@ class OrderService extends BaseService {
 
     var today = moment().format("DD-MM-YYYY");
     var time = moment().format("HHmm");
-    console.log("time : ", time);
 
     var obj = {};
     obj.KOTNumber = kot;
@@ -282,11 +283,14 @@ class OrderService extends BaseService {
     obj.customExtras = {};
 
     obj._id = accelerate_licencee_branch + "_KOT_" + kot;
-    var original_order_object_cart = obj.cart;
+    var responseObj = {
+      cart: obj.cart,
+      minimum_cooking_time,
+    };
 
     try {
-      await this.KOTService.createNewKOT(customerObject);
-      return original_order_object_cart, minimum_cooking_time;
+      await this.KOTService.createNewKOT(obj);
+      return responseObj;
     } catch (error) {
       throw error;
     }
@@ -308,14 +312,7 @@ class OrderService extends BaseService {
     data = await this.KOTService.getKOTById(kot_id).catch((error) => {
       throw error;
     });
-    if (_.isEmpty(data)) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        "KOT #" + KOTNumber + " not found on the Server, might have billed already."
-      );
-    }
-
-    if (data._id == "") {
+    if (_.isEmpty(data) || data._id == "") {
       throw new ErrorResponse(
         ResponseType.NO_RECORD_FOUND,
         "KOT #" + KOTNumber + " not found on the Server, might have billed already."
@@ -324,12 +321,15 @@ class OrderService extends BaseService {
 
     var originalData = data;
 
-    if (originalData.cart != updateData.cart) {
-      throw new ErrorResponse(
-        ResponseType.CONFLICT,
-        "KOT #" + KOTNumber + " already billed. Please check in <b>Live Orders</b>"
-      );
-    }
+    // if (originalData.cart != updateData.cart_products) {
+    //   throw new ErrorResponse(
+    //     ResponseType.CONFLICT,
+    //     "KOT #" + KOTNumber + " already billed. Please check in <b>Live Orders</b>"
+    //   );
+    // }
+
+    var changedCustomerInfo = updateData.customerInfo;
+    var changed_cart_products = updateData.cart_products;
 
     //Check if Item Deleted or Count Decreased (only Admins can do this!)
     var hasRestrictedEdits = false;
@@ -339,16 +339,15 @@ class OrderService extends BaseService {
 
     //Compare changes in the Cart
     var original_cart_products = originalData.cart;
-    var changed_cart_products = updateData.cart;
 
     //Search for changes in the existing items
     for (var j = 0; j < original_cart_products.length; j++) {
-      checkForItemChanges(original_cart_products[j], comparisonResult, changed_cart_products, hasRestrictedEdits);
+      this.checkForItemChanges(original_cart_products[j], comparisonResult, changed_cart_products, hasRestrictedEdits);
     }
 
     //Search for new additions to the Cart
     for (j = 0; j < changed_cart_products.length; j++) {
-      checkForNewItems(original_cart_products, changed_cart_products[j], comparisonResult);
+      this.checkForNewItems(original_cart_products, changed_cart_products[j], comparisonResult);
     }
 
     var item_delete_track = [];
@@ -533,14 +532,12 @@ class OrderService extends BaseService {
       }
     }
 
-     try {
-       await this.KOTService.updateKOTById(kot._id, kot);
-       return minimum_cooking_time;
-     } catch (error) {
-       throw error;
-     }
-
-
+    try {
+      await this.KOTService.updateKOTById(kot._id, kot);
+      return { minimum_cooking_time };
+    } catch (error) {
+      throw error;
+    }
   }
 
   async checkForItemChanges(checkingItem, comparisonResult, changed_cart_products, hasRestrictedEdits) {
@@ -551,21 +548,21 @@ class OrderService extends BaseService {
       if (
         checkingItem.code == changed_cart_products[i].code &&
         checkingItem.cartIndex == changed_cart_products[i].cartIndex
-        ) {
-          itemFound = true;
-          
-          //Change in Quantity
-          if (changed_cart_products[i].qty > checkingItem.qty) {
-            //qty increased
-            
-            var tempItem = changed_cart_products[i];
-            tempItem.change = "QUANTITY_INCREASE";
-            tempItem.oldValue = checkingItem.qty;
-            if (changed_cart_products[i].comments != "" && checkingItem.comments != changed_cart_products[i].comments) {
-              tempItem.newComments = changed_cart_products[i].comments;
-            }
-            comparisonResult.push(tempItem);
-          } else if (changed_cart_products[i].qty < checkingItem.qty) {
+      ) {
+        itemFound = true;
+
+        //Change in Quantity
+        if (changed_cart_products[i].qty > checkingItem.qty) {
+          //qty increased
+
+          var tempItem = changed_cart_products[i];
+          tempItem.change = "QUANTITY_INCREASE";
+          tempItem.oldValue = checkingItem.qty;
+          if (changed_cart_products[i].comments != "" && checkingItem.comments != changed_cart_products[i].comments) {
+            tempItem.newComments = changed_cart_products[i].comments;
+          }
+          comparisonResult.push(tempItem);
+        } else if (changed_cart_products[i].qty < checkingItem.qty) {
           //qty decreased
 
           var tempItem = changed_cart_products[i];

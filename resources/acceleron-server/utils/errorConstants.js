@@ -96,6 +96,7 @@ ErrorType.order_source_name_already_exists =
 ErrorType.printer_name_already_exists = "Printer Name already taken. Please set a different name.";
 ErrorType.bill_param_data_not_found = "Billing parameter data not found";
 ErrorType.unable_to_update_kot_index = "Unable to update KOT Index. Next KOT Number might be faulty.";
+ErrorType.KOT_Index_data_not_found = "KOT Index data not found";
 
 /* Table Errors */
 ErrorType.table_id_is_empty_or_invalid = "Table ID is empty or invalid format, please re-enter it correctly";
@@ -148,10 +149,20 @@ ErrorType.license_already_used = "Activation Error: Licence already used.";
 /*Order Errors*/
 ErrorType.empty_cart = "Empty Cart! Add items and try again";
 ErrorType.missing_billing_mode_info = "Billing Mode Info is missing in the request";
-ErrorType.missing_billing_mode_info = "Customer Details missing";
-ErrorType.missing_user_found = "User found status is missing in the request";
 ErrorType.missing_extras_in_billing_mode = "Something went wrong. Select Billing Mode again.";
 ErrorType.missing_customer_info = "Customer Details is missing in the request";
 ErrorType.only_admin_can_edit_item = "Only an Admin can reduce item quantity.";
+ErrorType.Token_is_not_set = "Token is not set";
+ErrorType.Delivery_Address_is_not_set = "Delivery Address is not set";
+ErrorType.Table_not_selected = "Table not selected";
+ErrorType.Table_Number_or_Address_Missing = "Table Number or Address Missing";
+ErrorType.Unable_to_read_Table_info = "Unable to read Table info";
+
+/*Customer Errors*/
+ErrorType.Customer_not_found = "Customer not found";
+ErrorType.customer_address_on_the_server_was_not_updated = "Customer address on the server was not updated";
+ErrorType.missing_new_customer_data = "New Customer data is missing";
+ErrorType.mobile_number_is_missing = "Mobile Number is missing";
+
 
 module.exports = ErrorType;
