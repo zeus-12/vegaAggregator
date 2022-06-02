@@ -14,7 +14,7 @@ class LoginService extends BaseService {
     this.AuthService = new AuthService(request);
   }
 
-  async addNewLicense(loginDetails) {
+  async validateAndGenerateToken(loginDetails) {
     let { username, password } = loginDetails;
     const data = await this.SettingsService.getSettingsById(
       "ACCELERATE_STAFF_PROFILES"
@@ -24,10 +24,10 @@ class LoginService extends BaseService {
     let staffProfiles = data.value;
     let user = staffProfiles.find((staff) => {
       return (
-        (!password && staff.name === username && staff.role === "REGULAR") ||
-        (staff.name === username &&
-          staff.code === password &&
-          staff.role === "ADMIN")
+        (staff.role === "STEWARD" && staff.code === username) ||
+        (staff.role === "ADMIN" &&
+          staff.code === username &&
+          staff.code === password)
       );
     });
 
@@ -39,7 +39,7 @@ class LoginService extends BaseService {
     }
 
     const token = await this.AuthService.createToken(user);
-    // console.log(token);
+    return token;
   }
 }
 

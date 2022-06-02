@@ -24,7 +24,7 @@ class LoginController extends BaseController {
       );
     }
 
-    return await this.LoginService.addNewLicense(loginDetails).catch(
+    return await this.LoginService.validateAndGenerateToken(loginDetails).catch(
       (error) => {
         throw error;
       }

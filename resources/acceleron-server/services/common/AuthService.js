@@ -15,6 +15,7 @@ class AuthService extends BaseService {
     this.request = request;
   }
 
+  //todo get from acceleron service
   async createToken(user) {
     var user_detail = {
       client: "ZAITOON",
