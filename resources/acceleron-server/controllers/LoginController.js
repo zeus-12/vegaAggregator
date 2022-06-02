@@ -10,18 +10,21 @@ class LoginController extends BaseController {
   }
 
   async userLogin() {
-    console.log("inside controller");
-    var username = this.request.body.username;
-    var usercode = this.request.body.usercode;
-    const ROLES = ["ADMIN", "REGULAR"];
-    if (ROLES.includes(this.request.body.role)) {
-      var role = this.request.body.role;
+    var bodyParams = this.request.body;
+    if (bodyParams.username && bodyParams.password) {
+      var { username, password } = bodyParams;
+      var loginDetails = { username, password };
+    } else if (bodyParams.username && !bodyParams.password) {
+      var { username } = bodyParams;
+      var loginDetails = { username };
     } else {
-      //throw error saying invalid role
+      throw new ErrorResponse(
+        BaseResponse.ResponseType.BAD_REQUEST,
+        ErrorType.incomplete_login_credentials
+      );
     }
 
-    const login_details = { username, usercode, role };
-    return await this.LoginService.addNewLicense(login_details).catch(
+    return await this.LoginService.addNewLicense(loginDetails).catch(
       (error) => {
         throw error;
       }

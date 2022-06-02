@@ -6,7 +6,6 @@ router.post("/", async function (req, res, next) {
     const data = await new LoginController(req).userLogin();
     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
   } catch (error) {
-    console.log(error);
     return next(error);
   }
 });

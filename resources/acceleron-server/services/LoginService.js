@@ -14,39 +14,32 @@ class LoginService extends BaseService {
     this.AuthService = new AuthService(request);
   }
 
-  async addNewLicense(login_details) {
-    let { username, role, usercode } = login_details;
-
+  async addNewLicense(loginDetails) {
+    let { username, password } = loginDetails;
     const data = await this.SettingsService.getSettingsById(
       "ACCELERATE_STAFF_PROFILES"
     ).catch((error) => {
       throw error;
     });
-    let staff_profiles = data.value;
-    console.log(staff_profiles);
-    let user = staff_profiles.find((staff) => {
+    let staffProfiles = data.value;
+    let user = staffProfiles.find((staff) => {
       return (
+        (!password && staff.name === username && staff.role === "REGULAR") ||
         (staff.name === username &&
-          staff.role === role &&
-          staff.code === usercode &&
-          role === "ADMIN") ||
-        (staff.name === username && staff.role === role && role === "REGULAR")
+          staff.code === password &&
+          staff.role === "ADMIN")
       );
     });
 
-    if (user === undefined) {
+    if (!user) {
       throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
+        BaseResponse.ResponseType.AUTH_FAILED,
+        ErrorType.no_user_found
       );
     }
 
     const token = await this.AuthService.createToken(user);
-
-    const userData = await this.AuthService.validateToken(token);
-
-    console.log(typeof userData);
-    return userData;
+    // console.log(token);
   }
 }
 
