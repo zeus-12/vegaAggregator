@@ -16,6 +16,7 @@ class BillingService extends BaseService {
     this.request = request;
     this.BillingModel = new BillingModel(request);
     this.KOTService = new KOTService(request);
+    this.TableService = new TableService(request);
     this.SettingsService = new SettingsService(request);
   }
 
@@ -52,7 +53,6 @@ class BillingService extends BaseService {
       //Calculate Sum to be paid
       var { grandPayableBill, totalPackagedAmount, totalCartAmount } =
         KOTUtils.billSumCalculation(kotfile.cart);
-      console.log(kotfile);
 
       var { kotfile, grandPayableBill } = KOTUtils.addExtras(
         grandPayableBill,
@@ -79,11 +79,49 @@ class BillingService extends BaseService {
 
       //Remove _rev and _id (KOT File Scraps!)
       var newBillFile = kotfile;
-
       delete newBillFile._id;
       delete newBillFile._rev;
       newBillFile._id = "ADYAR_BILL_" + billNumber;
-      //Set _id from Branch mentioned in Licence
+
+      function resetTableToFree() {}
+      var systemOptions = await this.SettingsService.getSettingsById(
+        "ACCELERATE_SYSTEM_OPTIONS"
+      );
+      var preferenceData = systemOptions.value.find(
+        (option) => option.systemName === "Z500"
+      );
+      var billSettleLater = preferenceData.data.find(
+        (item) => item.name === "billSettleLater"
+      ).value;
+
+      // var optionalPageRef = this.request.body.optionalPageRef;
+      let tableData = await this.TableService.fetchTablesByFilter(
+        "name",
+        kotfile.table
+      );
+
+      if (kotfile.orderDetails.modeType == "DINE") {
+        if (billSettleLater == "YES") {
+          await this.TableService.resetTableToFree(kotfile.table);
+        } else {
+          tableData = KOTUtils.updateTableForBilling(
+            tableData,
+            kotfile,
+            billNumber
+          );
+
+          // tableData.remarks = kotfile.payableAmount;
+          // tableData.KOT = billNumber;
+          // tableData.status = 2;
+          // tableData.lastUpdate = moment().format("HHmm");
+          // console.log(tableData);
+          await this.TableService.updateTableByFilter(
+            "name",
+            kotfile.table,
+            tableData
+          );
+        }
+      }
 
       return await this.BillingModel.generateBill(newBillFile, kot_id, kot_rev)
         .then(
@@ -91,11 +129,14 @@ class BillingService extends BaseService {
             throw error;
           })
         )
+
         .catch((error) => {
           throw error;
         });
     }
   }
+
+  async billTableMapping() {}
 }
 
 module.exports = BillingService;

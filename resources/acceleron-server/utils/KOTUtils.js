@@ -1,3 +1,4 @@
+var moment = require("moment");
 function reduceCart(raw_cart) {
   var beautified_cart = [];
 
@@ -118,6 +119,15 @@ function roundOffFigures(
   return kotfile;
 }
 
+function updateTableForBilling(tableData, kotfile, billNumber) {
+  tableData.remarks = kotfile.payableAmount;
+  tableData.KOT = billNumber;
+  tableData.status = 2;
+  tableData.lastUpdate = moment().format("HHmm");
+
+  return tableData;
+}
+
 module.exports = {
   reduceCart,
   initialisePaymentDetails,
@@ -125,4 +135,5 @@ module.exports = {
   billSumCalculation,
   addExtras,
   roundOffFigures,
+  updateTableForBilling,
 };
