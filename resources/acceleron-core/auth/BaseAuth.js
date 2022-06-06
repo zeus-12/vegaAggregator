@@ -4,11 +4,17 @@ let ErrorResponse = require("../utils/ErrorResponse");
 let BaseResponse = require("../utils/BaseResponse");
 let ResponseType = BaseResponse.ResponseType;
 //todo
-const secretKey = "secretkey";
+const secretKey = process.env.TOKEN_KEY || "";
 
 module.exports = function (req, res, next) {
   var token =
     req.body.token || req.query.token || req.headers["x-access-token"];
+  if (secretKey == "")
+    throw new ErrorResponse(
+      BaseResponse.ResponseType.ERROR,
+      ErrorType.something_went_wrong
+    );
+
   var route = req.path;
   var ignore_routes = ["/ping", "/login"];
   // decode token

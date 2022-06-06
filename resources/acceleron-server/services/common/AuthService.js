@@ -6,8 +6,8 @@ let BaseService = ACCELERONCORE._services.BaseService;
 
 var _ = require("underscore");
 var async = require("async");
-//todo
-const secretKey = "secretkey";
+
+const secretKey = process.env.TOKEN_KEY || "";
 
 class AuthService extends BaseService {
   constructor(request) {
