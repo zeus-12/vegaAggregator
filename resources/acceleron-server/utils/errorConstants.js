@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 var ErrorType = {};
 
@@ -207,4 +207,8 @@ ErrorType.filter_key_and_filter_method_empty =
   'Please provide Filter method and Search key.';
 ErrorType.bill_number_empty = 'Please provide the Bill number to be searched.';
 ErrorType.invalid_filter_method = "Filter method doesn't exist.";
+
+// login errors
+ErrorType.incomplete_login_credentials = "Please provide both username and password";
+
 module.exports = ErrorType;

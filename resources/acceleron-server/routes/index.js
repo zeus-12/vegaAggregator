@@ -20,6 +20,7 @@ router.get('/apidocs.json', function (req, res, next) {
 
 /* Basic Authentication */
 router.use(ACCELERONCORE._auth.BaseAuth);
+router.use('/login', require('./LoginRoute'));
 router.use('/settings', require('./SettingsRoute'));
 router.use('/table', require('./TableRoute'));
 router.use('/kot', require('./KOTRoute'));
