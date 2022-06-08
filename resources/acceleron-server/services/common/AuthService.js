@@ -3,38 +3,39 @@ let jwt = require("jsonwebtoken");
 var moment = require("moment");
 
 let BaseService = ACCELERONCORE._services.BaseService;
-
-var _ = require("underscore");
-var async = require("async");
+let LicenceClient = require("../../clients/LicenceClient");
 
 const secretKey = process.env.TOKEN_KEY || "";
+const DAY = 60 * 60 * 24;
+const TOKEN_EXPIRY_IN_DAYS = DAY * 7;
 
 class AuthService extends BaseService {
   constructor(request) {
     super(request);
     this.request = request;
+    this.LicenceClient = new LicenceClient();
   }
 
-  //todo get from acceleron service
-  async createToken(user) {
-    var user_detail = {
-      client: "ZAITOON",
-      branch: "ADYAR",
+  async createToken(userData, licenceKey) {
+    let licenceData = await this.LicenceClient.validateLicence(licenceKey);
+
+    const user_detail = {
+      client: licenceData.client,
+      branch: licenceData.branch,
       issueTime: moment().unix(),
       user: {
-        verifiedMobile: user.code,
-        name: user.name,
-        id: "srwr39trg9ed9g93r583t84e8tg8rgrf",
-        role: user.role,
-        homeBranch: "VELACHERY",
+        verifiedMobile: userData.code,
+        name: userData.name,
+        id: userData.id,
+        role: userData.role,
+        homeBranch: userData.homeBranch,
       },
-      machineId: "Z500",
+      machineId: licenceData.machineUID,
     };
-    const token = jwt.sign(user_detail, secretKey, {
-      //7days
-      expiresIn: 60 * 60 * 24 * 7,
+
+    return jwt.sign(user_detail, secretKey, {
+      expiresIn: TOKEN_EXPIRY_IN_DAYS
     });
-    return token;
   }
 }
 

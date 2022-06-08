@@ -5,6 +5,7 @@ var ErrorType = {};
 /* Generic Errors */
 ErrorType.missing_required_parameters = 'Required parameters missing';
 ErrorType.something_went_wrong = 'Something went wrong';
+ErrorType.server_cannot_verify_request = 'Server failed to verify the request';
 ErrorType.server_data_corrupted =
   'Server data corrupted, please contact Acceleron Support';
 ErrorType.server_cannot_handle_request =
@@ -200,6 +201,7 @@ ErrorType.mapped_menu_type_is_empty_or_invalid =
 ErrorType.machine_not_in_license =
   'Licence Error: Machine Name not issued in Licence.';
 ErrorType.license_already_used = 'Activation Error: Licence already used.';
+ErrorType.license_validation_failed = 'Failed to validate the licence';
 
 // Settled & Pending Bill Errors
 ErrorType.start_and_end_date_empty = 'Please provide Start and End dates.';

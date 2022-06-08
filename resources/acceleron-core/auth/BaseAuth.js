@@ -12,7 +12,7 @@ module.exports = function (req, res, next) {
   if (secretKey == "")
     throw new ErrorResponse(
       BaseResponse.ResponseType.ERROR,
-      ErrorType.something_went_wrong
+      ErrorType.server_cannot_verify_request
     );
 
   var route = req.path;
