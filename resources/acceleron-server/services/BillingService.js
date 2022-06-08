@@ -43,11 +43,8 @@ class BillingService extends BaseService {
       kotfile.billNumber = billNumber;
       kotfile = KOTUtils.initialisePaymentDetails(kotfile);
 
-      // var branch_code = window.localStorage.accelerate_licence_branch
-      //   ? window.localStorage.accelerate_licence_branch
-      //   : "";
       // todo
-      // kotfile.outletCode = branch_code != "" ? branch_code : "UNKNOWN";
+
       kotfile.outletCode = "ADYAR";
 
       /* BILL SUM CALCULATION */
@@ -101,55 +98,57 @@ class BillingService extends BaseService {
         "name",
         kotfile.table
       );
-      //move inside then block
-      if (kotfile.orderDetails.modeType == "DINE") {
-        if (billSettleLater == "YES") {
-          await this.TableService.resetTableToFree(kotfile.table);
-        } else {
-          tableData = KOTUtils.updateTableForBilling(
-            tableData,
-            kotfile,
-            billNumber
-          );
-
-          await this.TableService.updateTableByFilter(
-            "name",
-            kotfile.table,
-            tableData
-          );
-        }
-      }
-
-      if (optionalPageRef == "ORDER_PUNCHING") {
-        //todo uncomment entire section
-        // await this.KOTService.renderCustomerInfo();
-        //getting client from machine id
-        //  Z500 -> ACCELERATE_800
-        // accelerateLicence = this.request.loggedInUser.machineId.replace(
-        //   "Z",
-        //   "ACCELERATE_"
-        // );
-        // var messageData = {
-        //   customerName: kotfile.customerName,
-        //   customerMobile: kotfile.mobileNumber,
-        //   totalBillAmount: kotfile.billAmount,
-        //   accelerateLicence: accelerateLicence,
-        //   accelerateClient: this.request.loggedInUser.client,
-        // };
-        // if (kotfile.orderDetails.modeType == "DELIVERY") {
-        //   await this.MessagingService.postMessageRequest(
-        //     kotfile.customerMobile,
-        //     messageData,
-        //     "DELIVERY_CONFIRMATION"
-        //   );
-        // }
-      }
 
       return await this.BillingModel.generateBill(newBillFile, kot_id, kot_rev)
         .then(
-          await this.KOTService.deleteKOTById(kot_id).catch((error) => {
-            throw error;
-          })
+          await this.KOTService.deleteKOTById(kot_id)
+            .then(async => {
+              if (kotfile.orderDetails.modeType == "DINE") {
+                if (billSettleLater == "YES") {
+                  await this.TableService.resetTableToFree(kotfile.table);
+                } else {
+                  tableData = KOTUtils.updateTableForBilling(
+                    tableData,
+                    kotfile,
+                    billNumber
+                  );
+
+                  await this.TableService.updateTableByFilter(
+                    "name",
+                    kotfile.table,
+                    tableData
+                  );
+                }
+              }
+
+              if (optionalPageRef == "ORDER_PUNCHING") {
+
+                await this.KOTService.renderCustomerInfo();
+                // getting client from machine id
+                //  Z500 -> ACCELERATE_800
+                var accelerateLicence = this.request.loggedInUser.machineId.replace(
+                  "Z",
+                  "ACCELERATE_"
+                );
+                var messageData = {
+                  customerName: kotfile.customerName,
+                  customerMobile: kotfile.mobileNumber,
+                  totalBillAmount: kotfile.billAmount,
+                  accelerateLicence: accelerateLicence,
+                  accelerateClient: this.request.loggedInUser.client,
+                };
+                if (kotfile.orderDetails.modeType == "DELIVERY") {
+                  await this.MessagingService.postMessageRequest(
+                    kotfile.customerMobile,
+                    messageData,
+                    "DELIVERY_CONFIRMATION"
+                  );
+                }
+              }
+            })
+            .catch((error) => {
+              throw error;
+            })
         )
 
         .catch((error) => {

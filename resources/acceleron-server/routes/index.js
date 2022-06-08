@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 "use strict";
 var express = require("express");
-=======
-'use strict';
-var express = require('express');
->>>>>>> da0591eb5386d7f8816f12cc974458f96fac4b54
 var router = express.Router();
 
 var swaggerUi = require("swagger-ui-express");
@@ -25,19 +20,19 @@ router.get("/apidocs.json", function (req, res, next) {
 
 /* Basic Authentication */
 router.use(ACCELERONCORE._auth.BaseAuth);
-router.use('/settings', require('./SettingsRoute'));
-router.use('/table', require('./TableRoute'));
-router.use('/kot', require('./KOTRoute'));
-router.use('/user', require('./UserRoute'));
-router.use('/summary', require('./SummaryRoute'));
-router.use('/menu', require('./MenuRoute'));
-router.use('/managemenu', require('./ManageMenuRoute'));
-router.use('/license', require('./LicenseRoute'));
-router.use('/pending-bill', require('./PendingBillRoute'));
-router.use('/settled-bill', require('./SettledBillRoute'));
-router.use('/billing', require('./BillingModuleRoute'));
-router.use('/cancelled-order', require('./CancelledOrderRoute'));
-router.use('/cancelled-invoice', require('./CancelledInvoiceRoute'));
-router.use('/login', require('./LoginRoute'));
+router.use("/settings", require("./SettingsRoute"));
+router.use("/table", require("./TableRoute"));
+router.use("/kot", require("./KOTRoute"));
+router.use("/user", require("./UserRoute"));
+router.use("/summary", require("./SummaryRoute"));
+router.use("/menu", require("./MenuRoute"));
+router.use("/managemenu", require("./ManageMenuRoute"));
+router.use("/license", require("./LicenseRoute"));
+router.use("/pending-bill", require("./PendingBillRoute"));
+router.use("/settled-bill", require("./SettledBillRoute"));
+router.use("/billing", require("./BillingModuleRoute"));
+router.use("/cancelled-order", require("./CancelledOrderRoute"));
+router.use("/cancelled-invoice", require("./CancelledInvoiceRoute"));
+router.use("/login", require("./LoginRoute"));
 
 module.exports = router;
