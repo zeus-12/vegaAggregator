@@ -6,6 +6,7 @@ let SettingsService = require("./SettingsService");
 let TableService = require("./TableService");
 let KOTUtils = require("../utils/KOTUtils");
 let TimeUtils = require("../utils/TimeUtils");
+let MessagingService = require("./common/MessagingService");
 
 var _ = require("underscore");
 var async = require("async");
@@ -18,6 +19,7 @@ class BillingService extends BaseService {
     this.KOTService = new KOTService(request);
     this.TableService = new TableService(request);
     this.SettingsService = new SettingsService(request);
+    this.MessagingService = new MessagingService(request);
   }
 
   async generateBill(kotnumber) {
@@ -94,12 +96,12 @@ class BillingService extends BaseService {
         (item) => item.name === "billSettleLater"
       ).value;
 
-      // var optionalPageRef = this.request.body.optionalPageRef;
+      var optionalPageRef = this.request.body.optionalPageRef;
       let tableData = await this.TableService.fetchTablesByFilter(
         "name",
         kotfile.table
       );
-
+      //move inside then block
       if (kotfile.orderDetails.modeType == "DINE") {
         if (billSettleLater == "YES") {
           await this.TableService.resetTableToFree(kotfile.table);
@@ -110,17 +112,37 @@ class BillingService extends BaseService {
             billNumber
           );
 
-          // tableData.remarks = kotfile.payableAmount;
-          // tableData.KOT = billNumber;
-          // tableData.status = 2;
-          // tableData.lastUpdate = moment().format("HHmm");
-          // console.log(tableData);
           await this.TableService.updateTableByFilter(
             "name",
             kotfile.table,
             tableData
           );
         }
+      }
+
+      if (optionalPageRef == "ORDER_PUNCHING") {
+        //todo uncomment entire section
+        // await this.KOTService.renderCustomerInfo();
+        //getting client from machine id
+        //  Z500 -> ACCELERATE_800
+        // accelerateLicence = this.request.loggedInUser.machineId.replace(
+        //   "Z",
+        //   "ACCELERATE_"
+        // );
+        // var messageData = {
+        //   customerName: kotfile.customerName,
+        //   customerMobile: kotfile.mobileNumber,
+        //   totalBillAmount: kotfile.billAmount,
+        //   accelerateLicence: accelerateLicence,
+        //   accelerateClient: this.request.loggedInUser.client,
+        // };
+        // if (kotfile.orderDetails.modeType == "DELIVERY") {
+        //   await this.MessagingService.postMessageRequest(
+        //     kotfile.customerMobile,
+        //     messageData,
+        //     "DELIVERY_CONFIRMATION"
+        //   );
+        // }
       }
 
       return await this.BillingModel.generateBill(newBillFile, kot_id, kot_rev)
@@ -135,8 +157,6 @@ class BillingService extends BaseService {
         });
     }
   }
-
-  async billTableMapping() {}
 }
 
 module.exports = BillingService;
