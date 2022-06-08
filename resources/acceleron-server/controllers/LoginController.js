@@ -10,20 +10,16 @@ class LoginController extends BaseController {
   }
 
   async userLogin() {
-    var bodyParams = this.request.body;
-    if (bodyParams.username && bodyParams.password) {
-      var { username, password } = bodyParams;
-      var loginDetails = { username, password };
-    } else if (bodyParams.username && !bodyParams.password) {
-      var { username } = bodyParams;
-      var loginDetails = { username };
-    } else {
+    let bodyParams = this.request.body;
+    if (!bodyParams.username || !bodyParams.licenceKey) {
       throw new ErrorResponse(
         BaseResponse.ResponseType.BAD_REQUEST,
         ErrorType.incomplete_login_credentials
       );
     }
 
+    let { username, password, licenceKey } = bodyParams;
+    let loginDetails = { username, password, licenceKey };
     return await this.LoginService.validateAndGenerateToken(loginDetails).catch(
       (error) => {
         throw error;

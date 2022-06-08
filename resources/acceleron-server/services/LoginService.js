@@ -3,9 +3,6 @@ let BaseService = ACCELERONCORE._services.BaseService;
 let SettingsService = require("./SettingsService");
 let AuthService = require("./common/AuthService");
 
-var _ = require("underscore");
-var async = require("async");
-
 class LoginService extends BaseService {
   constructor(request) {
     super(request);
@@ -15,19 +12,17 @@ class LoginService extends BaseService {
   }
 
   async validateAndGenerateToken(loginDetails) {
-    let { username, password } = loginDetails;
-    const data = await this.SettingsService.getSettingsById(
-      "ACCELERATE_STAFF_PROFILES"
-    ).catch((error) => {
-      throw error;
-    });
+    let { username, password, licenceKey } = loginDetails;
+    const data = await this.SettingsService.getSettingsById("ACCELERATE_STAFF_PROFILES")
+        .catch((error) => {
+          throw error;
+        });
+
     let staffProfiles = data.value;
     let user = staffProfiles.find((staff) => {
       return (
         (staff.role === "STEWARD" && staff.code === username) ||
-        (staff.role === "ADMIN" &&
-          staff.code === username &&
-          staff.code === password)
+        (staff.role === "ADMIN" && staff.code === username && staff.password === password)
       );
     });
 
@@ -37,9 +32,7 @@ class LoginService extends BaseService {
         ErrorType.no_user_found
       );
     }
-
-    const token = await this.AuthService.createToken(user);
-    return token;
+    return await this.AuthService.createToken(user, licenceKey);
   }
 }
 
