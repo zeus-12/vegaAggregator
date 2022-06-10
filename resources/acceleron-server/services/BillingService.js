@@ -86,7 +86,7 @@ class BillingService extends BaseService {
         "ACCELERATE_SYSTEM_OPTIONS"
       );
       var preferenceData = systemOptions.value.find(
-        (option) => option.systemName === "Z500"
+        (option) => option.systemName === this.request.loggedInUser.machineId
       );
       var billSettleLater = preferenceData.data.find(
         (item) => item.name === "billSettleLater"
