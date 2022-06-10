@@ -24,9 +24,10 @@ class BillingService extends BaseService {
   }
 
   async generateBill(kotnumber) {
-    //todo
-
-    var kot_id = KOTUtils.frameKotNumber(this.request.loggedInUser.branch, kotnumber)
+    var kot_id = KOTUtils.frameKotNumber(
+      this.request.loggedInUser.branch,
+      kotnumber
+    );
     var data = await this.KOTService.getKOTById(kot_id).catch((error) => {
       throw error;
     });
@@ -40,8 +41,6 @@ class BillingService extends BaseService {
       kotfile.cart = KOTUtils.reduceCart(raw_cart);
       kotfile.billNumber = billNumber;
       kotfile = KOTUtils.initialisePaymentDetails(kotfile);
-
-      // todo
 
       kotfile.outletCode = this.request.loggedInUser.branch;
 
@@ -78,9 +77,10 @@ class BillingService extends BaseService {
       var newBillFile = kotfile;
       delete newBillFile._id;
       delete newBillFile._rev;
-      newBillFile._id = BillUtils.frameBillNumber(this.request.loggedInUser.branch, billNumber)
-    
-
+      newBillFile._id = BillUtils.frameBillNumber(
+        this.request.loggedInUser.branch,
+        billNumber
+      );
 
       var systemOptions = await this.SettingsService.getSettingsById(
         "ACCELERATE_SYSTEM_OPTIONS"
@@ -92,42 +92,39 @@ class BillingService extends BaseService {
         (item) => item.name === "billSettleLater"
       ).value;
 
-      var optionalPageRef = this.request.body.optionalPageRef;
       let tableData = await this.TableService.fetchTablesByFilter(
         "name",
         kotfile.table
       );
       const modeType = kotfile.orderDetails.modeType;
-        
 
+      var isTableStatusUpdated, smsSent, isTableSetFree;
 
-        var isTableStatusUpdated, smsSent,isTableSetFree ;
-
-
-       await this.BillingModel.generateBill(newBillFile, kot_id, kot_rev)
+      await this.BillingModel.generateBill(newBillFile, kot_id, kot_rev)
         .then(
           await this.KOTService.deleteKOTById(kot_id)
-            .then(async() => {
+            .then(async () => {
               if (modeType == "DINE" && billSettleLater == "YES") {
-                  await this.TableService.resetTableToFree(kotfile.table).then(isTableSetFree = true).catch(err=> isTableSetFree=false);
+                await this.TableService.resetTableToFree(kotfile.table)
+                  .then((isTableSetFree = true))
+                  .catch((err) => (isTableSetFree = false));
+              } else if (modeType == "DINE" && billSettleLater !== "YES") {
+                tableData = KOTUtils.updateTableForBilling(
+                  tableData,
+                  kotfile,
+                  billNumber
+                );
+
+                await this.TableService.updateTableByFilter(
+                  "name",
+                  kotfile.table,
+                  tableData
+                )
+                  .then((isTableStatusUpdated = true))
+                  .catch((err) => (isTableStatusUpdated = false));
               }
-              else if(modeType == "DINE" && billSettleLater !== "YES") {
-                  tableData = KOTUtils.updateTableForBilling(
-                    tableData,
-                    kotfile,
-                    billNumber
-                  );
 
-                  await this.TableService.updateTableByFilter(
-                    "name",
-                    kotfile.table,
-                    tableData
-                  ).then(isTableStatusUpdated = true).catch(err => isTableStatusUpdated=false);
-                }
-
-              if (optionalPageRef == "ORDER_PUNCHING") {
-                //todo
-                // await this.KOTService.renderCustomerInfo();
+              if (modeType == "DELIVERY") {
                 var messageData = {
                   customerName: newBillFile.customerName,
                   customerMobile: newBillFile.customerMobile,
@@ -135,13 +132,13 @@ class BillingService extends BaseService {
                   accelerateLicence: this.request.loggedInUser.machineId,
                   accelerateClient: this.request.loggedInUser.client,
                 };
-                if (modeType == "DELIVERY") {
-                  await this.MessagingService.postMessageRequest(
-                    kotfile.customerMobile,
-                    messageData,
-                    "DELIVERY_CONFIRMATION"
-                  ).then(smsSent=true).catch(err=>smsSent=false);
-                }
+                await this.MessagingService.postMessageRequest(
+                  kotfile.customerMobile,
+                  messageData,
+                  "DELIVERY_CONFIRMATION"
+                )
+                  .then((smsSent = true))
+                  .catch((err) => (smsSent = false));
               }
             })
             .catch((error) => {
@@ -158,10 +155,10 @@ class BillingService extends BaseService {
         billingMode: newBillFile.orderDetails.modeType,
         isTableSetFree,
         isTableStatusUpdated,
-        smsSent
-      }
-      
-      return response
+        smsSent,
+      };
+
+      return response;
     }
   }
 

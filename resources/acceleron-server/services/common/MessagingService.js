@@ -5,11 +5,10 @@ class MessagingService extends BaseService {
   constructor(request) {
     super(request);
     this.request = request;
-    // this.KOTService = new KOTService(request);
   }
 
   async postMessageRequest(mobileNumber, data, type) {
-    if(isNaN(mobileNumber) || mobileNumber < Math.pow(10,9)) return
+    if (isNaN(mobileNumber) || mobileNumber < Math.pow(10, 9)) return;
     var messageData = {
       mobileNumber,
       data,
@@ -25,7 +24,6 @@ class MessagingService extends BaseService {
     //   timeout: 10000,
     //   // success: function (data) {},
     // });
-    
   }
 }
 
