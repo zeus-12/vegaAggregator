@@ -4,7 +4,7 @@ let SettingsModel = require("../models/SettingsModel");
 
 var _ = require("underscore");
 var async = require("async");
-const ErrorType = require("../utils/errorConstants");
+const ErrorType = require("../utils/ErrorConstants");
 
 class SettingsService extends BaseService {
   constructor(request) {

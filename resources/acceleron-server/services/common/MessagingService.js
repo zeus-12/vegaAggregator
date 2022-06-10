@@ -1,29 +1,20 @@
 "use strict";
 let BaseService = ACCELERONCORE._services.BaseService;
+let MessagingClient = require("../../clients/MessagingClient");
+let CommonUtils = require("../../utils/CommonUtils");
 
 class MessagingService extends BaseService {
   constructor(request) {
     super(request);
     this.request = request;
+    this.MessagingClient = new MessagingClient();
   }
 
   async postMessageRequest(mobileNumber, data, type) {
-    if (isNaN(mobileNumber) || mobileNumber < Math.pow(10, 9)) return;
-    var messageData = {
-      mobileNumber,
-      data,
-      type,
-    };
-
-    // $.ajax({
-    //   type: "POST",
-    //   url: "https://www.accelerateengine.app/apis/posdeliveryconfirmationsms.php",
-    //   data: JSON.stringify(messageData),
-    //   contentType: "application/json",
-    //   dataType: "json",
-    //   timeout: 10000,
-    //   // success: function (data) {},
-    // });
+    if(!CommonUtils.validateMobileNumber(mobileNumber)) return;
+    
+    const messageData = {mobileNumber, data, type};
+    await this.MessagingClient.sendMessage(messageData);
   }
 }
 
