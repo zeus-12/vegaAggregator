@@ -1,11 +1,7 @@
 "use strict";
 let BaseService = ACCELERONCORE._services.BaseService;
-// let KOTService = require("./KOTService");
 
-var _ = require("underscore");
-var async = require("async");
-
-class BillingService extends BaseService {
+class MessagingService extends BaseService {
   constructor(request) {
     super(request);
     this.request = request;
@@ -13,27 +9,24 @@ class BillingService extends BaseService {
   }
 
   async postMessageRequest(mobileNumber, data, type) {
+    if(isNaN(mobileNumber) || mobileNumber < Math.pow(10,9)) return
     var messageData = {
       mobileNumber,
       data,
       type,
     };
-    //validate mobileNumber
 
-    // check isAutoSMSFeatureEnabled
-
-    $.ajax({
-      type: "POST",
-      url: "https://www.accelerateengine.app/apis/posdeliveryconfirmationsms.php",
-      data: JSON.stringify(messageData),
-      contentType: "application/json",
-      dataType: "json",
-      timeout: 10000,
-      // success: function (data) {},
-    });
-    //todo: anything to return
-    return;
+    // $.ajax({
+    //   type: "POST",
+    //   url: "https://www.accelerateengine.app/apis/posdeliveryconfirmationsms.php",
+    //   data: JSON.stringify(messageData),
+    //   contentType: "application/json",
+    //   dataType: "json",
+    //   timeout: 10000,
+    //   // success: function (data) {},
+    // });
+    
   }
 }
 
-module.exports = BillingService;
+module.exports = MessagingService;

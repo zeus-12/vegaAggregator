@@ -30,7 +30,7 @@ router.use("/managemenu", require("./ManageMenuRoute"));
 router.use("/license", require("./LicenseRoute"));
 router.use("/pending-bill", require("./PendingBillRoute"));
 router.use("/settled-bill", require("./SettledBillRoute"));
-router.use("/billing", require("./BillingModuleRoute"));
+router.use("/billing", require("./BillingRoute"));
 router.use("/cancelled-order", require("./CancelledOrderRoute"));
 router.use("/cancelled-invoice", require("./CancelledInvoiceRoute"));
 router.use("/login", require("./LoginRoute"));

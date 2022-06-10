@@ -17,6 +17,18 @@ class BillingController extends BaseController {
       throw error;
     });
   }
+
+  // async cancelBill() {
+  //   var filter = {};
+  //   if (this.request.body && this.request.query.bill_id) {
+  //     filter.file = this.request.body;
+  //     filter.bill_id = this.request.query.bill_id;
+  //   }
+
+  //   return await this.BillingService.cancelBill(filter).catch((error) => {
+  //     throw error;
+  //   });
+  // }
 }
 
 module.exports = BillingController;

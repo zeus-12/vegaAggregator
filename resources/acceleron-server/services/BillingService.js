@@ -5,6 +5,7 @@ let KOTService = require("./KOTService");
 let SettingsService = require("./SettingsService");
 let TableService = require("./TableService");
 let KOTUtils = require("../utils/KOTUtils");
+let BillUtils = require("../utils/BillUtils");
 let TimeUtils = require("../utils/TimeUtils");
 let MessagingService = require("./common/MessagingService");
 
@@ -24,7 +25,8 @@ class BillingService extends BaseService {
 
   async generateBill(kotnumber) {
     //todo
-    var kot_id = "ADYAR_KOT_" + kotnumber;
+
+    var kot_id = KOTUtils.frameKotNumber(this.request.loggedInUser.branch, kotnumber)
     var data = await this.KOTService.getKOTById(kot_id).catch((error) => {
       throw error;
     });
@@ -36,16 +38,12 @@ class BillingService extends BaseService {
       var raw_cart = kotfile.cart;
 
       kotfile.cart = KOTUtils.reduceCart(raw_cart);
-
-      // var memory_id = kotfile._id;
-      // var memory_rev = kotfile._rev;
-
       kotfile.billNumber = billNumber;
       kotfile = KOTUtils.initialisePaymentDetails(kotfile);
 
       // todo
 
-      kotfile.outletCode = "ADYAR";
+      kotfile.outletCode = this.request.loggedInUser.branch;
 
       /* BILL SUM CALCULATION */
 
@@ -80,9 +78,10 @@ class BillingService extends BaseService {
       var newBillFile = kotfile;
       delete newBillFile._id;
       delete newBillFile._rev;
-      newBillFile._id = "ADYAR_BILL_" + billNumber;
+      newBillFile._id = BillUtils.frameBillNumber(this.request.loggedInUser.branch, billNumber)
+    
 
-      function resetTableToFree() {}
+
       var systemOptions = await this.SettingsService.getSettingsById(
         "ACCELERATE_SYSTEM_OPTIONS"
       );
@@ -98,15 +97,21 @@ class BillingService extends BaseService {
         "name",
         kotfile.table
       );
+      const modeType = kotfile.orderDetails.modeType;
+        
 
-      return await this.BillingModel.generateBill(newBillFile, kot_id, kot_rev)
+
+        var isTableStatusUpdated, smsSent,isTableSetFree ;
+
+
+       await this.BillingModel.generateBill(newBillFile, kot_id, kot_rev)
         .then(
           await this.KOTService.deleteKOTById(kot_id)
-            .then(async => {
-              if (kotfile.orderDetails.modeType == "DINE") {
-                if (billSettleLater == "YES") {
-                  await this.TableService.resetTableToFree(kotfile.table);
-                } else {
+            .then(async() => {
+              if (modeType == "DINE" && billSettleLater == "YES") {
+                  await this.TableService.resetTableToFree(kotfile.table).then(isTableSetFree = true).catch(err=> isTableSetFree=false);
+              }
+              else if(modeType == "DINE" && billSettleLater !== "YES") {
                   tableData = KOTUtils.updateTableForBilling(
                     tableData,
                     kotfile,
@@ -117,32 +122,25 @@ class BillingService extends BaseService {
                     "name",
                     kotfile.table,
                     tableData
-                  );
+                  ).then(isTableStatusUpdated = true).catch(err => isTableStatusUpdated=false);
                 }
-              }
 
               if (optionalPageRef == "ORDER_PUNCHING") {
-
-                await this.KOTService.renderCustomerInfo();
-                // getting client from machine id
-                //  Z500 -> ACCELERATE_800
-                var accelerateLicence = this.request.loggedInUser.machineId.replace(
-                  "Z",
-                  "ACCELERATE_"
-                );
+                //todo
+                // await this.KOTService.renderCustomerInfo();
                 var messageData = {
-                  customerName: kotfile.customerName,
-                  customerMobile: kotfile.mobileNumber,
-                  totalBillAmount: kotfile.billAmount,
-                  accelerateLicence: accelerateLicence,
+                  customerName: newBillFile.customerName,
+                  customerMobile: newBillFile.customerMobile,
+                  totalBillAmount: newBillFile.payableAmount,
+                  accelerateLicence: this.request.loggedInUser.machineId,
                   accelerateClient: this.request.loggedInUser.client,
                 };
-                if (kotfile.orderDetails.modeType == "DELIVERY") {
+                if (modeType == "DELIVERY") {
                   await this.MessagingService.postMessageRequest(
                     kotfile.customerMobile,
                     messageData,
                     "DELIVERY_CONFIRMATION"
-                  );
+                  ).then(smsSent=true).catch(err=>smsSent=false);
                 }
               }
             })
@@ -154,8 +152,24 @@ class BillingService extends BaseService {
         .catch((error) => {
           throw error;
         });
+
+      var response = {
+        data: newBillFile,
+        billingMode: newBillFile.orderDetails.modeType,
+        isTableSetFree,
+        isTableStatusUpdated,
+        smsSent
+      }
+      
+      return response
     }
   }
+
+  // async cancelBill(filter) {
+  //   return this.BillingService.cancelBill(filter).catch((error) => {
+  //     throw error;
+  //   });
+  // }
 }
 
 module.exports = BillingService;

@@ -128,6 +128,10 @@ function updateTableForBilling(tableData, kotfile, billNumber) {
   return tableData;
 }
 
+function frameKotNumber(branch, kotnumber) {
+  var kot_id = branch + "_KOT_" + kotnumber;
+  return kot_id
+}
 module.exports = {
   reduceCart,
   initialisePaymentDetails,
@@ -136,4 +140,5 @@ module.exports = {
   addExtras,
   roundOffFigures,
   updateTableForBilling,
+  frameKotNumber
 };

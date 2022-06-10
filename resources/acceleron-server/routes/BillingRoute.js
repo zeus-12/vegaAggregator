@@ -10,9 +10,10 @@ router.post("/generate-bill/", async function (req, res, next) {
   }
 });
 
-// router.post("/post", async function (req, res, next) {
+
+// router.delete('/:BILL_NUMBER', async function (req, res, next) {
 //   try {
-//     const data = await new BillingController(req).postBill();
+//     const data = await new BillingController(req).cancelBill();
 //     return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
 //   } catch (error) {
 //     return next(error);
