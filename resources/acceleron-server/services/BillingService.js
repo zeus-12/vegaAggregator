@@ -151,8 +151,8 @@ class BillingService extends BaseService {
         });
 
       var response = {
-        data: newBillFile,
-        billingMode: newBillFile.orderDetails.modeType,
+        newBillFile,
+        billingMode: modeType,
         isTableSetFree,
         isTableStatusUpdated,
         smsSent,
