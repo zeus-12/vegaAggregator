@@ -8,6 +8,7 @@ let KOTUtils = require("../utils/KOTUtils");
 let BillUtils = require("../utils/BillUtils");
 let TimeUtils = require("../utils/TimeUtils");
 let MessagingService = require("./common/MessagingService");
+var moment = require("moment");
 
 var _ = require("underscore");
 var async = require("async");
@@ -100,12 +101,12 @@ class BillingService extends BaseService {
 
       var isTableStatusUpdated, smsSent, isTableSetFree;
 
-      await this.BillingModel.generateBill(newBillFile, kot_id, kot_rev)
+      await this.BillingModel.generateBill(newBillFile)
         .then(
           await this.KOTService.deleteKOTById(kot_id)
             .then(async () => {
               if (modeType == "DINE" && billSettleLater == "YES") {
-                await this.TableService.resetTableToFree(kotfile.table)
+                await this.TableService.resetTable(kotfile.table)
                   .then((isTableSetFree = true))
                   .catch((err) => (isTableSetFree = false));
               } else if (modeType == "DINE" && billSettleLater !== "YES") {
@@ -160,6 +161,200 @@ class BillingService extends BaseService {
 
       return response;
     }
+  }
+
+  async settleBill(billNumber, billingDetails) {
+    const { splitPayHoldList } = billingDetails;
+    //get bill data
+    let billData = await this.getBillById(billNumber).catch((error) => {
+      throw error;
+    });
+    let fullAmount = billData.payableAmount;
+
+    var paymentModeSelected = "";
+    if (splitPayHoldList.length > 1) {
+      paymentModeSelected = "MULTIPLE";
+    } else {
+      paymentModeSelected = splitPayHoldList[0].code;
+
+      var comments = splitPayHoldList[0].reference;
+      if (comments && comments != "") {
+        billData.paymentReference = comments;
+      }
+    }
+
+    var splitObj = [];
+
+    var totalSplitSum = 0;
+    var n = 0;
+    var actualNoZeroSplits = 0;
+    while (splitPayHoldList[n]) {
+      if (splitPayHoldList[n].amount > 0) {
+        //Skip Zeros
+        totalSplitSum += parseFloat(splitPayHoldList[n].amount);
+        splitObj.push(splitPayHoldList[n]);
+        actualNoZeroSplits++;
+      }
+
+      n++;
+    }
+
+    totalSplitSum = parseFloat(totalSplitSum).toFixed(2);
+    totalSplitSum = parseFloat(totalSplitSum);
+
+    //In case multiple selected but value added only for one, all others kept empty
+    if (splitPayHoldList.length > 1 && actualNoZeroSplits == 1) {
+      paymentModeSelected = splitObj[0].code;
+
+      var comments = splitObj[0].reference;
+      if (comments && comments != "") {
+        billData.paymentReference = comments;
+      }
+    }
+
+    billData.timeSettle = TimeUtils.getCurrentTimestamp();
+    billData.totalAmountPaid = parseFloat(totalSplitSum).toFixed(2);
+    billData.totalAmountPaid = parseFloat(billData.totalAmountPaid);
+
+    billData.paymentMode = paymentModeSelected;
+    billData.dateStamp = moment(billData.date, "DD-MM-YYYY").format("YYYYMMDD");
+
+    billData.outletCode = this.request.loggedInUser.branch;
+
+    // Split Payment details
+    if (paymentModeSelected == "MULTIPLE") {
+      billData.paymentSplits = splitObj;
+    }
+
+    //Round Off or Tips calculation - auto
+    if (totalSplitSum < fullAmount) {
+      billData.roundOffAmount = parseFloat(fullAmount - totalSplitSum).toFixed(
+        2
+      );
+      billData.roundOffAmount = parseFloat(billData.roundOffAmount);
+    }
+
+    if (totalSplitSum > fullAmount) {
+      billData.tipsAmount = parseFloat(totalSplitSum - fullAmount).toFixed(2);
+      billData.tipsAmount = parseFloat(billData.tipsAmount);
+    }
+    var billRev = billData._rev;
+
+    //Clean _rev and _id (billData Scraps)
+    delete billData._id;
+    delete billData._rev;
+
+    billData._id = this.request.loggedInUser.branch + "_INVOICE_" + billNumber;
+    var pointer = this;
+    await this.BillingModel.generateInvoice(billData, billNumber)
+      .then(async () => {
+        await pointer.deleteBillById(billNumber, billRev);
+      })
+      .then(async () => {
+        if (billData.orderDetails.modeType == "DINE")
+          await pointer.TableService.resetTable(billData.table);
+      })
+      .catch((error) => {
+        throw error;
+      });
+
+    return { totalSplitSum, billNumber };
+  }
+
+  async unsettleBill(billNumber) {
+    let invoiceData = await this.getInvoiceById(billNumber).catch((error) => {
+      throw error;
+    });
+
+
+    //refunded orders cannot be settled
+    if (invoiceData.refundDetails && invoiceData.refundDetails.amount != 0) {
+      throw new ErrorResponse(
+        BaseResponse.ResponseType.BAD_REQUEST,
+        ErrorType.unsettle_refunded_orders,
+      );
+    }
+
+    //deleting invoice-related metadata
+    invoiceData._id = invoiceData._id.replace("INVOICE", "BILL");
+    delete invoiceData._rev;
+    delete invoiceData.dateStamp;
+    delete invoiceData.paymentMode;
+    delete invoiceData.totalAmountPaid;
+    delete invoiceData.timeSettle;
+    delete invoiceData.paymentReference;
+    delete invoiceData.paymentSplits;
+
+    delete invoiceData.roundOffAmount;
+    delete invoiceData.tipsAmount;
+
+
+    //sending to accelerate-bills
+    const billData = await this.BillingModel.generateBill(invoiceData).then(
+      async () => await this.deleteInvoiceById(billNumber).catch((error) => {
+        throw error;
+      })
+    ).catch((error) => {
+      throw error;
+    });
+
+    return {billData};
+  }
+
+  async deleteInvoiceById(billNumber) {
+    var invoiceId = this.request.loggedInUser.branch + "_INVOICE_" + billNumber;
+    const invoiceData = await this.getInvoiceById(billNumber);
+    const invoiceRev = invoiceData._rev;
+
+    return await this.BillingModel.deleteInvoiceById(
+      invoiceId,
+      invoiceRev
+    ).catch((error) => {
+      throw error;
+    });
+  }
+
+  async getInvoiceById(billNumber) {
+    var invoiceId = this.request.loggedInUser.branch + "_INVOICE_" + billNumber;
+    const invoiceData = await this.BillingModel.getInvoiceById(invoiceId).catch(
+      (error) => {
+        throw error;
+      }
+    );
+    if (_.isEmpty(invoiceData)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_matching_results
+      );
+    }
+    return invoiceData;
+  }
+
+  async getBillById(billNumber) {
+    var billId = this.request.loggedInUser.branch + "_BILL_" + billNumber;
+    const billData = await this.BillingModel.getBillById(billId).catch(
+      (error) => {
+        throw error;
+      }
+    );
+    if (_.isEmpty(billData)) {
+      throw new ErrorResponse(
+        ResponseType.NO_RECORD_FOUND,
+        ErrorType.no_matching_results
+      );
+    }
+    return billData;
+  }
+
+  async deleteBillById(billNumber) {
+    const billData = await this.getBillById(billNumber);
+    const billRev = billData._rev;
+    var billId = this.request.loggedInUser.branch + "_BILL_" + billNumber;
+    return await this.BillingModel.deleteBillById(billId, billRev).catch(
+      (error) => {
+        throw error;
+      }
+    );
   }
 
   // async cancelBill(filter) {

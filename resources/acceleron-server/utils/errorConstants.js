@@ -213,4 +213,7 @@ ErrorType.invalid_filter_method = "Filter method doesn't exist.";
 // login errors
 ErrorType.incomplete_login_credentials = "Please provide both username and password";
 
+//billing
+ErrorType.unsettle_refunded_orders = "Refund Issued orders can not be moved back to Unsettled."
+
 module.exports = ErrorType;
