@@ -5,7 +5,7 @@ let KOTService = require("./KOTService");
 let SettingsService = require("./SettingsService");
 let TableService = require("./TableService");
 let KOTUtils = require("../utils/KOTUtils");
-let BillUtils = require("../utils/BillUtils");
+let BillingUtils = require("../utils/BillingUtils");
 let TimeUtils = require("../utils/TimeUtils");
 let MessagingService = require("./common/MessagingService");
 var moment = require("moment");
@@ -78,7 +78,7 @@ class BillingService extends BaseService {
       var newBillFile = kotfile;
       delete newBillFile._id;
       delete newBillFile._rev;
-      newBillFile._id = BillUtils.frameBillNumber(
+      newBillFile._id = BillingUtils.frameBillNumber(
         this.request.loggedInUser.branch,
         billNumber
       );
@@ -244,13 +244,24 @@ class BillingService extends BaseService {
       billData.tipsAmount = parseFloat(totalSplitSum - fullAmount).toFixed(2);
       billData.tipsAmount = parseFloat(billData.tipsAmount);
     }
+    var maxTolerance = fullAmount*0.05;
+    if(maxTolerance < 10){
+      maxTolerance = 10;
+    }
+
+    if(totalSplitSum < fullAmount && fullAmount-totalSplitSum > maxTolerance){
+      throw new ErrorResponse(
+        BaseResponse.ResponseType.BAD_REQUEST,
+        ErrorType.maxTolerance_error
+      );
+    }
     var billRev = billData._rev;
 
     //Clean _rev and _id (billData Scraps)
     delete billData._id;
     delete billData._rev;
-
-    billData._id = this.request.loggedInUser.branch + "_INVOICE_" + billNumber;
+    var branch = this.request.loggedInUser.branch;
+    billData._id = BillingUtils.frameInvoiceNumber(branch, billNumber);
     var pointer = this;
     await this.BillingModel.generateInvoice(billData, billNumber)
       .then(async () => {
@@ -285,7 +296,7 @@ class BillingService extends BaseService {
     }
 
     //deleting invoice-related metadata
-    reversed_bill._id = billUtils.convertInvoiceToBill(reversed_bill._id);
+    reversed_bill._id = BillingUtils.convertInvoiceToBill(reversed_bill._id);
     delete reversed_bill._rev;
     delete reversed_bill.dateStamp;
     delete reversed_bill.paymentMode;
@@ -313,7 +324,8 @@ class BillingService extends BaseService {
   }
 
   async deleteInvoiceById(billNumber) {
-    var invoiceId = this.request.loggedInUser.branch + "_INVOICE_" + billNumber;
+    const branch = this.request.loggedInUser.branch
+    var invoiceId = BillingUtils.frameInvoiceNumber(branch,billNumber)
     const invoiceData = await this.getInvoiceById(billNumber);
     const invoiceRev = invoiceData._rev;
 
@@ -326,7 +338,8 @@ class BillingService extends BaseService {
   }
 
   async getInvoiceById(billNumber) {
-    var invoiceId = this.request.loggedInUser.branch + "_INVOICE_" + billNumber;
+    const branch = this.request.loggedInUser.branch
+    var invoiceId = BillingUtils.frameInvoiceNumber(branch,billNumber)
     const invoiceData = await this.BillingModel.getInvoiceById(invoiceId).catch(
       (error) => {
         throw error;
