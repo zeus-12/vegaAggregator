@@ -214,6 +214,6 @@ ErrorType.invalid_filter_method = "Filter method doesn't exist.";
 ErrorType.incomplete_login_credentials = "Please provide both username and password";
 
 //billing
-ErrorType.unsettle_refunded_orders = "Refund Issued orders can not be moved back to Unsettled."
-
+ErrorType.unsettle_refunded_orders = "Refund Issued orders can not be moved back to Unsettled.";
+ErrorType.admin_access_required = "Requires Admin Access."; 
 module.exports = ErrorType;

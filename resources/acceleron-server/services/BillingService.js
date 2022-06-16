@@ -101,7 +101,7 @@ class BillingService extends BaseService {
 
       var isTableStatusUpdated, smsSent, isTableSetFree;
 
-      await this.BillingModel.generateBill(newBillFile)
+      await this.BillingModel.postBill(newBillFile)
         .then(
           await this.KOTService.deleteKOTById(kot_id)
             .then(async () => {
@@ -164,6 +164,12 @@ class BillingService extends BaseService {
   }
 
   async settleBill(billNumber, billingDetails) {
+    if (this.request.loggedInUser.role != 'ADMIN') {
+      throw new ErrorResponse(
+        ResponseType.BAD_REQUEST,
+        ErrorType.admin_access_required
+      );
+    }
     const { splitPayHoldList } = billingDetails;
     //get bill data
     let billData = await this.getBillById(billNumber).catch((error) => {
@@ -219,7 +225,7 @@ class BillingService extends BaseService {
     billData.paymentMode = paymentModeSelected;
     billData.dateStamp = moment(billData.date, "DD-MM-YYYY").format("YYYYMMDD");
 
-    billData.outletCode = this.request.loggedInUser.branch;
+    billData.outletCode = this.request.loggedInUser.branch ? this.request.loggedInUser.branch : "UNKNOWN";;
 
     // Split Payment details
     if (paymentModeSelected == "MULTIPLE") {
@@ -248,11 +254,15 @@ class BillingService extends BaseService {
     var pointer = this;
     await this.BillingModel.generateInvoice(billData, billNumber)
       .then(async () => {
-        await pointer.deleteBillById(billNumber, billRev);
-      })
-      .then(async () => {
+        await pointer.deleteBillById(billNumber, billRev).catch((error) => {
+          throw error;
+        });
         if (billData.orderDetails.modeType == "DINE")
-          await pointer.TableService.resetTable(billData.table);
+          await pointer.TableService.resetTable(billData.table).catch(
+            (error) => {
+              throw error;
+            }
+          );
       })
       .catch((error) => {
         throw error;
@@ -262,43 +272,44 @@ class BillingService extends BaseService {
   }
 
   async unsettleBill(billNumber) {
-    let invoiceData = await this.getInvoiceById(billNumber).catch((error) => {
+    let reversed_bill = await this.getInvoiceById(billNumber).catch((error) => {
       throw error;
     });
 
-
     //refunded orders cannot be settled
-    if (invoiceData.refundDetails && invoiceData.refundDetails.amount != 0) {
+    if (reversed_bill.refundDetails && reversed_bill.refundDetails.amount != 0) {
       throw new ErrorResponse(
         BaseResponse.ResponseType.BAD_REQUEST,
-        ErrorType.unsettle_refunded_orders,
+        ErrorType.unsettle_refunded_orders
       );
     }
 
     //deleting invoice-related metadata
-    invoiceData._id = invoiceData._id.replace("INVOICE", "BILL");
-    delete invoiceData._rev;
-    delete invoiceData.dateStamp;
-    delete invoiceData.paymentMode;
-    delete invoiceData.totalAmountPaid;
-    delete invoiceData.timeSettle;
-    delete invoiceData.paymentReference;
-    delete invoiceData.paymentSplits;
+    reversed_bill._id = billUtils.convertInvoiceToBill(reversed_bill._id);
+    delete reversed_bill._rev;
+    delete reversed_bill.dateStamp;
+    delete reversed_bill.paymentMode;
+    delete reversed_bill.totalAmountPaid;
+    delete reversed_bill.timeSettle;
+    delete reversed_bill.paymentReference;
+    delete reversed_bill.paymentSplits;
 
-    delete invoiceData.roundOffAmount;
-    delete invoiceData.tipsAmount;
-
+    delete reversed_bill.roundOffAmount;
+    delete reversed_bill.tipsAmount;
 
     //sending to accelerate-bills
-    const billData = await this.BillingModel.generateBill(invoiceData).then(
-      async () => await this.deleteInvoiceById(billNumber).catch((error) => {
+    const billData = await this.BillingModel.postBill(reversed_bill)
+      .then(
+        async () =>
+          await this.deleteInvoiceById(billNumber).catch((error) => {
+            throw error;
+          })
+      )
+      .catch((error) => {
         throw error;
-      })
-    ).catch((error) => {
-      throw error;
-    });
+      });
 
-    return {billData};
+    return { billData };
   }
 
   async deleteInvoiceById(billNumber) {

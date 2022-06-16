@@ -9,7 +9,7 @@ class BillingModel extends BaseModel {
     this.couch = ACCELERONCORE._connectors.CouchDBAsync;
   }
 
-  async generateBill(newBillFile) {
+  async postBill(newBillFile) {
     var data = await this.couch
       .post("/accelerate_bills/", newBillFile)
       .catch((error) => {
