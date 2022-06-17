@@ -14,54 +14,42 @@ class SettingsService extends BaseService {
   }
 
   async getSettingsById(settings_id) {
-    const data = await this.SettingsModel.getSettingsById(settings_id).catch(
-      (error) => {
-        throw error;
-      }
-    );
+    const data = await this.SettingsModel.getSettingsById(settings_id).catch((error) => {
+      throw error;
+    });
 
     if (_.isEmpty(data)) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
+      throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
     } else {
       if (_.isUndefined(data.value)) {
-        throw new ErrorResponse(
-          ResponseType.ERROR,
-          ErrorType.server_data_corrupted
-        );
+        throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_data_corrupted);
       } else {
         return data;
       }
     }
   }
 
-    async updateSettingsById(settings_id, new_entry) {
-    const data = await this.SettingsModel.updateNewSettingsData(
-      settings_id,
-      new_entry
-    ).catch((error) => {
+  async updateSettingsById(settings_id, new_entry) {
+    return await this.SettingsModel.updateNewSettingsData(settings_id, new_entry).catch((error) => {
       throw error;
     });
   }
 
   async addNewEntryToSettings(settings_id, new_entry) {
-    const settingsData = await this.getSettingsById(settings_id).catch(
-      (error) => {
-        throw error;
-      }
-    );
+    const settingsData = await this.getSettingsById(settings_id).catch((error) => {
+      throw error;
+    });
     var valueList = settingsData.value;
 
     switch (settings_id) {
+      case "ACCELERATE_SAVED_ORDERS": {
+        valueList.push(new_entry);
+        break;
+      }
       case "ACCELERATE_TABLE_SECTIONS": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i] == new_entry.new_section_name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.table_section_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.table_section_already_exists);
           }
         }
 
@@ -71,10 +59,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_COOKING_INGREDIENTS": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i] == new_entry.new_ingredient_name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.ingredient_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.ingredient_already_exists);
           }
         }
 
@@ -84,10 +69,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_DINE_SESSIONS": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i].name == new_entry.name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.dine_session_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.dine_session_already_exists);
           }
         }
 
@@ -103,10 +85,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_CANCELLATION_REASONS": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i] == new_entry.new_reason_name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.reason_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.reason_already_exists);
           }
         }
 
@@ -116,10 +95,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_SAVED_COMMENTS": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i] == new_entry.new_comment) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.comment_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.comment_already_exists);
           }
         }
 
@@ -129,10 +105,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_BILLING_PARAMETERS": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i].name == new_entry.name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.billing_parameter_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.billing_parameter_already_exists);
           }
         }
         let newEntryFormatted = {
@@ -148,10 +121,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_DISCOUNT_TYPES": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i].name == new_entry.name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.discount_name_already_exits
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.discount_name_already_exits);
           }
         }
         let newEntryFormatted = {
@@ -165,15 +135,10 @@ class SettingsService extends BaseService {
       case "ACCELERATE_BILLING_MODES": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i].name == new_entry.name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.billing_mode_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.billing_mode_already_exists);
           }
         }
-        const billParamData = await this.getSettingsById(
-          "ACCELERATE_BILLING_PARAMETERS"
-        ).catch((error) => {
+        const billParamData = await this.getSettingsById("ACCELERATE_BILLING_PARAMETERS").catch((error) => {
           throw error;
         });
         var billParamList = billParamData.value;
@@ -187,9 +152,7 @@ class SettingsService extends BaseService {
           if (!isActive) {
             throw new ErrorResponse(
               ResponseType.BAD_REQUEST,
-              'Please remove "' +
-                new_entry.extras[i].name +
-                '" from extras as it is no longer a billing parameter'
+              'Please remove "' + new_entry.extras[i].name + '" from extras as it is no longer a billing parameter'
             );
           }
         }
@@ -199,10 +162,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_PAYMENT_MODES": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i].name == new_entry.name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.payment_mode_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.payment_mode_already_exists);
           }
         }
         let newEntryFormatted = {
@@ -215,10 +175,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_ORDER_SOURCES": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i].name == new_entry.name) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.order_source_name_already_exists
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.order_source_name_already_exists);
           }
         }
         let newEntryFormatted = {
@@ -233,10 +190,7 @@ class SettingsService extends BaseService {
       case "ACCELERATE_CONFIGURED_MACHINES": {
         for (var i = 0; i < valueList.length; i++) {
           if (valueList[i].licence == new_entry.licence) {
-            throw new ErrorResponse(
-              ResponseType.CONFLICT,
-              ErrorType.license_already_used
-            );
+            throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.license_already_used);
           }
         }
         valueList.push(new_entry);
@@ -261,27 +215,19 @@ class SettingsService extends BaseService {
       }
 
       default: {
-        throw new ErrorResponse(
-          ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request
-        );
+        throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
       }
     }
     settingsData.value = valueList;
-    return await this.SettingsModel.updateNewSettingsData(
-      settings_id,
-      settingsData
-    ).catch((error) => {
+    return await this.SettingsModel.updateNewSettingsData(settings_id, settingsData).catch((error) => {
       throw error;
     });
   }
 
   async removeEntryFromSettings(settings_id, entry_to_remove) {
-    const settingsData = await this.getSettingsById(settings_id).catch(
-      (error) => {
-        throw error;
-      }
-    );
+    const settingsData = await this.getSettingsById(settings_id).catch((error) => {
+      throw error;
+    });
     var valueList = settingsData.value;
     var isFound = false;
 
@@ -428,37 +374,31 @@ class SettingsService extends BaseService {
         }
         break;
       }
+      case "ACCELERATE_SAVED_ORDERS": {
+        valueList.splice(entry_to_remove, 1);
+        isFound = true;
+        break;
+      }
 
       default: {
-        throw new ErrorResponse(
-          ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request
-        );
+        throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
       }
     }
 
     if (!isFound) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
+      throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
     }
 
     settingsData.value = valueList;
-    return await this.SettingsModel.updateNewSettingsData(
-      settings_id,
-      settingsData
-    ).catch((error) => {
+    return await this.SettingsModel.updateNewSettingsData(settings_id, settingsData).catch((error) => {
       throw error;
     });
   }
 
   async filterItemFromSettingsList(settings_id, filter_key) {
-    const settingsData = await this.getSettingsById(settings_id).catch(
-      (error) => {
-        throw error;
-      }
-    );
+    const settingsData = await this.getSettingsById(settings_id).catch((error) => {
+      throw error;
+    });
     var valueList = settingsData.value;
     var isFound = false;
     let returnResponse = "";
@@ -495,28 +435,20 @@ class SettingsService extends BaseService {
         break;
       }
       default: {
-        throw new ErrorResponse(
-          ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request
-        );
+        throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
       }
     }
 
     if (!isFound) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
+      throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
     }
     return returnResponse;
   }
 
   async updateItemFromSettingsList(settings_id, filter_key, entry_to_update) {
-    const settingsData = await this.getSettingsById(settings_id).catch(
-      (error) => {
-        throw error;
-      }
-    );
+    const settingsData = await this.getSettingsById(settings_id).catch((error) => {
+      throw error;
+    });
     var valueList = settingsData.value;
     switch (settings_id) {
       case "ACCELERATE_SYSTEM_OPTIONS": {
@@ -537,10 +469,7 @@ class SettingsService extends BaseService {
         }
 
         if (!isFound || !isUpdateFieldFound) {
-          throw new ErrorResponse(
-            ResponseType.NO_RECORD_FOUND,
-            ErrorType.no_matching_results
-          );
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
         }
         break;
       }
@@ -561,10 +490,7 @@ class SettingsService extends BaseService {
           }
         }
         if (!isFound || !isUpdateFieldFound) {
-          throw new ErrorResponse(
-            ResponseType.NO_RECORD_FOUND,
-            ErrorType.no_matching_results
-          );
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
         }
         break;
       }
@@ -583,25 +509,14 @@ class SettingsService extends BaseService {
               } else {
                 if (selectedTriggerKey != "") {
                   if (
-                    (key_selected[0] == selectedTriggerKey &&
-                      key_selected[1] == selectedNormalKey) ||
-                    (key_selected[1] == selectedTriggerKey &&
-                      key_selected[0] == selectedNormalKey)
+                    (key_selected[0] == selectedTriggerKey && key_selected[1] == selectedNormalKey) ||
+                    (key_selected[1] == selectedTriggerKey && key_selected[0] == selectedNormalKey)
                   ) {
-                    throw new ErrorResponse(
-                      ResponseType.CONFLICT,
-                      ErrorType.shortcut_key_already_exists
-                    );
+                    throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.shortcut_key_already_exists);
                   }
                 } else {
-                  if (
-                    key_selected[0] == selectedNormalKey &&
-                    key_selected.length == 1
-                  ) {
-                    throw new ErrorResponse(
-                      ResponseType.CONFLICT,
-                      ErrorType.shortcut_key_already_exists
-                    );
+                  if (key_selected[0] == selectedNormalKey && key_selected.length == 1) {
+                    throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.shortcut_key_already_exists);
                   }
                 }
               }
@@ -614,9 +529,7 @@ class SettingsService extends BaseService {
               if (i == valueList[n].data.length - 1 && replaceIndex > -1) {
                 //last iteration and replace index is found
                 valueList[n].data[replaceIndex].value =
-                  selectedTriggerKey != ""
-                    ? selectedTriggerKey + "+" + selectedNormalKey
-                    : selectedNormalKey;
+                  selectedTriggerKey != "" ? selectedTriggerKey + "+" + selectedNormalKey : selectedNormalKey;
               }
             }
           }
@@ -633,10 +546,7 @@ class SettingsService extends BaseService {
           }
         }
         if (!isFound) {
-          throw new ErrorResponse(
-            ResponseType.NO_RECORD_FOUND,
-            ErrorType.no_matching_results
-          );
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
         }
         break;
       }
@@ -713,10 +623,7 @@ class SettingsService extends BaseService {
             } else {
               for (var i = 0; i < valueList[n].data.length; i++) {
                 if (valueList[n].data[i].name == entry_to_update.name) {
-                  throw new ErrorResponse(
-                    ResponseType.CONFLICT,
-                    ErrorType.printer_name_already_exists
-                  );
+                  throw new ErrorResponse(ResponseType.CONFLICT, ErrorType.printer_name_already_exists);
                 }
               }
               if (!isFound) {
@@ -766,25 +673,17 @@ class SettingsService extends BaseService {
       }
 
       default: {
-        throw new ErrorResponse(
-          ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request
-        );
+        throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
       }
     }
     settingsData.value = valueList;
-    return await this.SettingsModel.updateNewSettingsData(
-      settings_id,
-      settingsData
-    ).catch((error) => {
+    return await this.SettingsModel.updateNewSettingsData(settings_id, settingsData).catch((error) => {
       throw error;
     });
   }
 
   async renameCategoryKOTRelays(machineName, categoryName, newCategoryName) {
-    const settingsData = await this.getSettingsById(
-      "ACCELERATE_KOT_RELAYING"
-    ).catch((error) => {
+    const settingsData = await this.getSettingsById("ACCELERATE_KOT_RELAYING").catch((error) => {
       throw error;
     });
     var settingsList = settingsData.value;
@@ -804,25 +703,17 @@ class SettingsService extends BaseService {
       }
     }
     if (!isFound || !isCategoryFound) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
+      throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
     } else {
       settingsData.value = settingsList;
-      return await this.SettingsModel.updateNewSettingsData(
-        "ACCELERATE_KOT_RELAYING",
-        settingsData
-      ).catch((error) => {
+      return await this.SettingsModel.updateNewSettingsData("ACCELERATE_KOT_RELAYING", settingsData).catch((error) => {
         throw error;
       });
     }
   }
 
   async deleteCategoryKOTRelays(machineName, categoryName) {
-    const settingsData = await this.getSettingsById(
-      "ACCELERATE_KOT_RELAYING"
-    ).catch((error) => {
+    const settingsData = await this.getSettingsById("ACCELERATE_KOT_RELAYING").catch((error) => {
       throw error;
     });
     var settingsList = settingsData.value;
@@ -842,33 +733,22 @@ class SettingsService extends BaseService {
       }
     }
     if (!isFound || !isCategoryFound) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_matching_results
-      );
+      throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
     } else {
       settingsData.value = settingsList;
-      return await this.SettingsModel.updateNewSettingsData(
-        "ACCELERATE_KOT_RELAYING",
-        settingsData
-      ).catch((error) => {
+      return await this.SettingsModel.updateNewSettingsData("ACCELERATE_KOT_RELAYING", settingsData).catch((error) => {
         throw error;
       });
     }
   }
 
   async resetBillingIndex(settings_id) {
-    const settingsData = await this.getSettingsById(settings_id).catch(
-      (error) => {
-        throw error;
-      }
-    );
+    const settingsData = await this.getSettingsById(settings_id).catch((error) => {
+      throw error;
+    });
 
     if (_.isEmpty(settingsData)) {
-      throw new ErrorResponse(
-        ResponseType.NO_RECORD_FOUND,
-        ErrorType.no_record_found_for_the_billing_index
-      );
+      throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_record_found_for_the_billing_index);
     }
     var value = settingsData.value;
     var memory_revID = settingsData._rev;
@@ -899,10 +779,7 @@ class SettingsService extends BaseService {
         break;
       }
       default: {
-        throw new ErrorResponse(
-          ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request
-        );
+        throw new ErrorResponse(ResponseType.ERROR, ErrorType.server_cannot_handle_request);
       }
     }
   }

@@ -97,6 +97,7 @@ ErrorType.printer_name_already_exists = "Printer Name already taken. Please set 
 ErrorType.bill_param_data_not_found = "Billing parameter data not found";
 ErrorType.unable_to_update_kot_index = "Unable to update KOT Index. Next KOT Number might be faulty.";
 ErrorType.KOT_Index_data_not_found = "KOT Index data not found";
+ErrorType.saved_time_missing = "Saved time is missing";
 
 /* Table Errors */
 ErrorType.table_id_is_empty_or_invalid = "Table ID is empty or invalid format, please re-enter it correctly";
@@ -114,6 +115,8 @@ ErrorType.capacity_must_be_a_number = "Capacity must be a number";
 ErrorType.sort_index_must_be_a_number = "Sort Index must be a number";
 
 ErrorType.invalid_filter = "Not valid filter";
+ErrorType.no_table_mapped_to_this_session = "There are no Tables mapped to this Section";
+ErrorType.tables_data_not_found = "Tables data not found";
 
 /* User Errors */
 ErrorType.name_is_empty_or_invalid = "Table Name is empty or invalid format, please re-enter it correctly";

@@ -54,6 +54,44 @@ class OrderController extends BaseController {
       throw error;
     });
   }
+
+  async saveOrder() {
+    var newHoldingOrder = this.request.body;
+
+    if (_.isEmpty(newHoldingOrder)) {
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
+    }
+
+    if (newHoldingOrder.cart_products.length == 0) {
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.empty_cart);
+    }
+
+    if (newHoldingOrder.customerInfo.length == 0) {
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_customer_info);
+    }
+
+    return await this.OrderService.saveOrder(newHoldingOrder).catch((error) => {
+      throw error;
+    });
+  }
+
+  async clearAllSavedOrders() {
+    return await this.OrderService.clearAllSavedOrders().catch((error) => {
+      throw error;
+    });
+  }
+
+  async removeSavedOrder() {
+    var orderId = this.request.params.id;
+
+    if (_.isEmpty(orderId)) {
+      throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_required_parameters);
+    }
+
+    return await this.OrderService.removeSavedOrder(orderId).catch((error) => {
+      throw error;
+    });
+  }
 }
 
 module.exports = OrderController;

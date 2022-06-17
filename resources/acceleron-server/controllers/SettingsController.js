@@ -231,6 +231,18 @@ class SettingsController extends BaseController {
         }
         break;
       }
+      case "ACCELERATE_SAVED_ORDERS": {
+        if (_.isEmpty(new_entry.cart_products)) {
+          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.empty_cart);
+        }
+        if (_.isEmpty(new_entry.customerInfo)) {
+          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.missing_customer_info);
+        }
+        if (_.isEmpty(new_entry.timestamp)) {
+          throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.saved_time_missing);
+        }
+        break;
+      }
     }
 
     return await this.SettingsService.addNewEntryToSettings(settings_id, new_entry).catch((error) => {

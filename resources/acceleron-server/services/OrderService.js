@@ -5,6 +5,7 @@ let OrderModel = require("../models/OrderModel");
 let SettingsService = require("./SettingsService");
 let SummaryService = require("./SummaryService");
 let KOTService = require("./KOTService");
+let TableService = require("./TableService");
 let CustomerManagementService = require("./CustomerManagementService");
 var moment = require("moment");
 
@@ -23,6 +24,7 @@ class OrderService extends BaseService {
     this.SummaryService = new SummaryService(request);
     this.CustomerManagementService = new CustomerManagementService(request);
     this.KOTService = new KOTService(request);
+    this.TableService = new TableService(request);
   }
 
   async generateNewKOT(newOrderData) {
@@ -624,6 +626,71 @@ class OrderService extends BaseService {
         comparisonResult.push(tempItem);
       }
     }
+  }
+
+  async saveOrder(newHoldingOrder) {
+    newHoldingOrder.timestamp = moment().format("HHmm");
+    let data = {}
+
+    try {
+      data = await this.SettingsService.addNewEntryToSettings("ACCELERATE_SAVED_ORDERS", newHoldingOrder);
+      //renderCustomerInfo()
+    }
+    catch (error) {
+      throw error;
+    }
+
+    //Mark the table as 'Reserved' if added to hold list
+    if (newHoldingOrder.customerInfo.modeType == "DINE" && newHoldingOrder.customerInfo.mappedAddress != "") {
+      await this.TableService.addTableToReserveList(newHoldingOrder.customerInfo.mappedAddress, "Hold Order").catch(
+        (error) => {
+          throw error;
+        }
+      );
+    }
+
+    return data;
+  }
+
+  async clearAllSavedOrders() {
+    let data = {};
+    data = await this.SettingsService.getSettingsById("ACCELERATE_SAVED_ORDERS").catch((error) => {
+      throw error;
+    });
+
+    var holding_orders = [];
+
+    //Update
+    var updateData = {
+      _rev: data._rev,
+      identifierTag: "ACCELERATE_SAVED_ORDERS",
+      value: holding_orders,
+    };
+
+    try {
+      data = this.SettingsService.updateSettingsById("ACCELERATE_SAVED_ORDERS", updateData);
+      await this.TableService.clearSavedOrderMappingFromTables().catch((error) => {
+        throw error;
+      });
+      //renderCustomerInfo()
+    } catch (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
+  async removeSavedOrder(orderId) { 
+    let data = {};
+
+    try {
+      data = await this.SettingsService.removeEntryFromSettings("ACCELERATE_SAVED_ORDERS", orderId);
+      //renderCustomerInfo()
+    } catch (error) {
+      throw error;
+    }
+
+    return data;
   }
 }
 
