@@ -1,4 +1,4 @@
-const RUN_AS = "AGGREGATOR";
+const RUN_AS = "SERVER";
 switch (RUN_AS) {
     case "AGGREGATOR": {
         console.log("Starting the application as AGGREGATOR.")
