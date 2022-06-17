@@ -17,6 +17,27 @@ class BillingController extends BaseController {
       throw error;
     });
   }
+  async settleBill() {
+    let billNumber = this.request.query.billno;
+    // totalSplitSum,splitPayHoldList,comments
+    const { splitPayHoldList } = this.request.body;
+    const billingDetails = { splitPayHoldList };
+    return await this.BillingService.settleBill(
+      billNumber,
+      billingDetails
+    ).catch((error) => {
+      throw error;
+    });
+  }
+
+  async unsettleBill() {
+    let billNumber = this.request.query.billno;
+    return await this.BillingService.unsettleBill(
+      billNumber,
+    ).catch((error) => {
+      throw error;
+    });
+  }
 
   // async cancelBill() {
   //   var filter = {};
