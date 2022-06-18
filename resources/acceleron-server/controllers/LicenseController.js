@@ -22,6 +22,27 @@ class LicenseController extends BaseController {
         }); 
     }
 
+    async preloadData() {
+        const sourcesList = ['ALL','ZOMATO', 'SWIGGY']
+        const source = this.request.query.source.toUpperCase()
+
+        if (sourcesList.indexOf(source) == -1) {
+         throw new ErrorResponse(
+           ResponseType.BAD_REQUEST,
+           "Invalid Source"
+         );
+       }
+        if (source == 'ALL') {
+            return await this.LicenseService.preloadData().catch(error => {
+                throw error
+            }); 
+        }
+        else {
+            return await this.LicenseService.fetchSingleMenuMapping(source).catch(error => {
+                throw error
+            }); 
+        }
+    }
 }
 
 module.exports = LicenseController;

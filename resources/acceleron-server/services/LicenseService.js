@@ -1,15 +1,19 @@
 'use strict';
 let BaseService = ACCELERONCORE._services.BaseService;
 let SettingsService = require('./SettingsService');
+let LicenseModel = require("../models/LicenseModel");
+
 
 var _ = require('underscore');
 var async = require('async');
+const { json } = require('express');
 
 class LicenseService extends BaseService {
   constructor(request) {
     super(request);
     this.request = request;
     this.SettingsService = new SettingsService(request);
+    this.LicenseModel = new LicenseModel(request);
   }
   async addNewLicense(newLicenseObject) {
     machine = newLicenseObject.machineUID;
@@ -139,6 +143,58 @@ class LicenseService extends BaseService {
     ).catch((error) => {
       throw error;
     });
+  }
+
+  async preloadData() {
+    var result = {}
+    var otherMenuData = []
+
+    let data = await this.LicenseModel.fetchAllMenuMappings()
+    const menuMappings = data.rows
+
+    menuMappings.map((menu) => {
+      otherMenuData.push({ source: menu.doc.orderSource, menu })
+    })
+
+    result.otherMenuData = otherMenuData
+
+
+    const ptr = this
+    const settingsRequestsToBeMade = [
+      { variableName: 'DATA_BILLING_MODES', settingsId: 'ACCELERATE_BILLING_MODES' },
+      { variableName: 'DATA_ORDER_SOURCES', settingsId: 'ACCELERATE_ORDER_SOURCES' },
+      { variableName: 'DATA_REGISTERED_DEVICES', settingsId: 'ACCELERATE_REGISTERED_DEVICES' },
+      { variableName: 'DATA_BILLING_PARAMETERS', settingsId: 'ACCELERATE_BILLING_PARAMETERS' },
+    ]
+
+    async function assignSettings() {
+      await Promise.all(settingsRequestsToBeMade.map(async (item) => {
+        let settingsData = await ptr.SettingsService.getSettingsById(item.settingsId).catch((error) => { throw error })
+        result[item.variableName] = settingsData.value
+      }));
+    }
+    await assignSettings()
+
+    let masterMenuData = await this.SettingsService.getSettingsById("ACCELERATE_MASTER_MENU").catch((error) => { throw error })
+    let mastermenu = masterMenuData.value
+    let list = [];
+    //populating menu based on category
+    for (let i=0; i<mastermenu.length; i++){
+      for(let j=0; j<mastermenu[i].items.length; j++){
+        list[mastermenu[i].items[j].code] = mastermenu[i].items[j];
+        list[mastermenu[i].items[j].code].category = mastermenu[i].category;
+      }
+    }
+
+    result.MENU_DATA_SYSTEM_ORIGINAL = list
+
+    return JSON.stringify(result)
+
+
+  }
+  async fetchSingleMenuMapping(source) {
+    const menuMappings = await this.LicenseModel.fetchSingleMenuMapping(source)
+    return menuMappings
   }
 }
 
