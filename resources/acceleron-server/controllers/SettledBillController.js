@@ -1,7 +1,8 @@
 let BaseController = ACCELERONCORE._controllers.BaseController;
 let SettledBillService = require('../services/SettledBillService');
-var _ = require('underscore');
+let BillingUtils = require('../utils/BillingUtils');
 const {isNumber} = require('underscore');
+
 
 function populateSkipAndLimit(filter, queryParams) {
   if (
@@ -54,16 +55,15 @@ class SettledBillController extends BaseController {
   }
 
   async searchBill() {
-    var filter = {};
     var searchkey = this.request.params['BILL_NUMBER'];
-
-    if (searchkey && isNumber(parseInt(searchkey))) {
-      filter.searchkey = searchkey;
-    } else {
+    if (!searchkey || !isNumber(parseInt(searchkey))) {
       throw new ErrorResponse(ResponseType.ERROR, ErrorType.bill_number_empty);
     }
 
-    return await this.SettledBillService.searchBill(filter).catch((error) => {
+    var userBranch = this.request.loggedInUser.branch;
+    var billNumber = BillingUtils.frameInvoiceNumber(userBranch, searchkey);
+
+    return await this.SettledBillService.searchBill(billNumber).catch((error) => {
       throw error;
     });
   }

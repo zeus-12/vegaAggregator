@@ -91,32 +91,22 @@ class PendingBillModel extends BaseModel {
     );
   }
 
-  async getPendingBillByBillNumber(filter) {
-    var filterbody = 'ADYAR_BILL_' + filter.searchkey;
-    return await this.couch.get('/accelerate_bills/' + filterbody);
+  async getPendingBillByBillNumber(billNumber) {
+    return await this.couch.get('/accelerate_bills/' + billNumber);
   }
 
-  async applyDiscount({bill_id, file, maximumReached, totalDiscount}) {
-    var data = await this.couch.put(
-      '/accelerate_bills/ADYAR_BILL_' + bill_id,
-      file,
-    );
+  async applyDiscount({billNumber, file, maximumReached, totalDiscount}) {
+    var data = await this.couch.put('/accelerate_bills/'+billNumber, file);
     var result = {data, maximumReached, totalDiscount};
     return result;
   }
 
-  async updateDeliveryAgent({data, bill_id}) {
-    return await this.couch.put(
-      '/accelerate_bills/ADYAR_BILL_' + bill_id,
-      data,
-    );
+  async updateDeliveryAgent({data, billNumber}) {
+    return await this.couch.put('/accelerate_bills/'+billNumber, data);
   }
 
-  async addItem({data, bill_id}) {
-    return await this.couch.put(
-      '/accelerate_bills/ADYAR_BILL_' + bill_id,
-      data,
-    );
+  async addItem({data, billNumber}) {
+    return await this.couch.put('/accelerate_bills/'+billNumber, data);
   }
 }
 module.exports = PendingBillModel;
