@@ -55,6 +55,15 @@ router.post("/:id/updateentry", async function (req, res, next) {
   }
 });
 
+router.post("/:id/new",async function (req,res,next){
+    try{
+        const data = await new SettingsController(req).createNewPersonalizations();
+        return await new BaseResponse(ResponseType.SUCCESS).send(res,data);
+    }catch(error){
+        next(error);
+    }
+})
+
 // Other APIs
 
 router.put(

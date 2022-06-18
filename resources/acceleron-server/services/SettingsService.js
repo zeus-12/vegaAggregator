@@ -924,6 +924,22 @@ class SettingsService extends BaseService {
     });
     return settingsData.value;
   }
+    async createNewPersonalizations(settings_id,machineName,personalizeData){
+        try{
+            const {_rev:revID} =  await this.getSettingsById(settings_id)
+
+            return this.SettingsModel.updateNewSettingsData(settings_id,{
+                _rev:revID,
+                identifierTag:settings_id,
+                value:{
+                    systemName: machineName,
+                    data: personalizeData,
+                }
+            })
+        }catch(error){
+            throw error;
+        }
+    } 
 }
 
 module.exports = SettingsService;
