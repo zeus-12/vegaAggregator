@@ -60,12 +60,11 @@ function preloadBillingData() {
       xhr.setRequestHeader("x-access-token", ACCELERON_SERVER_ACCESS_TOKEN);
     },
     success: function (data) {
-      console.log(JSON.parse(data.data))
+
       var {otherMenuData,DATA_BILLING_MODES,DATA_ORDER_SOURCES,DATA_REGISTERED_DEVICES,DATA_BILLING_PARAMETERS,MENU_DATA_SYSTEM_ORIGINAL} = JSON.parse(data.data)
       if (otherMenuData.length > 0) {  
         var MENU_DATA_OTHER_MENU_MAPPINGS = populateOtherMenuData(otherMenuData)
       }
-      console.log(MENU_DATA_OTHER_MENU_MAPPINGS)
 
       proceedToInitialisation()
 
