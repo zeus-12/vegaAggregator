@@ -90,9 +90,8 @@ class SettledBillModel extends BaseModel {
     );
   }
 
-  async getSettledBillByBillNumber(filter) {
-    var filterbody = 'ADYAR_INVOICE_' + filter.searchkey;
-    return await this.couch.get('/accelerate_invoices/' + filterbody);
+  async getSettledBillByBillNumber(billNumber) {
+    return await this.couch.get('/accelerate_invoices/' + billNumber);
   }
 }
 module.exports = SettledBillModel;

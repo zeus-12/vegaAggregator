@@ -1,6 +1,7 @@
 'use strict';
 let PendingBillModel = require('../models/PendingBillModel');
 let BaseService = ACCELERONCORE._services.BaseService;
+
 class PendingBillService extends BaseService {
   constructor(request) {
     super(request);
@@ -93,8 +94,8 @@ class PendingBillService extends BaseService {
     }
   }
 
-  async searchBill(filter) {
-    return this.PendingBillModel.getPendingBillByBillNumber(filter).catch(
+  async searchBill(billNumber) {
+    return this.PendingBillModel.getPendingBillByBillNumber(billNumber).catch(
       (error) => {
         throw error;
       },
@@ -117,6 +118,7 @@ class PendingBillService extends BaseService {
 
   async applyDiscount(filter) {
     var bill_id = filter.bill_id;
+    var billNumber = filter.billNumber;
 
     var type = filter.file.temp.type;
     var unit = filter.file.temp.unit;
@@ -124,7 +126,7 @@ class PendingBillService extends BaseService {
 
     var billing_modes = filter.file.billing_modes;
     //add appropriate filters for this
-    var data = await this.searchBill({searchkey: bill_id});
+    var data = await this.searchBill(billNumber);
 
     var file = data;
     var grandPayableBill = 0;
@@ -289,12 +291,7 @@ class PendingBillService extends BaseService {
     file.calculatedRoundOff =
       Math.round((grandPayableBillRounded - grandPayableBill) * 100) / 100;
 
-    return this.PendingBillModel.applyDiscount({
-      bill_id,
-      file,
-      maximumReached,
-      totalDiscount,
-    }).catch((error) => {
+    return this.PendingBillModel.applyDiscount({billNumber, file, maximumReached, totalDiscount,}).catch((error) => {
       throw error;
     });
   }
@@ -341,13 +338,11 @@ class PendingBillService extends BaseService {
   }
   async updateDeliveryAgent(filter) {
     var bill_id = filter.bill_id;
-    var data = await this.searchBill({searchkey: bill_id});
+    var billNumber = filter.billNumber;
+    var data = await this.searchBill(billNumber);
     data.deliveryDetails = filter.file;
 
-    return this.PendingBillModel.updateDeliveryAgent({
-      data,
-      bill_id,
-    })
+    return this.PendingBillModel.updateDeliveryAgent({data, billNumber})
       .then((data) => {
         //todo: update based on config
         var isAutoSMSFeatureEnabled = true;
@@ -363,13 +358,16 @@ class PendingBillService extends BaseService {
   async addItem(filter) {
     var bill_id = filter.bill_id;
     var new_cart = filter.file;
-    var data = await this.searchBill({searchkey: bill_id});
+    var billNumber = filter.billNumber;
+    var data = await this.searchBill(billNumber);
 
     var data = data;
 
     var extended_cart = [];
 
     var maxCartIndex = 0;
+
+    //TODO: Move this logic to utils
 
     var n = 0;
     while (data.cart[n]) {
@@ -532,7 +530,7 @@ class PendingBillService extends BaseService {
 
     return this.PendingBillModel.addItem({
       data,
-      bill_id,
+      billNumber,
     }).catch((error) => {
       throw error;
     });

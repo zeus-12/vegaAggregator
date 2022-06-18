@@ -1,6 +1,6 @@
 let BaseController = ACCELERONCORE._controllers.BaseController;
 let PendingBillService = require('../services/PendingBillService');
-var _ = require('underscore');
+let BillingUtils = require('../utils/BillingUtils');
 const {isNumber} = require('underscore');
 
 function populateSkipAndLimit(filter, queryParams) {
@@ -53,15 +53,15 @@ class PendingBillController extends BaseController {
   }
 
   async searchBill() {
-    var filter = {};
     var searchkey = this.request.params.BILL_NUMBER;
-
-    if (searchkey && isNumber(parseInt(searchkey))) {
-      filter.searchkey = searchkey;
-    } else {
+    if (!searchkey || !isNumber(parseInt(searchkey))) {
       throw new ErrorResponse(ResponseType.ERROR, ErrorType.bill_number_empty);
     }
-    return await this.PendingBillService.searchBill(filter).catch((error) => {
+
+    var userBranch = this.request.loggedInUser.branch;
+    var billNumber = BillingUtils.frameBillNumber(userBranch, searchkey);
+
+    return await this.PendingBillService.searchBill(billNumber).catch((error) => {
       throw error;
     });
   }
@@ -103,6 +103,7 @@ class PendingBillController extends BaseController {
   async applyDiscount() {
     var filter = {};
     var queryParams = this.request.query;
+    var userBranch = this.request.loggedInUser.branch;
 
     filter = populateSkipAndLimit(filter, queryParams);
     var bill_id = this.request.params.BILL_NUMBER;
@@ -110,6 +111,7 @@ class PendingBillController extends BaseController {
     if (this.request.body && bill_id) {
       filter.file = this.request.body;
       filter.bill_id = bill_id;
+      filter.billNumber = BillingUtils.frameBillNumber(userBranch, bill_id);
     }
 
     return await this.PendingBillService.applyDiscount(filter).catch(
@@ -121,6 +123,7 @@ class PendingBillController extends BaseController {
   async updateDeliveryAgent() {
     var filter = {};
     var queryParams = this.request.query;
+    var userBranch = this.request.loggedInUser.branch;
 
     filter = populateSkipAndLimit(filter, queryParams);
     var bill_id = this.request.params.BILL_NUMBER;
@@ -128,6 +131,7 @@ class PendingBillController extends BaseController {
     if (this.request.body && bill_id) {
       filter.file = this.request.body;
       filter.bill_id = bill_id;
+      filter.branchNumber = BillingUtils.frameBillNumber(userBranch, bill_id);
     }
     return await this.PendingBillService.updateDeliveryAgent(filter).catch(
       (error) => {
@@ -139,6 +143,7 @@ class PendingBillController extends BaseController {
   async addItem() {
     var filter = {};
     var queryParams = this.request.query;
+    var userBranch = this.request.loggedInUser.branch;
 
     filter = populateSkipAndLimit(filter, queryParams);
     var bill_id = this.request.params.BILL_NUMBER;
@@ -146,6 +151,7 @@ class PendingBillController extends BaseController {
     if (this.request.body && bill_id) {
       filter.file = this.request.body;
       filter.bill_id = bill_id;
+      filter.billNumber = BillingUtils.frameBillNumber(userBranch, bill_id);
     }
 
     return await this.PendingBillService.addItem(filter).catch((error) => {

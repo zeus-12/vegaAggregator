@@ -3,7 +3,8 @@ let _ = require("lodash");
 let ErrorResponse = require("../utils/ErrorResponse");
 let BaseResponse = require("../utils/BaseResponse");
 let ResponseType = BaseResponse.ResponseType;
-//todo
+
+//Server Secret for JWT
 const secretKey = process.env.TOKEN_KEY || "";
 
 module.exports = function (req, res, next) {

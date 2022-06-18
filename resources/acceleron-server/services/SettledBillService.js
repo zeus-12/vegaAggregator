@@ -93,8 +93,8 @@ class SettledBillService extends BaseService {
     }
   }
 
-  async searchBill(filter) {
-    return this.SettledBillModel.getSettledBillByBillNumber(filter).catch(
+  async searchBill(billNumber) {
+    return this.SettledBillModel.getSettledBillByBillNumber(billNumber).catch(
       (error) => {
         throw error;
       },
