@@ -37,3 +37,6 @@ class BootstrapService extends BaseService{
         }
 
 }
+}
+
+module.exports = BootstrapService;

@@ -1,9 +1,8 @@
 "use strict";
 let BaseController = ACCELERONCORE._controllers.BaseController;
 let BootstrapService = require('../services/BootstrapService');
-let SettingsService = require('../services/SettingsService');
 
-class BootstrapService extends BaseController {
+class BootstrapController extends BaseController {
 
     constructor(request) {
         super(request);
@@ -23,3 +22,6 @@ class BootstrapService extends BaseController {
         }
     } 
 }
+
+
+module.exports = BootstrapController;
