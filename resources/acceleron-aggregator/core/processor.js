@@ -11,7 +11,6 @@ let SERVICE_APPROVED_ORDERS = 0;
 let SERVICE_APPROVED_PRINTS = 0;
 let SERVICE_APPROVED_ACTIONS = 0;
 
-//remove later
 const ACCELERON_SERVER_ENDPOINT = 'http://localhost:3000';
 const ACCELERON_SERVER_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnQiOiJaQUlUT09OIiwiYnJhbmNoIjoiQURZQVIiLCJpc3N1ZVRpbWUiOjE2NTU0ODk5MTgsInVzZXIiOnsidmVyaWZpZWRNb2JpbGUiOiI5ODg0MTc5Njc1IiwibmFtZSI6IkphZnJ5Iiwicm9sZSI6IkFETUlOIn0sIm1hY2hpbmVJZCI6Ilo1MDAiLCJpYXQiOjE2NTU0ODk5MTgsImV4cCI6MTY1NjA5NDcxOH0.ku7MVw-iy8EyG-uUi5kmKQd8iFDOSHMbR0fIsphmftA"
 
@@ -52,7 +51,7 @@ function preloadBillingData() {
 
   $.ajax({
     type: 'GET',
-    url: ACCELERON_SERVER_ENDPOINT + '/license/initiate?source=ALL',
+    url: ACCELERON_SERVER_ENDPOINT + '/license/initiate',
     contentType: "application/json",
     dataType: 'json',
     timeout: 10000,
@@ -60,8 +59,18 @@ function preloadBillingData() {
       xhr.setRequestHeader("x-access-token", ACCELERON_SERVER_ACCESS_TOKEN);
     },
     success: function (data) {
+      var { otherMenuData, billingModesData:DATA_BILLING_MODES , orderSourcesData:DATA_ORDER_SOURCES, registeredDevicesData:DATA_REGISTERED_DEVICES, billingParametersData:DATA_BILLING_PARAMETERS, masterMenu: mastermenu } = data.data
 
-      var {otherMenuData,DATA_BILLING_MODES,DATA_ORDER_SOURCES,DATA_REGISTERED_DEVICES,DATA_BILLING_PARAMETERS,MENU_DATA_SYSTEM_ORIGINAL} = JSON.parse(data.data)
+      let list = [];
+
+      for (var i=0; i<mastermenu.length; i++){
+        for(var j=0; j<mastermenu[i].items.length; j++){
+          list[mastermenu[i].items[j].code] = mastermenu[i].items[j];
+          list[mastermenu[i].items[j].code].category = mastermenu[i].category;
+        }         
+      }
+      var MENU_DATA_SYSTEM_ORIGINAL = list;
+
       if (otherMenuData.length > 0) {  
         var MENU_DATA_OTHER_MENU_MAPPINGS = populateOtherMenuData(otherMenuData)
       }

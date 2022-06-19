@@ -145,55 +145,32 @@ class LicenseService extends BaseService {
     });
   }
 
-  async preloadData() {
-    var result = {}
+  async getDataForAggregatorInitialisation() {
     var otherMenuData = []
 
-    let data = await this.LicenseModel.fetchAllMenuMappings()
-    const menuMappings = data.rows
+    let menuMappingsData = await this.LicenseModel.fetchAllMenuMappings()
+    const menuMappings = menuMappingsData.rows
 
     menuMappings.map((menu) => {
       otherMenuData.push({ source: menu.doc.orderSource, menu })
     })
-
-    result.otherMenuData = otherMenuData
-
-
-    const ptr = this
-    const settingsRequestsToBeMade = [
-      { variableName: 'DATA_BILLING_MODES', settingsId: 'ACCELERATE_BILLING_MODES' },
-      { variableName: 'DATA_ORDER_SOURCES', settingsId: 'ACCELERATE_ORDER_SOURCES' },
-      { variableName: 'DATA_REGISTERED_DEVICES', settingsId: 'ACCELERATE_REGISTERED_DEVICES' },
-      { variableName: 'DATA_BILLING_PARAMETERS', settingsId: 'ACCELERATE_BILLING_PARAMETERS' },
-    ]
-
-    async function assignSettings() {
-      await Promise.all(settingsRequestsToBeMade.map(async (item) => {
-        let settingsData = await ptr.SettingsService.getSettingsById(item.settingsId).catch((error) => { throw error })
-        result[item.variableName] = settingsData.value
-      }));
-    }
-    await assignSettings()
-
+   
+    //fetching settings data    
+    let billingModesData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_MODES").catch((error) => { throw error })
+    let orderSourcesData = await this.SettingsService.getSettingsById("ACCELERATE_ORDER_SOURCES").catch((error) => { throw error })
+    let registeredDevicesData = await this.SettingsService.getSettingsById("ACCELERATE_REGISTERED_DEVICES").catch((error) => { throw error })
+    let billingParametersData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_PARAMETERS").catch((error) => { throw error })
     let masterMenuData = await this.SettingsService.getSettingsById("ACCELERATE_MASTER_MENU").catch((error) => { throw error })
-    let mastermenu = masterMenuData.value
-    let list = [];
-    //populating menu based on category
-    for (let i=0; i<mastermenu.length; i++){
-      for(let j=0; j<mastermenu[i].items.length; j++){
-        list[mastermenu[i].items[j].code] = mastermenu[i].items[j];
-        list[mastermenu[i].items[j].code].category = mastermenu[i].category;
-      }
-    }
+    
+    let masterMenu = masterMenuData.value
+    
 
-    result.MENU_DATA_SYSTEM_ORIGINAL = list
-
-    return JSON.stringify(result)
+    return {otherMenuData,billingModesData,orderSourcesData,registeredDevicesData,billingParametersData,masterMenu}
 
 
   }
-  async fetchSingleMenuMapping(source) {
-    const menuMappings = await this.LicenseModel.fetchSingleMenuMapping(source)
+  async fetchMenuMappingsBySource(source) {
+    const menuMappings = await this.LicenseModel.fetchMenuMappingsBySource(source)
     return menuMappings
   }
 }

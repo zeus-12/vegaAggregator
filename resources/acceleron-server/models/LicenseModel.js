@@ -10,7 +10,7 @@ class LicenseModel extends BaseModel{
         this.couch = ACCELERONCORE._connectors.CouchDBAsync;
     }
     
-    async fetchSingleMenuMapping(source) {
+    async fetchMenuMappingsBySource(source) {
         const menuTitle = "MENU_" +source
         const data = await this.couch.get('/accelerate_other_menu_mappings/'+menuTitle).catch(error => {
             throw error;

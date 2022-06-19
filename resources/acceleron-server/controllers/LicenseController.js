@@ -22,23 +22,25 @@ class LicenseController extends BaseController {
         }); 
     }
 
-    async preloadData() {
-        const sourcesList = ['ALL','ZOMATO', 'SWIGGY']
-        const source = this.request.query.source.toUpperCase()
+    async getDataForAggregatorInitialisation() {
+      
+        const source = this.request.query.source?.toUpperCase()
 
-        if (sourcesList.indexOf(source) == -1) {
-         throw new ErrorResponse(
-           ResponseType.BAD_REQUEST,
-           "Invalid Source"
-         );
-       }
-        if (source == 'ALL') {
-            return await this.LicenseService.preloadData().catch(error => {
+       
+        if (!source) {
+            return await this.LicenseService.getDataForAggregatorInitialisation().catch(error => {
                 throw error
             }); 
         }
         else {
-            return await this.LicenseService.fetchSingleMenuMapping(source).catch(error => {
+            const sourcesList = ['ZOMATO', 'SWIGGY']
+            if (sourcesList.indexOf(source) == -1) {
+                throw new ErrorResponse(
+                  ResponseType.BAD_REQUEST,
+                  ErrorType.invalid_source
+                );
+              }
+            return await this.LicenseService.fetchMenuMappingsBySource(source).catch(error => {
                 throw error
             }); 
         }
