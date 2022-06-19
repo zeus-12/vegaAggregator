@@ -7,6 +7,9 @@ class CoreCalculation {
 
     }
 
+    /************************************************************
+                        * BILL GENERATION *
+     ************************************************************/
 
     //Calculate the total cart amount and total amount of all packaged items (for which taxes might not be applicable)
     calculateCartTotals(orderCart) {
@@ -118,6 +121,112 @@ class CoreCalculation {
         }
 
         return { discountList, discountSum };
+    }
+
+
+    /************************************************************
+                    * INVOICE (BILL SETTLEMENT) *
+     ************************************************************/
+
+    calculatePaymentSettlement(splitPayList, totalPayableAmount) {
+
+        var paymentMode = '';
+        var paymentReference = '';
+        var paymentSplits = [];
+        var totalAmountPaid = 0;
+        var excessAmountPaid = 0;
+        var shortageInPaidAmount = 0;
+
+        var totalSplitSum = 0;
+        var validSplitPaymentsCount = 0;
+
+        if(splitPayList.length > 1){
+            paymentMode = 'MULTIPLE';
+        }
+        else{
+            paymentMode = splitPayList[0].code;
+            if(!BillingCoreUtils.isEmpty(splitPayList[0].reference))
+                paymentReference = splitPayList[0].reference;
+        }
+
+        var n = 0;
+        while(splitPayList[n]){
+            if(BillingCoreUtils.isValidPaymentAmount(splitPayList[n].amount)){
+                totalSplitSum += parseFloat(splitPayList[n].amount);
+                paymentSplits.push(splitPayList[n]);
+                validSplitPaymentsCount++;
+            }
+            n++;
+        }
+        totalSplitSum = BillingCoreUtils.floatSafeNumber(totalSplitSum);
+
+        //In case multiple selected but value added only for one, all others kept empty
+        if(splitPayList.length > 1 && validSplitPaymentsCount == 1){
+            paymentMode = paymentSplits[0].code;
+            if(!BillingCoreUtils.isEmpty(paymentSplits[0].reference))
+                paymentReference = paymentSplits[0].reference;
+        }
+
+        totalAmountPaid = totalSplitSum;
+        if(paymentMode != 'MULTIPLE') {
+            paymentSplits = [];
+        }
+
+        const MAX_ROUNDOFF_TOLERANCE_PERCENTAGE = 5;
+        var maxAllowedTolerance = totalPayableAmount * BillingCoreUtils.toPercentage(MAX_ROUNDOFF_TOLERANCE_PERCENTAGE);
+        if(totalSplitSum < totalPayableAmount && (totalPayableAmount - totalSplitSum) > maxAllowedTolerance){
+            //TODO: Throw Error? (Do this in validateClass)
+        }
+
+        //Round Off (shortageInPaidAmount) or Tips (excessAmountPaid) calculation
+        if(totalSplitSum < totalPayableAmount){
+            shortageInPaidAmount = BillingCoreUtils.floatSafeNumber(totalPayableAmount - totalSplitSum);
+        }
+        else if(totalSplitSum > totalPayableAmount){
+            excessAmountPaid = BillingCoreUtils.floatSafeNumber(totalSplitSum - totalPayableAmount);
+        }
+
+        return { paymentMode, paymentReference, paymentSplits, totalAmountPaid, excessAmountPaid, shortageInPaidAmount };
+    }
+
+
+    calculateTaxableSumOnRefund(invoice, refundDetails) {
+        var totalCartAmount = invoice.grossCartAmount;
+        var discountAmount = BillingCoreUtils.isValidPaymentAmount(invoice.discount.amount) ? invoice.discount.amount : 0;
+        var requestedRefund = refundDetails.amount;
+
+        return totalCartAmount - requestedRefund - discountAmount;
+    }
+
+
+    calculateEffectiveRefund(invoice, billingMode, refundDetails) {
+        var requestedRefund = refundDetails.amount;
+        var adjustedRefundAmount = 0;
+        var newTotalPayableAfterRefund = 0;
+        var newCalculatedRoundOff = 0;
+        var updatedTaxesAndExtrasList = [];
+        var updatedCustomExtraList = {};
+
+        if (refundDetails.status == 2) { //Partial Refund
+            var taxableCartAmountAfterRefund = this.calculateTaxableSumOnRefund(invoice, refundDetails);
+            var totalPackagedAmount = 0; //TODO: How to tackle this?
+            var customExtras = invoice.customExtras;
+            var { taxesAndExtrasList, taxesAndExtrasSum} = this.calculateTaxesAndExtras(billingMode, taxableCartAmountAfterRefund, totalPackagedAmount);
+            var { customExtraList, customExtraSum } = this.calculateCustomExtras(customExtras, taxableCartAmountAfterRefund, totalPackagedAmount);
+
+            newTotalPayableAfterRefund = taxableCartAmountAfterRefund + taxesAndExtrasSum + customExtraSum;
+
+            adjustedRefundAmount = BillingCoreUtils.roundToFloor(invoice.totalAmountPaid - newTotalPayableAfterRefund);
+            newCalculatedRoundOff = BillingCoreUtils.calculateDifferenceToClosestInteger(newTotalPayableAfterRefund);
+            updatedTaxesAndExtrasList = taxesAndExtrasList;
+            updatedCustomExtraList = customExtraList;
+        } else if (refundDetails.status == 3) { //Full Refund
+            adjustedRefundAmount = requestedRefund;
+            newTotalPayableAfterRefund = invoice.grossCartAmount;
+            newCalculatedRoundOff = invoice.calculatedRoundOff; //TODO: Check what happens with calculatedRoundOff in case of full refund
+        }
+
+        return { requestedRefund, adjustedRefundAmount, newTotalPayableAfterRefund, newCalculatedRoundOff, updatedTaxesAndExtrasList, updatedCustomExtraList };
     }
 }
 

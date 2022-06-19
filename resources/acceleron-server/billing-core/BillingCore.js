@@ -22,12 +22,57 @@ class BillingCore {
         var { customExtraList, customExtraSum } = this.CoreCalculation.calculateCustomExtras(customExtras, totalCartAmount, totalPackagedAmount);
         var { discountList, discountSum } = this.CoreCalculation.calculateDiscounts(discounts, totalCartAmount, totalPackagedAmount);
 
-        return this.createBillSkeleton(verifiedOrderCart, billingMode, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum);
+        return this.frameBill(verifiedOrderCart, billingMode, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum);
+    }
+
+
+    //Transform bill to invoice by attaching the payment details
+    generateInvoice(bill, paymentMode, paymentDetails, splitPayList) {
+        //TODO: Validate max discount allowed in paymentMode
+        var totalPayableAmount = bill.payableAmount;
+        var { paymentMode, paymentReference, paymentSplits, totalAmountPaid, excessAmountPaid, shortageInPaidAmount } = this.CoreCalculation.calculatePaymentSettlement(splitPayList, totalPayableAmount);
+
+        const GENERATED_INVOICE = bill;
+        GENERATED_INVOICE.totalAmountPaid = totalAmountPaid;
+        GENERATED_INVOICE.paymentMode = paymentMode;
+        GENERATED_INVOICE.paymentReference = paymentReference;
+        GENERATED_INVOICE.dateStamp = ""; //Settlement date
+        GENERATED_INVOICE.timeSettle = "";
+
+        if(paymentSplits.length > 0)
+            GENERATED_INVOICE.paymentSplits = paymentSplits;
+
+        if(shortageInPaidAmount > 0)
+            GENERATED_INVOICE.roundOffAmount = shortageInPaidAmount;
+        else if(excessAmountPaid > 0)
+            GENERATED_INVOICE.tipsAmount = excessAmountPaid;
+
+        return GENERATED_INVOICE;
+    }
+
+    //Issue refund to an invoice
+    issueRefund(invoice, billingMode, refundDetails) {
+        this.CoreValidation.validateRefundDetails(invoice, refundDetails);
+        var { requestedRefund, adjustedRefundAmount, newTotalPayableAfterRefund, newCalculatedRoundOff, updatedTaxesAndExtrasList, updatedCustomExtraList} = this.CoreCalculation.calculateEffectiveRefund(invoice, billingMode, refundDetails);
+
+        const UPDATED_INVOICE = invoice;
+        UPDATED_INVOICE.extras = updatedTaxesAndExtrasList;
+        UPDATED_INVOICE.customExtras = updatedCustomExtraList;
+        UPDATED_INVOICE.payableAmount = newTotalPayableAfterRefund;
+        UPDATED_INVOICE.calculatedRoundOff = newCalculatedRoundOff;
+        UPDATED_INVOICE.refundDetails.amount = adjustedRefundAmount;
+        UPDATED_INVOICE.refundDetails.netAmount = requestedRefund;
+
+        if(refundDetails.status == 3) { //Full Refund
+            UPDATED_INVOICE.discount = {}; //TODO: Validate what happens to discount in full refund case
+        }
+
+        return UPDATED_INVOICE;
     }
 
 
     //Create a bill out of given data
-    createBillSkeleton(verifiedOrderCart, billingMode, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum) {
+    frameBill(verifiedOrderCart, billingMode, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum) {
 
         const totalPayableAmount = totalCartAmount + taxesAndExtrasSum + customExtraSum - discountSum;
 
