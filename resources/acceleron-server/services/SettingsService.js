@@ -455,6 +455,15 @@ class SettingsService extends BaseService {
     var valueList = settingsData.value;
     var isFound = false;
     let returnResponse = "";
+
+    var OTHER_ALLOWED_SETTINGS = [
+      "ACCELERATE_SYSTEM_OPTIONS",
+      "ACCELERATE_PERSONALISATIONS",
+      "ACCELERATE_SHORTCUT_KEYS",
+      "ACCELERATE_KOT_RELAYING",
+      "ACCELERATE_CONFIGURED_PRINTERS"
+    ];
+
     switch (settings_id) {
       case "ACCELERATE_STAFF_PROFILES": {
         for (var i = 0; i < valueList.length; i++) {
@@ -462,16 +471,6 @@ class SettingsService extends BaseService {
             isFound = true;
             returnResponse = valueList[i];
             delete returnResponse["password"];
-            break;
-          }
-        }
-        break;
-      }
-      case "ACCELERATE_SYSTEM_OPTIONS": {
-        for (var i = 0; i < valueList.length; i++) {
-          if (valueList[i].systemName == filter_key) {
-            isFound = true;
-            returnResponse = valueList[i].data;
             break;
           }
         }
@@ -488,10 +487,20 @@ class SettingsService extends BaseService {
         break;
       }
       default: {
-        throw new ErrorResponse(
-          ResponseType.ERROR,
-          ErrorType.server_cannot_handle_request
-        );
+        if (!OTHER_ALLOWED_SETTINGS.includes(settings_id)) {
+          throw new ErrorResponse(
+              ResponseType.ERROR,
+              ErrorType.server_cannot_handle_request
+          );
+        } else {
+          for (var i = 0; i < valueList.length; i++) {
+            if (valueList[i].systemName == filter_key) {
+              isFound = true;
+              returnResponse = valueList[i].data;
+              break;
+            }
+          }
+        }
       }
     }
 

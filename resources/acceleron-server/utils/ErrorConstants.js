@@ -45,6 +45,15 @@ ErrorType.invalid_settings_name = 'Not valid settings name';
 ErrorType.default_settings_already_exists = 'Default settings already exists for this machine';
 ErrorType.invalid_fix_key = 'Not valid fix key';
 ErrorType.select_one_more_key = 'Select one more key';
+ErrorType.settings_not_found_system_options = 'System Options data not found';
+ErrorType.settings_not_found_personalisations = 'Personalisations data not found';
+ErrorType.settings_not_found_bill_layout = 'Bill layout data not found'
+ErrorType.settings_not_found_shortcuts = 'Shortcuts data not found'
+ErrorType.settings_not_found_kot_relays = 'KOT relay data not found'
+ErrorType.settings_not_found_dine_sessions = 'Dine sessions data not found'
+ErrorType.settings_not_found_configured_printers = 'Configured Printers not found'
+ErrorType.settings_not_found_order_sources = 'Order sources data not found'
+
 
 ErrorType.session_name_empty_or_invalid =
   'Session Name is empty or invalid format, please re-enter it correctly';
