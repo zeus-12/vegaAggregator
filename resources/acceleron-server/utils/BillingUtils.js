@@ -10,16 +10,30 @@ function frameInvoiceNumber(branch, billNumber) {
   return invoiceId;
 }
 
-function convertInvoiceToBill(invoiceId) {
+function frameInvoiceNumberFromBillNumber(invoiceId) {
   let billId = invoiceId.replace("INVOICE", "BILL");
   return billId;
 }
 
-function assignBillNumber(generatedBill, billNumber, outletCode, orderDetails) {
+function propagateKOTDataAndAssignBillNumber(generatedBill, billNumber, outletCode, kotData) {
   generatedBill.billNumber = billNumber;
   generatedBill.outletCode = outletCode;
   generatedBill.timeBill = TimeUtils.getCurrentTimestamp();
-  generatedBill.orderDetails = orderDetails;
+
+  //Copy from kotData
+  generatedBill.KOTNumber = kotData.KOTNumber;
+  generatedBill.orderDetails = kotData.orderDetails;
+  generatedBill.table = kotData.table;
+  generatedBill.customerName = kotData.customerName;
+  generatedBill.customerMobile = kotData.customerMobile;
+  generatedBill.guestCount = kotData.guestCount;
+  generatedBill.machineName = kotData.machineName;
+  generatedBill.sessionName = kotData.sessionName;
+  generatedBill.stewardName = kotData.stewardName;
+  generatedBill.stewardCode = kotData.stewardCode;
+  generatedBill.date = kotData.date;
+  generatedBill.timePunch = kotData.timePunch;
+  generatedBill.timeKOT = kotData.timeKOT;
 }
 
-module.exports = { frameBillNumber, frameInvoiceNumber, convertInvoiceToBill, assignBillNumber };
+module.exports = { frameBillNumber, frameInvoiceNumber, frameInvoiceNumberFromBillNumber, propagateKOTDataAndAssignBillNumber };

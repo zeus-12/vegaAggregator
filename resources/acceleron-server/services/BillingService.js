@@ -39,13 +39,12 @@ class BillingService extends BaseService {
     });
 
     const reducedCart = KOTUtils.reduceCart(kotData.cart);
-    const orderDetails = kotData.orderDetails; //Copy other details as well
 
     var masterMenu = [];
-    var generatedBill = this.BillingCore.generateBill(masterMenu, reducedCart, billingMode, customExtras, discounts);
-
+    var billingModeExtras = [];
+    var generatedBill = this.BillingCore.generateBill(masterMenu, reducedCart, billingModeExtras, kotData.customExtras, kotData.discount);
     const billNumber = await this.SettingsService.generateNextIndex("BILL");
-    BillingUtils.assignBillNumber(generatedBill, billNumber, branchName, orderDetails);
+    BillingUtils.propagateKOTDataAndAssignBillNumber(generatedBill, billNumber, branchName, kotData);
 
     /*Save NEW BILL*/
     delete generatedBill._id;
@@ -243,7 +242,7 @@ class BillingService extends BaseService {
     }
 
     //deleting invoice-related metadata
-    reversed_bill._id = BillingUtils.convertInvoiceToBill(reversed_bill._id);
+    reversed_bill._id = BillingUtils.frameInvoiceNumberFromBillNumber(reversed_bill._id);
     delete reversed_bill._rev;
     delete reversed_bill.dateStamp;
     delete reversed_bill.paymentMode;

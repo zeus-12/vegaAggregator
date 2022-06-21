@@ -1,4 +1,5 @@
-var moment = require("moment");
+const TimeUtils = require("../utils/TimeUtils");
+
 function reduceCart(raw_cart) {
   var beautified_cart = [];
 
@@ -38,75 +39,22 @@ function reduceCart(raw_cart) {
   return beautified_cart;
 }
 
-
-
-function billSumCalculation(cart) {
-  var grandPayableBill = 0;
-
-  var totalCartAmount = 0;
-  var totalPackagedAmount = 0;
-
-  var n = 0;
-  while (cart[n]) {
-    totalCartAmount += cart[n].price * cart[n].qty;
-
-    if (cart[n].isPackaged) {
-      totalPackagedAmount += cart[n].qty * cart[n].price;
-    }
-
-    n++;
-  }
-
-  grandPayableBill += totalCartAmount;
-  return { grandPayableBill, totalPackagedAmount, totalCartAmount };
-}
-function addExtras(grandPayableBill, kotfile) {
-  //add extras
-  if (!(Object.keys(kotfile.extras).length === 0)) {
-    var m = 0;
-    while (kotfile.extras[m]) {
-      grandPayableBill += kotfile.extras[m].amount;
-      m++;
-    }
-  }
-
-  //add custom extras if any
-  if (!(Object.keys(kotfile.customExtras).length === 0)) {
-    grandPayableBill += kotfile.customExtras.amount;
-  }
-
-  //substract discounts if any
-  if (!(Object.keys(kotfile.discount).length === 0)) {
-    grandPayableBill -= kotfile.discount.amount;
-
-    if (kotfile.discount.type == "NOCOSTBILL") {
-      //Remove all the charges (Special Case)
-      grandPayableBill = 0;
-
-      kotfile.customExtras = {};
-      kotfile.extras = [];
-    }
-  }
-  return { kotfile, grandPayableBill };
-}
-
 function updateTableAsBilledRequest(tableData, generatedBill, billNumber) {
   tableData.remarks = generatedBill.payableAmount;
   tableData.KOT = billNumber;
   tableData.status = 2;
-  tableData.lastUpdate = moment().format("HHmm");
+  tableData.lastUpdate = TimeUtils.getCurrentTimestamp();
 
   return tableData;
 }
 
-function frameKotNumber(branch, kotnumber) {
-  var kot_id = branch + "_KOT_" + kotnumber;
+function frameKotNumber(branch, kotNumber) {
+  var kot_id = branch + "_KOT_" + kotNumber;
   return kot_id
 }
+
 module.exports = {
   reduceCart,
-  billSumCalculation,
-  addExtras,
   updateTableAsBilledRequest,
   frameKotNumber
 };
