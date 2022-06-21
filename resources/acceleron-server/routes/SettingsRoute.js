@@ -57,7 +57,7 @@ router.post("/:id/updateentry", async function (req, res, next) {
 
 router.post("/:id/add-default",async function (req,res,next){
     try{
-        const data = await new SettingsController(req).createNewPersonalizations();
+        const data = await new SettingsController(req).addDefaultSettingsData();
         return await new BaseResponse(ResponseType.SUCCESS).send(res,data);
     }catch(error){
         next(error);

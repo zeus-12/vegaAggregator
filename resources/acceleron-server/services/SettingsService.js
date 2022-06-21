@@ -1,6 +1,7 @@
 "use strict";
 let BaseService = ACCELERONCORE._services.BaseService;
 let SettingsModel = require("../models/SettingsModel");
+let DataFactoryManager = require("../factory/DataFactoryManager");
 
 var _ = require("underscore");
 var async = require("async");
@@ -11,6 +12,7 @@ class SettingsService extends BaseService {
     super(request);
     this.request = request;
     this.SettingsModel = new SettingsModel(request);
+    this.DataFactoryManager = new DataFactoryManager();
   }
 
   async getSettingsById(settings_id) {
@@ -924,18 +926,20 @@ class SettingsService extends BaseService {
     });
     return settingsData.value;
   }
-    async createNewPersonalizations(settings_id,machineName,personalizeData){
-        try{
+    async addDefaultSettingsData(settings_id, machineName){
+        try {
             const {data:{_rev:revID}} =  await this.getSettingsById(settings_id);
+            const defaultSettingsData = this.DataFactoryManager.getDefaultSettingsData(settings_id);
+
             return this.SettingsModel.updateNewSettingsData(settings_id,{
                 _rev:revID,
                 identifierTag:settings_id,
                 value:{
                     systemName: machineName,
-                    data: personalizeData,
+                    data: defaultSettingsData,
                 }
             });
-        }catch(error){
+        } catch(error) {
             throw error;
         }
     } 

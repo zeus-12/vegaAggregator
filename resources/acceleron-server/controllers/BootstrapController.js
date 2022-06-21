@@ -14,9 +14,9 @@ class BootstrapController extends BaseController {
             if(!filter){
                throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.filter_key_is_empty_or_invalid); 
             }
-      const initData = await this.BootstrapService.initialiseAcceleronPOS(filter);
+            const initData = await this.BootstrapService.initialiseAcceleronPOS(filter);
             return initData;
-        }catch(error){
+        } catch(error){
             throw error;
         }
     } 

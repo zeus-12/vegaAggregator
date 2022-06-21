@@ -2,7 +2,6 @@
 let BaseController = ACCELERONCORE._controllers.BaseController;
 let SettingsService = require("../services/SettingsService");
 let QuickFixesService = require("../services/QuickFixesService");
-const defaultShortcutKeys = require("../factory/DefaultShortcutKeysData.json");
 
 var _ = require("underscore");
 
@@ -766,7 +765,8 @@ class SettingsController extends BaseController {
       );
       
   }
-    async createNewPersonalizations(){
+
+  async addDefaultSettingsData(){
         const {machineName} = this.request.body;
         const {id:settings_id} = this.request.params; 
         const ALLOWED_OPTIONS = ["ACCELERATE_SHORTCUT_KEYS","ACCELERATE_PERSONALISATIONS","ACCELERATE_SYSTEM_OPTIONS","ACCELERATE_CONFIGURED_PRINTERS","ACCELERATE_KOT_RELAYING"];
@@ -782,14 +782,8 @@ class SettingsController extends BaseController {
                 ErrorType.machine_name_is_empty_or_invalid
             );
         }
-        if(_.isEmpty(personalizeData)){
-            throw new ErrorResponse(
-               ResponseType.BAD_REQUEST,
-               ErrorType.personalize_data_is_empty_or_invalid
-            );
-        }
-        const personalizeData = defaultShortcutKeys[settings_id];
-        return await this.SettingsService.createNewPersonalizations(machineName,personalizeData).catch(
+
+        return await this.SettingsService.addDefaultSettingsData(settings_id, machineName).catch(
             error=>{
                 throw error;
             }
