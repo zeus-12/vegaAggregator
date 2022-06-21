@@ -52,7 +52,7 @@ class BillingService extends BaseService {
     generatedBill._id = BillingUtils.frameBillNumber(branchName, billNumber);
 
     var preferenceData = await this.SettingsService.filterItemFromSettingsList("ACCELERATE_SYSTEM_OPTIONS", systemId);
-    var billSettleLater = preferenceData.data.find(
+    var billSettleLater = preferenceData.find(
       (item) => item.name === "billSettleLater"
     ).value;
 
