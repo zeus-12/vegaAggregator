@@ -1,7 +1,7 @@
 let router = new ACCELERONCORE._routes.BaseRouter();
 let BootstrapController = require('../controllers/BootstrapController'); 
 
-router.get('/initiate', async function (req, res, next) {
+router.get('/initiate-aggregator', async function (req, res, next) {
   try {
       const data = await new BootstrapController(req).getDataForAggregatorInitialisation();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
