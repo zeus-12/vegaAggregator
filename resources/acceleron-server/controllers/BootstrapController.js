@@ -9,14 +9,16 @@ class BootstrapController extends BaseController {
     }
 
   async initialiseAcceleronPOS() {
-        try{
-            const {filter} = this.request.params;
-            if(!filter){
-               throw new ErrorResponse(ResponseType.BAD_REQUEST, ErrorType.filter_key_is_empty_or_invalid); 
+        try {
+            var licenseKey = this.request.query.key;
+            if(!licenseKey){
+               throw new ErrorResponse(
+                   ResponseType.BAD_REQUEST,
+                   ErrorType.system_name_is_empty_or_invalid
+               );
             }
-            const initData = await this.BootstrapService.initialiseAcceleronPOS(filter);
-            return initData;
-        } catch(error){
+            return await this.BootstrapService.initialiseAcceleronPOS(licenseKey);
+        } catch(error) {
             throw error;
         }
     } 

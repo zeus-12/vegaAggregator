@@ -943,7 +943,7 @@ class SettingsService extends BaseService {
             ErrorType.default_settings_already_exists
         );
       }
-      
+
       settingsData.value.push({
         "systemName": machineName,
         "data": defaultSettingsData,
