@@ -1,12 +1,12 @@
 "use strict";
 const BaseService = ACCELERONCORE._services.BaseService;
-const SettingsService = require("../services/SettingsService")
+const SettingsService = require("../services/SettingsService");
 
 const DEFAULT_KEY_FOR_GENERIC_SETTINGS = "Any";
 
-class BootstrapService extends BaseService{
+class BootstrapService extends BaseService {
 
-    constructor(request){
+    constructor(request) {
         super(request);
         this.request = request;
         this.SettingsService = new SettingsService(request);
