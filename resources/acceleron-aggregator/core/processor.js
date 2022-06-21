@@ -48,7 +48,7 @@ function preloadBillingData() {
 
   $.ajax({
     type: 'GET',
-    url: ACCELERON_SERVER_ENDPOINT + '/bootstrap/initiate',
+    url: ACCELERON_SERVER_ENDPOINT + '/bootstrap/initiate-aggregator',
     contentType: "application/json",
     dataType: 'json',
     timeout: 10000,
@@ -56,20 +56,25 @@ function preloadBillingData() {
       xhr.setRequestHeader("x-access-token", ACCELERON_SERVER_ACCESS_TOKEN);
     },
     success: function (data) {
-      var { otherMenuData, billingModesData:DATA_BILLING_MODES , orderSourcesData:DATA_ORDER_SOURCES, registeredDevicesData:DATA_REGISTERED_DEVICES, billingParametersData:DATA_BILLING_PARAMETERS, masterMenu: mastermenu } = data.data
+      var { otherMenuData, billingModesData, orderSourcesData, registeredDevicesData, billingParametersData, masterMenu } = data.data
+      
+      DATA_BILLING_MODES = billingModesData
+      DATA_ORDER_SOURCES = orderSourcesData
+      DATA_REGISTERED_DEVICES = registeredDevicesData
+      DATA_BILLING_PARAMETERS = billingParametersData
 
       let list = [];
 
-      for (var i=0; i<mastermenu.length; i++){
-        for(var j=0; j<mastermenu[i].items.length; j++){
-          list[mastermenu[i].items[j].code] = mastermenu[i].items[j];
-          list[mastermenu[i].items[j].code].category = mastermenu[i].category;
+      for (var i=0; i<masterMenu.length; i++){
+        for(var j=0; j<masterMenu[i].items.length; j++){
+          list[masterMenu[i].items[j].code] = masterMenu[i].items[j];
+          list[masterMenu[i].items[j].code].category = masterMenu[i].category;
         }         
       }
-      var MENU_DATA_SYSTEM_ORIGINAL = list;
+      MENU_DATA_SYSTEM_ORIGINAL = list;
 
       if (otherMenuData.length > 0) {  
-        var MENU_DATA_OTHER_MENU_MAPPINGS = populateOtherMenuData(otherMenuData)
+        MENU_DATA_OTHER_MENU_MAPPINGS = populateOtherMenuData(otherMenuData)
       }
 
       proceedToInitialisation()
@@ -83,7 +88,6 @@ function preloadBillingData() {
 
 
   function populateOtherMenuData(otherMenuData) {
-    let MENU_DATA_OTHER_MENU_MAPPINGS = []
     otherMenuData.map(menu => MENU_DATA_OTHER_MENU_MAPPINGS[menu.source] = menu.menu)
     return MENU_DATA_OTHER_MENU_MAPPINGS
   }
@@ -91,7 +95,7 @@ function preloadBillingData() {
  
 
 
-  function proceedToInitialisation(){
+  function proceedToInitialisation() {
     //return '';
     initialiseProcessing();
   }

@@ -10,6 +10,14 @@ class ManageMenuModel extends BaseModel{
         this.couch = ACCELERONCORE._connectors.CouchDBAsync;
     }
 
+    async fetchAllMenuMappings() {
+        const data = await this.couch.get('/accelerate_other_menu_mappings/_all_docs?include_docs=true').catch(error => {
+            throw error;
+        });
+        return data;
+        
+    } 
+
     async createNewMappedMenu(menuData){
         const data = await this.couch.post('/accelerate_other_menu_mappings/', menuData).catch(error => {
             throw error;

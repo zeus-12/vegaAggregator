@@ -8,6 +8,21 @@ class ManageMenuService extends BaseService {
       super(request);
       this.ManageMenuModel = new ManageMenuModel(request);
     }
+  
+    async getAllMenuMappings(menuTypeCode) {
+      var otherMenuData = []
+  
+      let menuMappingsData = await this.ManageMenuModel.fetchAllMenuMappings().catch(error => {
+        throw error
+      });
+      const menuMappings = menuMappingsData.rows
+  
+      menuMappings.map((menu) => {
+        otherMenuData.push({ source: menu.doc.orderSource, menu })
+      })
+      return otherMenuData
+
+    }
 
 
     async createNewMappedMenu(newData) {
