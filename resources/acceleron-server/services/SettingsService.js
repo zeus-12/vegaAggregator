@@ -926,8 +926,7 @@ class SettingsService extends BaseService {
   }
     async createNewPersonalizations(settings_id,machineName,personalizeData){
         try{
-            const {_rev:revID} =  await this.getSettingsById(settings_id)
-
+            const {data:{_rev:revID}} =  await this.getSettingsById(settings_id);
             return this.SettingsModel.updateNewSettingsData(settings_id,{
                 _rev:revID,
                 identifierTag:settings_id,
@@ -935,7 +934,7 @@ class SettingsService extends BaseService {
                     systemName: machineName,
                     data: personalizeData,
                 }
-            })
+            });
         }catch(error){
             throw error;
         }

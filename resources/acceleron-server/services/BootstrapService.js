@@ -9,7 +9,7 @@ class BootstrapService extends BaseService{
         this.SettingsService = new SettingsService(request);
     }
 
-    async initiateSystem(filter){
+    async initialiseAcceleronPOS(filter){
         try{
             const [{data:licenceObject},
                    {data:systemOptions},
