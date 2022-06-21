@@ -107,7 +107,7 @@ class CoreCalculation {
         if(discountComponent.unit == 'PERCENTAGE'){
             discountSum = discountComponent.value * totalCartAmount / 100;
         }
-        else if(kot.discount.unit == 'FIXED'){
+        else if(discountComponent.unit == 'FIXED'){
             discountSum = discountComponent.value;
         }
 
