@@ -8,6 +8,13 @@ class BootstrapController extends BaseController {
         this.BootstrapService = new BootstrapService(request);
     }
 
+    async getDataForAggregatorInitialisation() {
+        return await this.BootstrapService.getDataForAggregatorInitialisation().catch(error => {
+            throw error
+        }); 
+
+    }  
+
   async initialiseAcceleronPOS() {
         var licenseKey = this.request.query.key;
         if(!licenseKey){

@@ -17,6 +17,7 @@ ErrorType.invalid_data_format = 'Invalid data format';
 ErrorType.entry_already_exists = 'Entry already exists';
 
 /* Menu Errors */
+ErrorType.menu_is_empty= 'Menu is empty, please add items.'
 ErrorType.item_code_is_empty_or_invalid =
   'Item Code is empty or invalid format, please re-enter it correctly';
 ErrorType.item_name_is_empty_or_invalid =
@@ -223,6 +224,9 @@ ErrorType.invalid_filter_method = "Filter method doesn't exist.";
 
 // login errors
 ErrorType.incomplete_login_credentials = "Please provide both username and password";
+
+//registered devices
+ErrorType.registered_devices_empty_or_invalid =  'Registered Devices are empty or invalid.';
 
 
 //custom

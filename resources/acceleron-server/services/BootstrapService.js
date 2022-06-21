@@ -1,7 +1,7 @@
 "use strict";
 const BaseService = ACCELERONCORE._services.BaseService;
 const SettingsService = require("../services/SettingsService");
-
+const ManageMenuService = require("../services/ManageMenuService");
 const DEFAULT_KEY_FOR_GENERIC_SETTINGS = "Any";
 
 class BootstrapService extends BaseService {
@@ -10,6 +10,7 @@ class BootstrapService extends BaseService {
         super(request);
         this.request = request;
         this.SettingsService = new SettingsService(request);
+        this.ManageMenuService = new ManageMenuService(request);
     }
 
     async initialiseAcceleronPOS(machineName) {
@@ -114,6 +115,52 @@ class BootstrapService extends BaseService {
 
         return initData;
     }
+
+
+  async getDataForAggregatorInitialisation() {
+      
+    let otherMenuData = await this.ManageMenuService.getAllMenuMappings().catch((error)=>{throw new ErrorResponse(
+        ResponseType.BAD_REQUEST,
+        ErrorType.mapped_menu_type_is_empty_or_invalid
+      );})
+      
+    let billingModesData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_MODES").catch((error) => { throw new ErrorResponse(
+        ResponseType.BAD_REQUEST,
+        ErrorType.bill_mode_name_empty_or_invalid 
+    );
+    })
+      
+    let orderSourcesData = await this.SettingsService.getSettingsById("ACCELERATE_ORDER_SOURCES").catch((error) => { throw new ErrorResponse(
+        ResponseType.BAD_REQUEST,
+        ErrorType.order_source_name_empty_or_invalid 
+    );
+    })
+      
+    let registeredDevicesData = await this.SettingsService.getSettingsById("ACCELERATE_REGISTERED_DEVICES").catch((error) => { throw new ErrorResponse(
+        ResponseType.BAD_REQUEST,
+        ErrorType.registered_devices_empty_or_invalid
+    );
+    })
+      
+    let billingParametersData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_PARAMETERS").catch((error) => { throw new ErrorResponse(
+        ResponseType.BAD_REQUEST,
+        ErrorType.bill_param_name_empty_or_invalid
+    );
+    })
+      
+    let masterMenuData = await this.SettingsService.getSettingsById("ACCELERATE_MASTER_MENU").catch((error) => { throw new ErrorResponse(
+        ResponseType.BAD_REQUEST,
+        ErrorType.menu_is_empty
+      ); })
+    
+    let masterMenu = masterMenuData.value
+    
+
+    return {otherMenuData,billingModesData,orderSourcesData,registeredDevicesData,billingParametersData,masterMenu}
+
+
+  }
+  
 }
 
 module.exports = BootstrapService;

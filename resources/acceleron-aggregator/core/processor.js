@@ -44,282 +44,58 @@ function operationStart(){
 
 
 
-function preloadBillingData(){
+function preloadBillingData() {
 
-  fetchModes();
+  $.ajax({
+    type: 'GET',
+    url: ACCELERON_SERVER_ENDPOINT + '/bootstrap/initiate-aggregator',
+    contentType: "application/json",
+    dataType: 'json',
+    timeout: 10000,
+    beforeSend: function (xhr) {
+      xhr.setRequestHeader("x-access-token", ACCELERON_SERVER_ACCESS_TOKEN);
+    },
+    success: function (data) {
+      var { otherMenuData, billingModesData, orderSourcesData, registeredDevicesData, billingParametersData, masterMenu } = data.data
+      
+      DATA_BILLING_MODES = billingModesData
+      DATA_ORDER_SOURCES = orderSourcesData
+      DATA_REGISTERED_DEVICES = registeredDevicesData
+      DATA_BILLING_PARAMETERS = billingParametersData
 
-  function fetchModes(){
+      let list = [];
 
-    var requestData = {
-      "selector"  :{ 
-                    "identifierTag": "ACCELERATE_BILLING_MODES" 
-                  },
-      "fields"    : ["identifierTag", "value"]
+      for (var i=0; i<masterMenu.length; i++){
+        for(var j=0; j<masterMenu[i].items.length; j++){
+          list[masterMenu[i].items[j].code] = masterMenu[i].items[j];
+          list[masterMenu[i].items[j].code].category = masterMenu[i].category;
+        }         
+      }
+      MENU_DATA_SYSTEM_ORIGINAL = list;
+
+      if (otherMenuData.length > 0) {  
+        MENU_DATA_OTHER_MENU_MAPPINGS = populateOtherMenuData(otherMenuData)
+      }
+
+      proceedToInitialisation()
+
+      
+    },
+    error: function(data) {
+      showToast('System Error: Unable to initiate data. Please contact Accelerate Support.', '#e74c3c');
     }
+  })
 
-    $.ajax({
-      type: 'POST',
-      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
-      data: JSON.stringify(requestData),
-      contentType: "application/json",
-      dataType: 'json',
-      timeout: 10000,
-      success: function(data) {
-        if(data.docs.length > 0){
-          if(data.docs[0].identifierTag == 'ACCELERATE_BILLING_MODES'){
-              DATA_BILLING_MODES = data.docs[0].value;
-              fetchSources();
-          }
-          else{
-            showToast('Not Found Error: Billing Modes data not found. Please contact Accelerate Support.', '#e74c3c');
-          }
-        }
-        else{
-          showToast('Not Found Error: Billing Modes data not found. Please contact Accelerate Support.', '#e74c3c');
-        } 
-      },
-      error: function(data) {
-        showToast('System Error: Unable to read Billing Modes data. Please contact Accelerate Support.', '#e74c3c');
-      }
 
-    });
-
+  function populateOtherMenuData(otherMenuData) {
+    otherMenuData.map(menu => MENU_DATA_OTHER_MENU_MAPPINGS[menu.source] = menu.menu)
+    return MENU_DATA_OTHER_MENU_MAPPINGS
   }
 
+ 
 
 
-  function fetchSources(){
-    
-    var requestData = {
-      "selector"  :{ 
-                    "identifierTag": "ACCELERATE_ORDER_SOURCES" 
-                  },
-      "fields"    : ["identifierTag", "value"]
-    }
-
-    $.ajax({
-      type: 'POST',
-      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
-      data: JSON.stringify(requestData),
-      contentType: "application/json",
-      dataType: 'json',
-      timeout: 10000,
-      success: function(data) {
-        if(data.docs.length > 0){
-          if(data.docs[0].identifierTag == 'ACCELERATE_ORDER_SOURCES'){
-              DATA_ORDER_SOURCES = data.docs[0].value;
-              fetchDefaultPrinters();
-          }
-          else{
-            showToast('Not Found Error: Order Sources data not found. Please contact Accelerate Support.', '#e74c3c');
-          }
-        }
-        else{
-          showToast('Not Found Error: Order Sources data not found. Please contact Accelerate Support.', '#e74c3c');
-        }
-        
-      },
-      error: function(data) {
-        showToast('System Error: Unable to read Order Sources data. Please contact Accelerate Support.', '#e74c3c');
-      }
-
-    });
-  }
-
-
-  function fetchDefaultPrinters(){
-    
-    var requestData = {
-      "selector"  :{ 
-                    "identifierTag": "ACCELERATE_REGISTERED_DEVICES" 
-                  },
-      "fields"    : ["identifierTag", "value"]
-    }
-
-    $.ajax({
-      type: 'POST',
-      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
-      data: JSON.stringify(requestData),
-      contentType: "application/json",
-      dataType: 'json',
-      timeout: 10000,
-      success: function(data) {
-        if(data.docs.length > 0){
-          if(data.docs[0].identifierTag == 'ACCELERATE_REGISTERED_DEVICES'){
-              
-              DATA_REGISTERED_DEVICES = data.docs[0].value;
-
-              fetchParameters();
-          }
-          else{
-            showToast('Not Found Error: Registered Devices data not found. Please contact Accelerate Support.', '#e74c3c');
-          }
-        }
-        else{
-          showToast('Not Found Error: Registered Devices data not found. Please contact Accelerate Support.', '#e74c3c');
-        }
-        
-      },
-      error: function(data) {
-        showToast('System Error: Unable to read Registered Devices data. Please contact Accelerate Support.', '#e74c3c');
-      }
-
-    });
-  }
-
-
-
-
-  function fetchParameters(){
-    
-    var requestData = {
-      "selector"  :{ 
-                    "identifierTag": "ACCELERATE_BILLING_PARAMETERS" 
-                  },
-      "fields"    : ["identifierTag", "value"]
-    }
-
-    $.ajax({
-      type: 'POST',
-      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
-      data: JSON.stringify(requestData),
-      contentType: "application/json",
-      dataType: 'json',
-      timeout: 10000,
-      success: function(data) {
-        if(data.docs.length > 0){
-          if(data.docs[0].identifierTag == 'ACCELERATE_BILLING_PARAMETERS'){
-              DATA_BILLING_PARAMETERS = data.docs[0].value;
-              preloadSystemMenu();
-          }
-          else{
-            showToast('Not Found Error: Billing Parameters data not found. Please contact Accelerate Support.', '#e74c3c');
-          }
-        }
-        else{
-          showToast('Not Found Error: Billing Parameters data not found. Please contact Accelerate Support.', '#e74c3c');
-        }
-        
-      },
-      error: function(data) {
-        showToast('System Error: Unable to read Billing Parameters data. Please contact Accelerate Support.', '#e74c3c');
-      }
-
-    });
-  }
-
-  function preloadSystemMenu(){
-
-      var requestData = {
-        "selector"  :{ 
-                      "identifierTag": "ACCELERATE_MASTER_MENU" 
-                    },
-        "fields"    : ["_rev", "identifierTag", "value"]
-      }
-
-      $.ajax({
-        type: 'POST',
-        url: COMMON_LOCAL_SERVER_IP + '/accelerate_settings/_find',
-        data: JSON.stringify(requestData),
-        contentType: "application/json",
-        dataType: 'json',
-        timeout: 10000,
-        success: function(data) {
-          if(data.docs.length > 0){
-            if(data.docs[0].identifierTag == 'ACCELERATE_MASTER_MENU'){
-
-                var mastermenu = data.docs[0].value;
-                var list = [];
-          
-                for (var i=0; i<mastermenu.length; i++){
-                  for(var j=0; j<mastermenu[i].items.length; j++){
-                    list[mastermenu[i].items[j].code] = mastermenu[i].items[j];
-                    list[mastermenu[i].items[j].code].category = mastermenu[i].category;
-                  }         
-                }
-
-                MENU_DATA_SYSTEM_ORIGINAL = list;
-                populateOtherMenuMappings();
-
-            }
-            else{
-              showToast('Not Found Error: Menu data not found. Please contact Accelerate Support.', '#e74c3c');
-              populateOtherMenuMappings();
-            }
-          }
-          else{
-            showToast('Not Found Error: Menu data not found. Please contact Accelerate Support.', '#e74c3c');
-            populateOtherMenuMappings();
-          }
-          
-        },
-        error: function(data) {
-          showToast('System Error: Unable to read Menu data. Please contact Accelerate Support.', '#e74c3c');
-          populateOtherMenuMappings();
-        }
-
-      });   
-  }
-
-
-  function populateOtherMenuMappings(){
-
-    $.ajax({
-      type: 'GET',
-      url: COMMON_LOCAL_SERVER_IP+'/accelerate_other_menu_mappings/_all_docs/',
-      timeout: 10000,
-      success: function(data) {
-        if(data.rows.length == 0){
-            proceedToInitialisation();
-        }
-        else{
-            loadOtherMenu(data.rows, 0)
-        }
-      },
-      error: function(data) {
-        proceedToInitialisation();
-      }
-
-    }); 
-
-
-    function loadOtherMenu(menuSet, index){
-
-      if(menuSet[index]){
-        $.ajax({
-          type: 'GET',
-          url: COMMON_LOCAL_SERVER_IP+'/accelerate_other_menu_mappings/'+menuSet[index].id,
-          timeout: 10000,
-          success: function(data) {
-            if(data._id != ""){
-
-                var otherMenu = data;
-                MENU_DATA_OTHER_MENU_MAPPINGS[data.orderSource] = data.value;
-                
-                loadOtherMenu(menuSet, index + 1);
-
-            }
-            else{
-              loadOtherMenu(menuSet, index + 1);
-            }
-          },
-          error: function(data) {
-            loadOtherMenu(menuSet, index + 1);
-          }
-
-        }); 
-      }
-      else{
-        proceedToInitialisation(); 
-      }
-
-    }
-
-
-  }
-
-
-  function proceedToInitialisation(){
+  function proceedToInitialisation() {
     //return '';
     initialiseProcessing();
   }
