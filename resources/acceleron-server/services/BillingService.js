@@ -4,14 +4,16 @@ let BillingModel = require("../models/BillingModel");
 let KOTService = require("./KOTService");
 let SettingsService = require("./SettingsService");
 let TableService = require("./TableService");
+let MessagingService = require("./common/MessagingService");
+let BillingCore = require("../billing-core/BillingCore");
 let KOTUtils = require("../utils/KOTUtils");
 let BillingUtils = require("../utils/BillingUtils");
 let TimeUtils = require("../utils/TimeUtils");
-let MessagingService = require("./common/MessagingService");
-var moment = require("moment");
+let MessagingTypes = require("../constants/MessagingTypes");
 
+var moment = require("moment");
 var _ = require("underscore");
-var async = require("async");
+
 
 class BillingService extends BaseService {
   constructor(request) {
@@ -22,146 +24,91 @@ class BillingService extends BaseService {
     this.TableService = new TableService(request);
     this.SettingsService = new SettingsService(request);
     this.MessagingService = new MessagingService(request);
+    this.BillingCore = new BillingCore();
   }
 
-  async generateBill(kotnumber) {
-    var kot_id = KOTUtils.frameKotNumber(
-      this.request.loggedInUser.branch,
-      kotnumber
-    );
-    var data = await this.KOTService.getKOTById(kot_id).catch((error) => {
+  async generateBill(kotNumber) {
+
+    const branchName = this.request.loggedInUser.branch;
+    const systemId = this.request.loggedInUser.machineId;
+    const clientName = this.request.loggedInUser.client;
+
+    var kot_id = KOTUtils.frameKotNumber(branchName, kotNumber);
+    var kotData = await this.KOTService.getKOTById(kot_id).catch((error) => {
       throw error;
     });
-    var kot_rev = data._rev;
-    let billNumber = await this.SettingsService.generateNextIndex("BILL");
 
-    if (data._id != "") {
-      var kotfile = data;
-      var raw_cart = kotfile.cart;
+    const reducedCart = KOTUtils.reduceCart(kotData.cart);
+    const orderDetails = kotData.orderDetails; //Copy other details as well
 
-      kotfile.cart = KOTUtils.reduceCart(raw_cart);
-      kotfile.billNumber = billNumber;
-      kotfile = KOTUtils.initialisePaymentDetails(kotfile);
+    var masterMenu = [];
+    var generatedBill = this.BillingCore.generateBill(masterMenu, reducedCart, billingMode, customExtras, discounts);
 
-      kotfile.outletCode = this.request.loggedInUser.branch;
+    const billNumber = await this.SettingsService.generateNextIndex("BILL");
+    BillingUtils.assignBillNumber(generatedBill, billNumber, branchName, orderDetails);
 
-      /* BILL SUM CALCULATION */
+    /*Save NEW BILL*/
+    delete generatedBill._id;
+    delete generatedBill._rev;
+    generatedBill._id = BillingUtils.frameBillNumber(branchName, billNumber);
 
-      //Calculate Sum to be paid
-      var { grandPayableBill, totalPackagedAmount, totalCartAmount } =
-        KOTUtils.billSumCalculation(kotfile.cart);
+    var preferenceData = await this.SettingsService.filterItemFromSettingsList("ACCELERATE_SYSTEM_OPTIONS", systemId);
+    var billSettleLater = preferenceData.data.find(
+      (item) => item.name === "billSettleLater"
+    ).value;
 
-      var { kotfile, grandPayableBill } = KOTUtils.addExtras(
-        grandPayableBill,
-        kotfile
-      );
+    let tableData = await this.TableService.fetchTablesByFilter("name", kotData.table);
+    const modeType = generatedBill.orderDetails.modeType;
 
-      grandPayableBill = parseFloat(grandPayableBill).toFixed(2);
-      var grandPayableBillRounded = Math.round(grandPayableBill);
+    var isTableStatusUpdated, smsSent, isTableSetFree;
 
-      kotfile = KOTUtils.roundOffFigures(
-        kotfile,
-        grandPayableBillRounded,
-        totalPackagedAmount,
-        totalCartAmount,
-        grandPayableBill
-      );
+    await this.BillingModel.postBill(generatedBill).then(
+          await this.KOTService.deleteKOTById(kot_id).then(async () => {
 
-      kotfile.timeBill = TimeUtils.getCurrentTimestamp();
+            if (modeType == "DINE" && billSettleLater == "YES") {
+              await this.TableService.resetTable(kotData.table)
+                .then((isTableSetFree = true))
+                .catch((err) => (isTableSetFree = false));
+            }
+            else if (modeType == "DINE" && billSettleLater !== "YES") {
+              const tableDataUpdateRequest = KOTUtils.updateTableAsBilledRequest(tableData, generatedBill, billNumber);
+              await this.TableService.updateTableByFilter("name", generatedBill.table, tableDataUpdateRequest)
+                .then((isTableStatusUpdated = true))
+                .catch((err) => (isTableStatusUpdated = false));
+            }
 
-      //Remove Unwanted Stuff
-      kotfile = KOTUtils.cleanUpComments(kotfile);
+            if (modeType == "DELIVERY") {
+              var messageData = {
+                customerName: generatedBill.customerName,
+                customerMobile: generatedBill.customerMobile,
+                totalBillAmount: generatedBill.payableAmount,
+                accelerateLicence: systemId,
+                accelerateClient: clientName,
+              };
+              await this.MessagingService.postMessageRequest(generatedBill.customerMobile, messageData, MessagingTypes.DELIVERY_CONFIRMATION)
+                .then((smsSent = true))
+                .catch((err) => (smsSent = false));
+            }
+          })
+          .catch((error) => {
+            throw error;
+          })
+      )
+      .catch((error) => {
+        throw error;
+      });
 
-      /*Save NEW BILL*/
+    var response = {
+      generatedBill,
+      billingMode: modeType,
+      isTableSetFree,
+      isTableStatusUpdated,
+      smsSent,
+    };
 
-      //Remove _rev and _id (KOT File Scraps!)
-      var newBillFile = kotfile;
-      delete newBillFile._id;
-      delete newBillFile._rev;
-      newBillFile._id = BillingUtils.frameBillNumber(
-        this.request.loggedInUser.branch,
-        billNumber
-      );
-
-      var systemOptions = await this.SettingsService.getSettingsById(
-        "ACCELERATE_SYSTEM_OPTIONS"
-      );
-      var preferenceData = systemOptions.value.find(
-        (option) => option.systemName === this.request.loggedInUser.machineId
-      );
-      var billSettleLater = preferenceData.data.find(
-        (item) => item.name === "billSettleLater"
-      ).value;
-
-      let tableData = await this.TableService.fetchTablesByFilter(
-        "name",
-        kotfile.table
-      );
-      const modeType = kotfile.orderDetails.modeType;
-
-      var isTableStatusUpdated, smsSent, isTableSetFree;
-
-      await this.BillingModel.postBill(newBillFile)
-        .then(
-          await this.KOTService.deleteKOTById(kot_id)
-            .then(async () => {
-              if (modeType == "DINE" && billSettleLater == "YES") {
-                await this.TableService.resetTable(kotfile.table)
-                  .then((isTableSetFree = true))
-                  .catch((err) => (isTableSetFree = false));
-              } else if (modeType == "DINE" && billSettleLater !== "YES") {
-                tableData = KOTUtils.updateTableForBilling(
-                  tableData,
-                  kotfile,
-                  billNumber
-                );
-
-                await this.TableService.updateTableByFilter(
-                  "name",
-                  kotfile.table,
-                  tableData
-                )
-                  .then((isTableStatusUpdated = true))
-                  .catch((err) => (isTableStatusUpdated = false));
-              }
-
-              if (modeType == "DELIVERY") {
-                var messageData = {
-                  customerName: newBillFile.customerName,
-                  customerMobile: newBillFile.customerMobile,
-                  totalBillAmount: newBillFile.payableAmount,
-                  accelerateLicence: this.request.loggedInUser.machineId,
-                  accelerateClient: this.request.loggedInUser.client,
-                };
-                await this.MessagingService.postMessageRequest(
-                  kotfile.customerMobile,
-                  messageData,
-                  "DELIVERY_CONFIRMATION"
-                )
-                  .then((smsSent = true))
-                  .catch((err) => (smsSent = false));
-              }
-            })
-            .catch((error) => {
-              throw error;
-            })
-        )
-
-        .catch((error) => {
-          throw error;
-        });
-
-      var response = {
-        newBillFile,
-        billingMode: modeType,
-        isTableSetFree,
-        isTableStatusUpdated,
-        smsSent,
-      };
-
-      return response;
-    }
+    return response;
   }
+
 
   async settleBill(billNumber, billingDetails) {
     if (this.request.loggedInUser.role != 'ADMIN') {

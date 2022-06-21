@@ -1,3 +1,5 @@
+const TimeUtils = require("./TimeUtils");
+
 function frameBillNumber(branch, billNumber) {
   const billId = branch + "_BILL_" + billNumber;
   return billId;
@@ -12,4 +14,12 @@ function convertInvoiceToBill(invoiceId) {
   let billId = invoiceId.replace("INVOICE", "BILL");
   return billId;
 }
-module.exports = { frameBillNumber, frameInvoiceNumber, convertInvoiceToBill };
+
+function assignBillNumber(generatedBill, billNumber, outletCode, orderDetails) {
+  generatedBill.billNumber = billNumber;
+  generatedBill.outletCode = outletCode;
+  generatedBill.timeBill = TimeUtils.getCurrentTimestamp();
+  generatedBill.orderDetails = orderDetails;
+}
+
+module.exports = { frameBillNumber, frameInvoiceNumber, convertInvoiceToBill, assignBillNumber };

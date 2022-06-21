@@ -22,7 +22,7 @@ global.BaseResponse = ACCELERONCORE._utils.BaseResponse;
 global.ResponseType = ACCELERONCORE._utils.BaseResponse.ResponseType;
 global.ErrorResponse = ACCELERONCORE._utils.ErrorResponse;
 
-global.ErrorType = require('./utils/ErrorConstants');
+global.ErrorType = require('./constants/ErrorConstants');
 
 
 const SOCKET_IDLE_TIMEOUT = parseInt(process.env.SOCKET_IDLE_TIMEOUT || "100") * 1000;

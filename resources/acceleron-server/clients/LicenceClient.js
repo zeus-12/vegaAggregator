@@ -1,5 +1,5 @@
 "use strict";
-const ClientEndpoints = require("../utils/ClientEndpoints");
+const ClientEndpoints = require("../constants/ClientEndpoints");
 let BaseHttpClient = ACCELERONCORE._clients.BaseHttpClient;
 
 class LicenceClient extends BaseHttpClient {

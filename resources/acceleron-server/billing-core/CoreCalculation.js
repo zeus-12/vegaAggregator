@@ -29,8 +29,8 @@ class CoreCalculation {
 
 
     //Calculate the applicable taxes and extras based on the billing mode
-    calculateTaxesAndExtras(billingMode, totalCartAmount, totalPackagedAmount) {
-        var applicableExtras = billingMode.taxesAndExtras;
+    calculateTaxesAndExtras(billingModeExtras, totalCartAmount, totalPackagedAmount) {
+        var applicableExtras = billingModeExtras;
         let taxesAndExtrasSum = 0;
 
         //Note: Skip tax and other extras (with isCompulsary no) on packaged food Pepsi ect. (marked with 'isPackaged' = true)
@@ -199,7 +199,7 @@ class CoreCalculation {
     }
 
 
-    calculateEffectiveRefund(invoice, billingMode, refundDetails) {
+    calculateEffectiveRefund(invoice, billingModeExtras, refundDetails) {
         var requestedRefund = refundDetails.amount;
         var adjustedRefundAmount = 0;
         var newTotalPayableAfterRefund = 0;
@@ -211,7 +211,7 @@ class CoreCalculation {
             var taxableCartAmountAfterRefund = this.calculateTaxableSumOnRefund(invoice, refundDetails);
             var totalPackagedAmount = 0; //TODO: How to tackle this?
             var customExtras = invoice.customExtras;
-            var { taxesAndExtrasList, taxesAndExtrasSum} = this.calculateTaxesAndExtras(billingMode, taxableCartAmountAfterRefund, totalPackagedAmount);
+            var { taxesAndExtrasList, taxesAndExtrasSum} = this.calculateTaxesAndExtras(billingModeExtras, taxableCartAmountAfterRefund, totalPackagedAmount);
             var { customExtraList, customExtraSum } = this.calculateCustomExtras(customExtras, taxableCartAmountAfterRefund, totalPackagedAmount);
 
             newTotalPayableAfterRefund = taxableCartAmountAfterRefund + taxesAndExtrasSum + customExtraSum;

@@ -15,14 +15,14 @@ class BillingCore {
         this.CoreValidation = new CoreValidation();
     }
 
-    generateBill(masterMenu, orderCart, billingMode, customExtras, discounts) {
+    generateBill(masterMenu, orderCart, billingModeExtras, customExtras, discounts) {
         var verifiedOrderCart = this.CoreValidation.validateCartAgainstMasterMenu(masterMenu, orderCart);
         var { totalCartAmount, totalPackagedAmount } = this.CoreCalculation.calculateCartTotals(verifiedOrderCart);
-        var { taxesAndExtrasList, taxesAndExtrasSum } = this.CoreCalculation.calculateTaxesAndExtras(billingMode, totalCartAmount, totalPackagedAmount);
+        var { taxesAndExtrasList, taxesAndExtrasSum } = this.CoreCalculation.calculateTaxesAndExtras(billingModeExtras, totalCartAmount, totalPackagedAmount);
         var { customExtraList, customExtraSum } = this.CoreCalculation.calculateCustomExtras(customExtras, totalCartAmount, totalPackagedAmount);
         var { discountList, discountSum } = this.CoreCalculation.calculateDiscounts(discounts, totalCartAmount, totalPackagedAmount);
 
-        return this.frameBill(verifiedOrderCart, billingMode, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum);
+        return this.frameBill(verifiedOrderCart, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum);
     }
 
 
@@ -51,9 +51,9 @@ class BillingCore {
     }
 
     //Issue refund to an invoice
-    issueRefund(invoice, billingMode, refundDetails) {
+    issueRefund(invoice, billingModeExtras, refundDetails) {
         this.CoreValidation.validateRefundDetails(invoice, refundDetails);
-        var { requestedRefund, adjustedRefundAmount, newTotalPayableAfterRefund, newCalculatedRoundOff, updatedTaxesAndExtrasList, updatedCustomExtraList} = this.CoreCalculation.calculateEffectiveRefund(invoice, billingMode, refundDetails);
+        var { requestedRefund, adjustedRefundAmount, newTotalPayableAfterRefund, newCalculatedRoundOff, updatedTaxesAndExtrasList, updatedCustomExtraList} = this.CoreCalculation.calculateEffectiveRefund(invoice, billingModeExtras, refundDetails);
 
         const UPDATED_INVOICE = invoice;
         UPDATED_INVOICE.extras = updatedTaxesAndExtrasList;
@@ -72,14 +72,14 @@ class BillingCore {
 
 
     //Create a bill out of given data
-    frameBill(verifiedOrderCart, billingMode, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum) {
+    frameBill(verifiedOrderCart, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum) {
 
         const totalPayableAmount = totalCartAmount + taxesAndExtrasSum + customExtraSum - discountSum;
 
         const GENERATED_BILL = {
             "_id": "",
             "KOTNumber": "",
-            "orderDetails": billingMode.orderDetails,
+            "orderDetails": "",
             "table": "",
             "customerName": "",
             "customerMobile": "",

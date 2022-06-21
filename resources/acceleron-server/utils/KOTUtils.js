@@ -23,6 +23,10 @@ function reduceCart(raw_cart) {
           }
         }
 
+        //Clean up comments
+        delete beautified_cart[k].ingredients;
+        delete beautified_cart[k].comments;
+
         k++;
       }
 
@@ -33,25 +37,9 @@ function reduceCart(raw_cart) {
   }
   return beautified_cart;
 }
-function initialisePaymentDetails(kotfile) {
-  kotfile.paymentMode = "";
-  kotfile.totalAmountPaid = "";
-  kotfile.paymentReference = "";
-  return kotfile;
-}
-function cleanUpComments(kotfile) {
-  delete kotfile.specialRemarks;
-  delete kotfile.allergyInfo;
 
-  var c = 0;
-  while (kotfile.cart[c]) {
-    delete kotfile.cart[c].ingredients;
-    delete kotfile.cart[c].comments;
 
-    c++;
-  }
-  return kotfile;
-}
+
 function billSumCalculation(cart) {
   var grandPayableBill = 0;
 
@@ -102,25 +90,8 @@ function addExtras(grandPayableBill, kotfile) {
   return { kotfile, grandPayableBill };
 }
 
-function roundOffFigures(
-  kotfile,
-  grandPayableBillRounded,
-  totalPackagedAmount,
-  totalCartAmount,
-  grandPayableBill
-) {
-  kotfile.payableAmount = grandPayableBillRounded;
-  kotfile.grossCartAmount = totalCartAmount;
-  kotfile.grossPackagedAmount = totalPackagedAmount;
-
-  kotfile.calculatedRoundOff =
-    Math.round((grandPayableBillRounded - grandPayableBill) * 100) / 100;
-
-  return kotfile;
-}
-
-function updateTableForBilling(tableData, kotfile, billNumber) {
-  tableData.remarks = kotfile.payableAmount;
+function updateTableAsBilledRequest(tableData, generatedBill, billNumber) {
+  tableData.remarks = generatedBill.payableAmount;
   tableData.KOT = billNumber;
   tableData.status = 2;
   tableData.lastUpdate = moment().format("HHmm");
@@ -134,11 +105,8 @@ function frameKotNumber(branch, kotnumber) {
 }
 module.exports = {
   reduceCart,
-  initialisePaymentDetails,
-  cleanUpComments,
   billSumCalculation,
   addExtras,
-  roundOffFigures,
-  updateTableForBilling,
+  updateTableAsBilledRequest,
   frameKotNumber
 };
