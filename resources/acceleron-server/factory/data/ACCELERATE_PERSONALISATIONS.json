@@ -1,0 +1,34 @@
+[
+  {
+    "name": "theme",
+    "value": "skin-green"
+  },
+  {
+    "name": "menuImages",
+    "value": "NO"
+  },
+  {
+    "name": "punchingRightScreen",
+    "value": "TABLE"
+  },
+  {
+    "name": "virtualKeyboard",
+    "value": 0
+  },
+  {
+    "name": "screenLockOptions",
+    "value": "SCREENSAVER"
+  },
+  {
+    "name": "screenLockDuration",
+    "value": "2700"
+  },
+  {
+    "name": "securityPasscodeProtection",
+    "value": "NO"
+  },
+  {
+    "name": "pagesPasscodeProtection",
+    "value": "NO"
+  }
+]

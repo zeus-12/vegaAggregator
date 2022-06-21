@@ -765,6 +765,30 @@ class SettingsController extends BaseController {
       );
       
   }
+
+  async addDefaultSettingsData(){
+        const {machineName} = this.request.body;
+        const {id:settings_id} = this.request.params; 
+        const ALLOWED_OPTIONS = ["ACCELERATE_SHORTCUT_KEYS","ACCELERATE_PERSONALISATIONS","ACCELERATE_SYSTEM_OPTIONS","ACCELERATE_CONFIGURED_PRINTERS","ACCELERATE_KOT_RELAYING"];
+        if(!ALLOWED_OPTIONS.includes(settings_id)){
+            throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                ErrorType.invalid_settings_name
+            );
+        }
+        if(_.isEmpty(machineName)){
+            throw new ErrorResponse(
+                ResponseType.BAD_REQUEST,
+                ErrorType.machine_name_is_empty_or_invalid
+            );
+        }
+
+        return await this.SettingsService.addDefaultSettingsData(settings_id, machineName).catch(
+            error=>{
+                throw error;
+            }
+        )
+    }
 }
 
 module.exports = SettingsController;
