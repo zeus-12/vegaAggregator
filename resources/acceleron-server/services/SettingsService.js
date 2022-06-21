@@ -932,6 +932,18 @@ class SettingsService extends BaseService {
     try {
       const settingsData = await this.getSettingsById(settings_id);
       const defaultSettingsData = this.DataFactoryManager.getDefaultSettingsData(settings_id);
+
+      let settingsContentData = settingsData.value.find(
+          (settingsContent) => settingsContent.systemName === machineName
+      );
+
+      if(settingsContentData) {
+        throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.default_settings_already_exists
+        );
+      }
+      
       settingsData.value.push({
         "systemName": machineName,
         "data": defaultSettingsData,

@@ -42,6 +42,7 @@ ErrorType.image_is_empty_or_invalid = 'Item Image is empty or invalid ';
 ErrorType.settings_id_is_empty_or_invalid =
   'Settings ID is empty or invalid format, please re-enter it correctly';
 ErrorType.invalid_settings_name = 'Not valid settings name';
+ErrorType.default_settings_already_exists = 'Default settings already exists for this machine';
 ErrorType.invalid_fix_key = 'Not valid fix key';
 ErrorType.select_one_more_key = 'Select one more key';
 
