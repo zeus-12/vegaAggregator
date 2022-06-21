@@ -1,7 +1,7 @@
 "use strict";
 const BaseService = ACCELERONCORE._services.BaseService;
 const SettingsService = require("../services/SettingsService");
-
+const BootstrapModel = require('../models/BootstrapModel')
 const DEFAULT_KEY_FOR_GENERIC_SETTINGS = "Any";
 
 class BootstrapService extends BaseService {
@@ -10,6 +10,8 @@ class BootstrapService extends BaseService {
         super(request);
         this.request = request;
         this.SettingsService = new SettingsService(request);
+        this.BootstrapModel = new BootstrapModel(request);
+
     }
 
     async initialiseAcceleronPOS(machineName) {
@@ -114,6 +116,36 @@ class BootstrapService extends BaseService {
 
         return initData;
     }
+
+
+  async getDataForAggregatorInitialisation() {
+    var otherMenuData = []
+
+    let menuMappingsData = await this.BootstrapModel.fetchAllMenuMappings()
+    const menuMappings = menuMappingsData.rows
+
+    menuMappings.map((menu) => {
+      otherMenuData.push({ source: menu.doc.orderSource, menu })
+    })
+   
+    //fetching settings data    
+    let billingModesData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_MODES").catch((error) => { throw error })
+    let orderSourcesData = await this.SettingsService.getSettingsById("ACCELERATE_ORDER_SOURCES").catch((error) => { throw error })
+    let registeredDevicesData = await this.SettingsService.getSettingsById("ACCELERATE_REGISTERED_DEVICES").catch((error) => { throw error })
+    let billingParametersData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_PARAMETERS").catch((error) => { throw error })
+    let masterMenuData = await this.SettingsService.getSettingsById("ACCELERATE_MASTER_MENU").catch((error) => { throw error })
+    
+    let masterMenu = masterMenuData.value
+    
+
+    return {otherMenuData,billingModesData,orderSourcesData,registeredDevicesData,billingParametersData,masterMenu}
+
+
+  }
+  async fetchMenuMappingsBySource(source) {
+    const menuMappings = await this.BootstrapModel.fetchMenuMappingsBySource(source)
+    return menuMappings
+  }
 }
 
 module.exports = BootstrapService;

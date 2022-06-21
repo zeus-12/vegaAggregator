@@ -224,6 +224,9 @@ ErrorType.invalid_filter_method = "Filter method doesn't exist.";
 // login errors
 ErrorType.incomplete_login_credentials = "Please provide both username and password";
 
+// aggregator bootstrap
+//processor.js
+ErrorType.invalid_source = "Invalid Source";
 
 //custom
 // Refund Issued orders can not be moved back to Unsettled.

@@ -8,6 +8,29 @@ class BootstrapController extends BaseController {
         this.BootstrapService = new BootstrapService(request);
     }
 
+    async getDataForAggregatorInitialisation() {
+        
+        const source = this.request.query.source?.toUpperCase()
+
+        if (!source) {
+            return await this.BootstrapService.getDataForAggregatorInitialisation().catch(error => {
+                throw error
+            }); 
+        }
+        else {
+            const sourcesList = ['ZOMATO', 'SWIGGY']
+            if (sourcesList.indexOf(source) == -1) {
+                throw new ErrorResponse(
+                    ResponseType.BAD_REQUEST,
+                    ErrorType.invalid_source
+                );
+                }
+            return await this.BootstrapService.fetchMenuMappingsBySource(source).catch(error => {
+                throw error
+            }); 
+        }
+    }  
+
   async initialiseAcceleronPOS() {
         var licenseKey = this.request.query.key;
         if(!licenseKey){
