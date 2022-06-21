@@ -7,7 +7,7 @@ class DataFactoryManager {
         this.initialiseData();
     }
 
-    getDefaultSettingsData = function (settingsId) {
+    getDefaultSettingsData(settingsId) {
         const ALLOWED_OPTIONS = ["ACCELERATE_SHORTCUT_KEYS","ACCELERATE_PERSONALISATIONS","ACCELERATE_SYSTEM_OPTIONS"];
         if(!ALLOWED_OPTIONS.includes(settingsId)){
             return [];
@@ -16,7 +16,7 @@ class DataFactoryManager {
         }
     }
 
-    initialiseData = function () {
+    initialiseData() {
         var defaultSettingsData = [];
         defaultSettingsData["ACCELERATE_SHORTCUT_KEYS"] = require("./data/ACCELERATE_SHORTCUT_KEYS.json");
         defaultSettingsData["ACCELERATE_PERSONALISATIONS"] = require("./data/ACCELERATE_PERSONALISATIONS.json");

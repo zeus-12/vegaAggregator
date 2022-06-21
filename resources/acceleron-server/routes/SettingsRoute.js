@@ -55,7 +55,7 @@ router.post("/:id/updateentry", async function (req, res, next) {
   }
 });
 
-router.post("/:id/add-default",async function (req,res,next){
+router.post("/:id/add-default", async function (req,res,next){
     try{
         const data = await new SettingsController(req).addDefaultSettingsData();
         return await new BaseResponse(ResponseType.SUCCESS).send(res,data);
@@ -66,9 +66,7 @@ router.post("/:id/add-default",async function (req,res,next){
 
 // Other APIs
 
-router.put(
-  "/ACCELERATE_KOT_RELAYING/renamecategory",
-  async function (req, res, next) {
+router.put("/ACCELERATE_KOT_RELAYING/renamecategory", async function (req, res, next) {
     try {
       const data = await new SettingsController(req).renameCategoryKOTRelays();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);
@@ -78,9 +76,7 @@ router.put(
   }
 );
 
-router.put(
-  "/ACCELERATE_KOT_RELAYING/deletecategory",
-  async function (req, res, next) {
+router.put("/ACCELERATE_KOT_RELAYING/deletecategory", async function (req, res, next) {
     try {
       const data = await new SettingsController(req).deleteCategoryKOTRelays();
       return await new BaseResponse(ResponseType.SUCCESS).send(res, data);

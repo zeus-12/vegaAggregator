@@ -926,23 +926,22 @@ class SettingsService extends BaseService {
     });
     return settingsData.value;
   }
-    async addDefaultSettingsData(settings_id, machineName){
-        try {
-            const {data:{_rev:revID}} =  await this.getSettingsById(settings_id);
-            const defaultSettingsData = this.DataFactoryManager.getDefaultSettingsData(settings_id);
 
-            return this.SettingsModel.updateNewSettingsData(settings_id,{
-                _rev:revID,
-                identifierTag:settings_id,
-                value:{
-                    systemName: machineName,
-                    data: defaultSettingsData,
-                }
-            });
-        } catch(error) {
-            throw error;
-        }
-    } 
+
+  async addDefaultSettingsData(settings_id, machineName){
+    try {
+      const settingsData = await this.getSettingsById(settings_id);
+      const defaultSettingsData = this.DataFactoryManager.getDefaultSettingsData(settings_id);
+      settingsData.value.push({
+        "systemName": machineName,
+        "data": defaultSettingsData,
+      });
+
+      return this.SettingsModel.updateNewSettingsData(settings_id,settingsData);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = SettingsService;
