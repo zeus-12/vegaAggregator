@@ -1,0 +1,332 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "_id": {
+      "type": "string"
+    },
+    "_rev": {
+      "type": "string"
+    },
+    "KOTNumber": {
+      "type": "string"
+    },
+    "orderDetails": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "modeType": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string"
+        },
+        "isOnline": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mode",
+        "modeType",
+        "reference",
+        "isOnline"
+      ]
+    },
+    "table": {
+      "type": "string"
+    },
+    "customerName": {
+      "type": "string"
+    },
+    "customerMobile": {
+      "type": "string"
+    },
+    "guestCount": {
+      "type": "null"
+    },
+    "machineName": {
+      "type": "string"
+    },
+    "sessionName": {
+      "type": "string"
+    },
+    "stewardName": {
+      "type": "string"
+    },
+    "stewardCode": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string"
+    },
+    "timePunch": {
+      "type": "string"
+    },
+    "timeKOT": {
+      "type": "string"
+    },
+    "timeBill": {
+      "type": "string"
+    },
+    "cart": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "cartIndex": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            },
+            "price": {
+              "type": "string"
+            },
+            "isCustom": {
+              "type": "boolean"
+            },
+            "isPackaged": {
+              "type": "boolean"
+            },
+            "code": {
+              "type": "string"
+            },
+            "qty": {
+              "type": "integer"
+            },
+            "cookingTime": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "cartIndex",
+            "name",
+            "category",
+            "price",
+            "isCustom",
+            "isPackaged",
+            "code",
+            "qty",
+            "cookingTime"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cartIndex": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            },
+            "price": {
+              "type": "string"
+            },
+            "isCustom": {
+              "type": "boolean"
+            },
+            "isPackaged": {
+              "type": "boolean"
+            },
+            "code": {
+              "type": "string"
+            },
+            "qty": {
+              "type": "integer"
+            },
+            "cookingTime": {
+              "type": "integer"
+            },
+            "change": {
+              "type": "string"
+            },
+            "oldValue": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "cartIndex",
+            "name",
+            "category",
+            "price",
+            "isCustom",
+            "isPackaged",
+            "code",
+            "qty",
+            "cookingTime",
+            "change",
+            "oldValue"
+          ]
+        }
+      ]
+    },
+    "extras": {
+      "type": "array",
+      "items": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "number"
+            },
+            "isPackagedExcluded": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "name",
+            "value",
+            "unit",
+            "amount",
+            "isPackagedExcluded"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "number"
+            },
+            "isPackagedExcluded": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "name",
+            "value",
+            "unit",
+            "amount",
+            "isPackagedExcluded"
+          ]
+        }
+      ]
+    },
+    "discount": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "type": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "type",
+        "unit",
+        "value",
+        "reference"
+      ]
+    },
+    "customExtras": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "integer"
+        },
+        "type": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "amount",
+        "type",
+        "unit",
+        "value",
+        "reference"
+      ]
+    },
+    "billNumber": {
+      "type": "integer"
+    },
+    "outletCode": {
+      "type": "string"
+    },
+    "payableAmount": {
+      "type": "integer"
+    },
+    "grossCartAmount": {
+      "type": "integer"
+    },
+    "grossPackagedAmount": {
+      "type": "integer"
+    },
+    "calculatedRoundOff": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "_id",
+    "_rev",
+    "KOTNumber",
+    "orderDetails",
+    "table",
+    "customerName",
+    "customerMobile",
+    "guestCount",
+    "machineName",
+    "sessionName",
+    "stewardName",
+    "stewardCode",
+    "date",
+    "timePunch",
+    "timeKOT",
+    "timeBill",
+    "cart",
+    "extras",
+    "discount",
+    "customExtras",
+    "billNumber",
+    "outletCode",
+    "payableAmount",
+    "grossCartAmount",
+    "grossPackagedAmount",
+    "calculatedRoundOff"
+  ]
+}

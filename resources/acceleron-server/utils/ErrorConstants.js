@@ -214,6 +214,7 @@ ErrorType.license_already_used = 'Activation Error: Licence already used.';
 ErrorType.license_validation_failed = 'Failed to validate the licence';
 
 // Settled & Pending Bill Errors
+ErrorType.refund_greater_than_paid_amount = 'Refund can not be more than the paid amount';
 ErrorType.start_and_end_date_empty = 'Please provide Start and End dates.';
 ErrorType.filter_key_and_filter_method_empty =
   'Please provide Filter method and Search key.';
