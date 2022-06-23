@@ -121,9 +121,9 @@ class TableService extends BaseService {
     async setTableFree(table_id){
         try {
           await this.resetTable(table_id);
-          return {isTableSetFree : true}
+          return true;
         } catch (error) {
-          return {isTableSetFree : false}
+          return false;
         }
     }
 
@@ -409,10 +409,10 @@ class TableService extends BaseService {
         tableData.lastUpdate = TimeUtils.getCurrentTimestamp();
 
         await this.updateTableByFilter("name", tableNumber, tableData);
-        return { isTableStatusUpdated : true };
+        return true;
       }
       catch (error) {
-        { isTableStatusUpdated : false };
+        return false;
       }
   }
 

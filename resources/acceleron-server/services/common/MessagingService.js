@@ -17,13 +17,12 @@ class MessagingService extends BaseService {
     await this.MessagingClient.sendMessage(messageData);
   }
 
-  //For internally called methods, catch error and response with useful messages - using service should not have tp handle error cases
   async sendConfirmationSMS(mobileNumber, messageContent, type) {
     try {
       await this.postMessageRequest(mobileNumber, messageContent, type)
-      return { isSMSSent : true };
+      return true;
     } catch (error) {
-      return { isSMSSent : false };
+      return false;
     }
   }
 }
