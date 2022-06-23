@@ -21,8 +21,12 @@ BillingCoreUtils.roundToFloor = function (number) {
    return Math.floor(number)
 }
 
+BillingCoreUtils.roundOffTotalPayable = function (number) {
+   return Math.round(number)
+}
+
 BillingCoreUtils.calculateDifferenceToClosestInteger = function (number) {
-   const number_rounded = Math.round(number);
+   const number_rounded = BillingCoreUtils.roundOffTotalPayable(number);
    const number_with_decimals = BillingCoreUtils.floatSafeNumber(number);
    return BillingCoreUtils.floatSafeNumber(number_rounded - number_with_decimals);
 }

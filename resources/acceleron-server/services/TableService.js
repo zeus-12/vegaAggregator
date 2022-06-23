@@ -4,6 +4,7 @@ let CommonModel = require('../models/CommonModel');
 let TableModel = require('../models/TableModel');
 let SettingsService = require('./SettingsService');
 let KOTService = require('./KOTService');
+let TimeUtils = require("../utils/TimeUtils");
 
 var _ = require('underscore');
 var async = require('async');
@@ -100,7 +101,6 @@ class TableService extends BaseService {
     }
 
     async resetTable(table_id){
-
       var tableData = await this.getTableById(table_id).catch(error => {
         throw error
       });
@@ -113,10 +113,18 @@ class TableService extends BaseService {
       tableData.guestContact = ""; 
       tableData.reservationMapping = ""; 
       tableData.guestCount = "";            
-    return await this.TableModel.saveSingleTableData(table_id, tableData).catch(error => {
-      throw error
-    });            
-      
+      return await this.TableModel.saveSingleTableData(table_id, tableData).catch(error => {
+        throw error
+      });
+    }
+
+    async setTableFree(table_id){
+        try {
+          await this.resetTable(table_id);
+          return {isTableSetFree : true}
+        } catch (error) {
+          return {isTableSetFree : false}
+        }
     }
 
     async updateTableByFilter(filter_key, unique_id, updateData){
@@ -234,6 +242,8 @@ class TableService extends BaseService {
         "reservationMapping" : "", 
         "guestCount" : ""
     }
+
+
       await this.updateTableByFilter('name', oldTableNumber, updateData).catch(error => {
         throw error
       });
@@ -249,7 +259,8 @@ class TableService extends BaseService {
         "guestContact" : kotData.guestContact, 
         "reservationMapping" : kotData.reservationMapping, 
         "guestCount" : kotData.guestCount
-    }
+      }
+
       var result = await this.updateTableByFilter('name', newTableNumber, newUpdateData).catch(error => {
         throw error
       });
@@ -388,6 +399,22 @@ class TableService extends BaseService {
       });
 
     }
+
+    async updateTableAsBilled(tableNumber, updateData) {
+      try {
+        let tableData = await this.fetchTablesByFilter("name", tableNumber);
+        tableData.remarks = updateData.payableAmount;
+        tableData.KOT = updateData.billNumber;
+        tableData.status = 2;
+        tableData.lastUpdate = TimeUtils.getCurrentTimestamp();
+
+        await this.updateTableByFilter("name", tableNumber, tableData);
+        return { isTableStatusUpdated : true };
+      }
+      catch (error) {
+        { isTableStatusUpdated : false };
+      }
+  }
 
 }
 

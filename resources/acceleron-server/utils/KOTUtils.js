@@ -1,5 +1,3 @@
-const TimeUtils = require("../utils/TimeUtils");
-
 function reduceCart(raw_cart) {
   var beautified_cart = [];
 
@@ -39,15 +37,6 @@ function reduceCart(raw_cart) {
   return beautified_cart;
 }
 
-function updateTableAsBilledRequest(tableData, generatedBill, billNumber) {
-  tableData.remarks = generatedBill.payableAmount;
-  tableData.KOT = billNumber;
-  tableData.status = 2;
-  tableData.lastUpdate = TimeUtils.getCurrentTimestamp();
-
-  return tableData;
-}
-
 function frameKotNumber(branch, kotNumber) {
   var kot_id = branch + "_KOT_" + kotNumber;
   return kot_id
@@ -55,6 +44,5 @@ function frameKotNumber(branch, kotNumber) {
 
 module.exports = {
   reduceCart,
-  updateTableAsBilledRequest,
   frameKotNumber
 };

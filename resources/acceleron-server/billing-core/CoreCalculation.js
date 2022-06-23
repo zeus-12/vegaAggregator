@@ -29,8 +29,8 @@ class CoreCalculation {
 
 
     //Calculate the applicable taxes and extras based on the billing mode
-    calculateTaxesAndExtras(billingModeExtras, totalCartAmount, totalPackagedAmount) {
-        var applicableExtras = billingModeExtras;
+    calculateTaxesAndExtras(billingMode, totalCartAmount, totalPackagedAmount) {
+        var applicableExtras = billingMode.extras;
         let taxesAndExtrasSum = 0;
 
         //Note: Skip tax and other extras (with isCompulsary no) on packaged food Pepsi ect. (marked with 'isPackaged' = true)

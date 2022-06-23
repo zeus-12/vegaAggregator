@@ -16,10 +16,10 @@ class BillingCore {
         this.CoreValidation = new CoreValidation();
     }
 
-    generateBill(masterMenu, orderCart, billingModeExtras, customExtras, discounts) {
+    generateBill(masterMenu, orderCart, billingMode, customExtras, discounts) {
         var verifiedOrderCart = this.CoreValidation.validateCartAgainstMasterMenu(masterMenu, orderCart);
         var { totalCartAmount, totalPackagedAmount } = this.CoreCalculation.calculateCartTotals(verifiedOrderCart);
-        var { taxesAndExtrasList, taxesAndExtrasSum } = this.CoreCalculation.calculateTaxesAndExtras(billingModeExtras, totalCartAmount, totalPackagedAmount);
+        var { taxesAndExtrasList, taxesAndExtrasSum } = this.CoreCalculation.calculateTaxesAndExtras(billingMode, totalCartAmount, totalPackagedAmount);
         var { customExtraList, customExtraSum } = this.CoreCalculation.calculateCustomExtras(customExtras, totalCartAmount, totalPackagedAmount);
         var { discountList, discountSum } = this.CoreCalculation.calculateDiscounts(discounts, totalCartAmount, totalPackagedAmount);
 
@@ -29,8 +29,9 @@ class BillingCore {
     //Create a bill out of given data
     frameBill(verifiedOrderCart, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum) {
 
-        const totalPayableAmount = totalCartAmount + taxesAndExtrasSum + customExtraSum - discountSum;
+        var totalPayableAmount = totalCartAmount + taxesAndExtrasSum + customExtraSum - discountSum;
         const calculatedRoundOff = BillingCoreUtils.calculateDifferenceToClosestInteger(totalPayableAmount);
+        totalPayableAmount = BillingCoreUtils.roundOffTotalPayable(totalPayableAmount);
 
         const GENERATED_BILL = {
             "_id": "",

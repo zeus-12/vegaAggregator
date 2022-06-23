@@ -1,13 +1,11 @@
 const TimeUtils = require("./TimeUtils");
 
 function frameBillNumber(branch, billNumber) {
-  const billId = branch + "_BILL_" + billNumber;
-  return billId;
+  return branch + "_BILL_" + billNumber;
 }
 
 function frameInvoiceNumber(branch, billNumber) {
-  const invoiceId = branch + "_INVOICE_" + billNumber;
-  return invoiceId;
+  return branch + "_INVOICE_" + billNumber;
 }
 
 function frameInvoiceNumberFromBillNumber(invoiceId) {
@@ -16,6 +14,7 @@ function frameInvoiceNumberFromBillNumber(invoiceId) {
 }
 
 function propagateKOTDataAndAssignBillNumber(generatedBill, billNumber, outletCode, kotData) {
+  generatedBill._id = this.frameBillNumber(outletCode, billNumber);
   generatedBill.billNumber = billNumber;
   generatedBill.outletCode = outletCode;
   generatedBill.timeBill = TimeUtils.getCurrentTimestamp();

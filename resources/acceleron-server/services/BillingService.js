@@ -2,7 +2,9 @@
 let BaseService = ACCELERONCORE._services.BaseService;
 let BillingModel = require("../models/BillingModel");
 let KOTService = require("./KOTService");
-let SettingsService = require("./SettingsService");
+let MenuService = require("./MenuService");
+let BillingHelperService = require("./helpers/BillingHelperService");
+let PreferenceHelperService = require("./helpers/PreferenceHelperService");
 let TableService = require("./TableService");
 let MessagingService = require("./common/MessagingService");
 let BillingCore = require("../billing-core/BillingCore");
@@ -10,6 +12,7 @@ let KOTUtils = require("../utils/KOTUtils");
 let BillingUtils = require("../utils/BillingUtils");
 let TimeUtils = require("../utils/TimeUtils");
 let MessagingTypes = require("../constants/MessagingTypes");
+let SystemOptions = require("../constants/SystemOptions");
 
 var moment = require("moment");
 var _ = require("underscore");
@@ -21,9 +24,11 @@ class BillingService extends BaseService {
     this.request = request;
     this.BillingModel = new BillingModel(request);
     this.KOTService = new KOTService(request);
+    this.MenuService = new MenuService(request);
     this.TableService = new TableService(request);
-    this.SettingsService = new SettingsService(request);
     this.MessagingService = new MessagingService(request);
+    this.BillingHelperService = new BillingHelperService(request);
+    this.PreferenceHelperService = new PreferenceHelperService(request);
     this.BillingCore = new BillingCore();
   }
 
@@ -34,78 +39,57 @@ class BillingService extends BaseService {
     const clientName = this.request.loggedInUser.client;
 
     var kot_id = KOTUtils.frameKotNumber(branchName, kotNumber);
-    var kotData = await this.KOTService.getKOTById(kot_id).catch((error) => {
-      throw error;
-    });
-
+    var kotData = await this.KOTService.getKOTById(kot_id);
     const reducedCart = KOTUtils.reduceCart(kotData.cart);
 
-    var masterMenu = [];
-    var billingModeExtras = [];
-    var generatedBill = this.BillingCore.generateBill(masterMenu, reducedCart, billingModeExtras, kotData.customExtras, kotData.discount);
-    const billNumber = await this.SettingsService.generateNextIndex("BILL");
+    var masterMenu = await this.MenuService.getFullMenu();
+    var detailedBillingMode = await this.BillingHelperService.getDetailedBillingModeByName(kotData.orderDetails.mode);
+
+    var generatedBill = this.BillingCore.generateBill(masterMenu, reducedCart, detailedBillingMode, kotData.customExtras, kotData.discount);
+
+    const billNumber = await this.BillingHelperService.acquireBillNumber();
     BillingUtils.propagateKOTDataAndAssignBillNumber(generatedBill, billNumber, branchName, kotData);
 
-    /*Save NEW BILL*/
-    delete generatedBill._id;
-    delete generatedBill._rev;
-    generatedBill._id = BillingUtils.frameBillNumber(branchName, billNumber);
+    await this.BillingModel.postBill(generatedBill);
+    await this.KOTService.deleteKOTById(kot_id);
 
-    var preferenceData = await this.SettingsService.filterItemFromSettingsList("ACCELERATE_SYSTEM_OPTIONS", systemId);
-    var billSettleLater = preferenceData.find(
-      (item) => item.name === "billSettleLater"
-    ).value;
-
-    let tableData = await this.TableService.fetchTablesByFilter("name", kotData.table);
+    var isTableStatusUpdated, isSMSSent, isTableSetFree;
     const modeType = generatedBill.orderDetails.modeType;
-
-    var isTableStatusUpdated, smsSent, isTableSetFree;
-
-    await this.BillingModel.postBill(generatedBill).then(
-          await this.KOTService.deleteKOTById(kot_id).then(async () => {
-
-            if (modeType == "DINE" && billSettleLater == "YES") {
-              await this.TableService.resetTable(kotData.table)
-                .then((isTableSetFree = true))
-                .catch((err) => (isTableSetFree = false));
+    switch (modeType) {
+      case "DINE": {
+          var billSettleLaterPreference = this.PreferenceHelperService.getPreference(systemId, SystemOptions.SETTLE_BILL_LATER);
+          if(billSettleLaterPreference == "YES") {
+            isTableSetFree = await this.TableService.setTableFree(kotData.table);
+          }
+          else {
+            var tableDataUpdateRequest = {
+              "payableAmount" : generatedBill.payableAmount,
+              "billNumber" : generatedBill.billNumber
             }
-            else if (modeType == "DINE" && billSettleLater !== "YES") {
-              const tableDataUpdateRequest = KOTUtils.updateTableAsBilledRequest(tableData, generatedBill, billNumber);
-              await this.TableService.updateTableByFilter("name", generatedBill.table, tableDataUpdateRequest)
-                .then((isTableStatusUpdated = true))
-                .catch((err) => (isTableStatusUpdated = false));
-            }
+            isTableStatusUpdated = await this.TableService.updateTableAsBilled(generatedBill.table, tableDataUpdateRequest);
+          }
+          break;
+      }
+      case "DELIVERY": {
+          var messageData = {
+            customerName: generatedBill.customerName,
+            customerMobile: generatedBill.customerMobile,
+            totalBillAmount: generatedBill.payableAmount,
+            accelerateLicence: systemId,
+            accelerateClient: clientName,
+          };
+          isSMSSent = await this.MessagingService.sendConfirmationSMS(generatedBill.customerMobile, messageData, MessagingTypes.DELIVERY_CONFIRMATION);
+          break;
+      }
+    }
 
-            if (modeType == "DELIVERY") {
-              var messageData = {
-                customerName: generatedBill.customerName,
-                customerMobile: generatedBill.customerMobile,
-                totalBillAmount: generatedBill.payableAmount,
-                accelerateLicence: systemId,
-                accelerateClient: clientName,
-              };
-              await this.MessagingService.postMessageRequest(generatedBill.customerMobile, messageData, MessagingTypes.DELIVERY_CONFIRMATION)
-                .then((smsSent = true))
-                .catch((err) => (smsSent = false));
-            }
-          })
-          .catch((error) => {
-            throw error;
-          })
-      )
-      .catch((error) => {
-        throw error;
-      });
-
-    var response = {
-      generatedBill,
+    return {
+      newBillFile: generatedBill,
       billingMode: modeType,
       isTableSetFree,
       isTableStatusUpdated,
-      smsSent,
+      smsSent : isSMSSent,
     };
-
-    return response;
   }
 
 
