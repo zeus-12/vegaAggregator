@@ -1,9 +1,7 @@
 var moment = require("moment");
 
 function getCurrentTimestamp() {
-  time = moment().format("HHmm");
-  return time;
+  return moment().format("HHmm");;
 }
-module.exports = {
-  getCurrentTimestamp,
-};
+
+module.exports = {getCurrentTimestamp};

@@ -1,6 +1,7 @@
 "use strict";
 let CoreCalculation = require("./CoreCalculation");
 let CoreValidation = require("./CoreValidation");
+let BillingCoreUtils = require("./BillingCoreUtils");
 
 class BillingCore {
 
@@ -22,9 +23,49 @@ class BillingCore {
         var { customExtraList, customExtraSum } = this.CoreCalculation.calculateCustomExtras(customExtras, totalCartAmount, totalPackagedAmount);
         var { discountList, discountSum } = this.CoreCalculation.calculateDiscounts(discounts, totalCartAmount, totalPackagedAmount);
 
-        return this.frameBill(verifiedOrderCart, billingMode, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum);
+        return this.frameBill(verifiedOrderCart, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum);
     }
 
+    //Create a bill out of given data
+    frameBill(verifiedOrderCart, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum) {
+
+        var totalPayableAmount = totalCartAmount + taxesAndExtrasSum + customExtraSum - discountSum;
+        const calculatedRoundOff = BillingCoreUtils.calculateDifferenceToClosestInteger(totalPayableAmount);
+        totalPayableAmount = BillingCoreUtils.roundOffTotalPayable(totalPayableAmount);
+
+        const GENERATED_BILL = {
+            "_id": "",
+            "KOTNumber": "",
+            "orderDetails": "",
+            "table": "",
+            "customerName": "",
+            "customerMobile": "",
+            "guestCount": "",
+            "machineName": "",
+            "sessionName": "",
+            "stewardName": "",
+            "stewardCode": "",
+            "date": "",
+            "timePunch": "",
+            "timeKOT": "",
+            "timeBill": "",
+            "cart": verifiedOrderCart,
+            "extras": taxesAndExtrasList,
+            "discount": BillingCoreUtils.isValidPaymentAmount(discountSum) ? discountList : {},
+            "customExtras": BillingCoreUtils.isValidPaymentAmount(customExtraSum) ? customExtraList : {},
+            "billNumber": "",
+            "outletCode": "",
+            "payableAmount": totalPayableAmount,
+            "grossCartAmount": totalCartAmount,
+            "grossPackagedAmount": totalPackagedAmount,
+            "calculatedRoundOff": calculatedRoundOff,
+            "paymentMode": "",
+            "totalAmountPaid": "",
+            "paymentReference": ""
+        };
+        
+        return GENERATED_BILL;
+    }
 
     //Transform bill to invoice by attaching the payment details
     generateInvoice(bill, paymentMode, paymentDetails, splitPayList) {
@@ -51,9 +92,9 @@ class BillingCore {
     }
 
     //Issue refund to an invoice
-    issueRefund(invoice, billingMode, refundDetails) {
+    issueRefund(invoice, billingModeExtras, refundDetails) {
         this.CoreValidation.validateRefundDetails(invoice, refundDetails);
-        var { requestedRefund, adjustedRefundAmount, newTotalPayableAfterRefund, newCalculatedRoundOff, updatedTaxesAndExtrasList, updatedCustomExtraList} = this.CoreCalculation.calculateEffectiveRefund(invoice, billingMode, refundDetails);
+        var { requestedRefund, adjustedRefundAmount, newTotalPayableAfterRefund, newCalculatedRoundOff, updatedTaxesAndExtrasList, updatedCustomExtraList} = this.CoreCalculation.calculateEffectiveRefund(invoice, billingModeExtras, refundDetails);
 
         const UPDATED_INVOICE = invoice;
         UPDATED_INVOICE.extras = updatedTaxesAndExtrasList;
@@ -70,42 +111,6 @@ class BillingCore {
         return UPDATED_INVOICE;
     }
 
-
-    //Create a bill out of given data
-    frameBill(verifiedOrderCart, billingMode, totalCartAmount, totalPackagedAmount, taxesAndExtrasList, taxesAndExtrasSum, customExtraList, customExtraSum, discountList, discountSum) {
-
-        const totalPayableAmount = totalCartAmount + taxesAndExtrasSum + customExtraSum - discountSum;
-
-        const GENERATED_BILL = {
-            "_id": "",
-            "KOTNumber": "",
-            "orderDetails": billingMode.orderDetails,
-            "table": "",
-            "customerName": "",
-            "customerMobile": "",
-            "guestCount": "",
-            "machineName": "",
-            "sessionName": "",
-            "stewardName": "",
-            "stewardCode": "",
-            "date": "",
-            "timePunch": "",
-            "timeKOT": "",
-            "timeBill": "",
-            "cart": verifiedOrderCart,
-            "extras": taxesAndExtrasList,
-            "discount": discountList,
-            "customExtras": customExtraList,
-            "billNumber": "",
-            "outletCode": "",
-            "payableAmount": totalPayableAmount,
-            "grossCartAmount": totalCartAmount,
-            "grossPackagedAmount": totalPackagedAmount,
-            "calculatedRoundOff": ""
-        };
-        
-        return GENERATED_BILL;
-    }
 }
 
 module.exports = BillingCore;

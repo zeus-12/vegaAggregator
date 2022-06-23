@@ -17,10 +17,10 @@ class KOTService extends BaseService {
 
     async getKOTById(kot_id) {
       const data = await this.KOTModel.getKOTById(kot_id).catch(error => {
-        throw error
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.kot_requested_not_found);
       });
       if(_.isEmpty(data)){
-        throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.no_matching_results);
+          throw new ErrorResponse(ResponseType.NO_RECORD_FOUND, ErrorType.kot_requested_not_found);
       }
       return data;
     }

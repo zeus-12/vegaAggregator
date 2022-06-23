@@ -16,6 +16,15 @@ class MessagingService extends BaseService {
     const messageData = {mobileNumber, data, type};
     await this.MessagingClient.sendMessage(messageData);
   }
+
+  async sendConfirmationSMS(mobileNumber, messageContent, type) {
+    try {
+      await this.postMessageRequest(mobileNumber, messageContent, type)
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
 }
 
 module.exports = MessagingService;

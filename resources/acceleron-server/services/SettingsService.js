@@ -5,7 +5,7 @@ let DataFactoryManager = require("../factory/DataFactoryManager");
 
 var _ = require("underscore");
 var async = require("async");
-const ErrorType = require("../utils/ErrorConstants");
+const ErrorType = require("../constants/ErrorConstants");
 
 class SettingsService extends BaseService {
   constructor(request) {
