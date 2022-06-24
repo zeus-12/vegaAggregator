@@ -27,7 +27,23 @@ class BootstrapController extends BaseController {
         return await this.BootstrapService.initialiseAcceleronPOS(licenseKey).catch(error => {
             throw error
         });
-    } 
+  }
+    async listenRequest() {
+        
+    return await this.BootstrapService.listenRequest().catch(error => {
+        throw error
+    }); 
+
+    }
+
+    async deleteActionRequestById() {
+        const actionRequestId = `PRINT_VIEW_${this.request.loggedInUser.branch}_KOT_${this.request.params.ID}`;
+        return await this.BootstrapService.deleteActionRequestById(actionRequestId).catch(error => {
+            throw error
+        }); 
+    }
 }
+
+
 
 module.exports = BootstrapController;

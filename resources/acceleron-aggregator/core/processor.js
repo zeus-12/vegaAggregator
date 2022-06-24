@@ -6,6 +6,9 @@ let DATA_REGISTERED_DEVICES = '';
 let MENU_DATA_SYSTEM_ORIGINAL = [];
 let MENU_DATA_OTHER_MENU_MAPPINGS = [];
 
+const ACCELERON_SERVER_ENDPOINT = 'http://localhost:3000';
+const ACCELERON_SERVER_ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnQiOiJaQUlUT09OIiwiYnJhbmNoIjoiQURZQVIiLCJpc3N1ZVRpbWUiOjE2NTU0ODk5MTgsInVzZXIiOnsidmVyaWZpZWRNb2JpbGUiOiI5ODg0MTc5Njc1IiwibmFtZSI6IkphZnJ5Iiwicm9sZSI6IkFETUlOIn0sIm1hY2hpbmVJZCI6Ilo1MDAiLCJpYXQiOjE2NTU0ODk5MTgsImV4cCI6MTY1NjA5NDcxOH0.ku7MVw-iy8EyG-uUi5kmKQd8iFDOSHMbR0fIsphmftA"
+
 
 let SERVICE_APPROVED_ORDERS = 0;
 let SERVICE_APPROVED_PRINTS = 0;
@@ -348,719 +351,714 @@ function findDefaultPrinter(deviceCode, type){
   MAIN PROCESSING FUNCTION
 */
 
-function initialiseProcessing(){
+function removeAlreadyProccessedActionRequest(id){
+  $.ajax({
+      type: 'DELETE',
+      url: ACCELERON_SERVER_ENDPOINT + `/bootstrap/action_request/${id}`,
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader("x-access-token", ACCELERON_SERVER_ACCESS_TOKEN);
+      },
+      error: function (data) {
+        showToast('Server Warning: Unable to modify action request. Please contact Accelerate Support.', '#e67e22');
+      }
+    })
+}
 
 
-        if(PAUSE_FLAG){
-            return '';
+function initialiseProcessing() {
+
+
+  if (PAUSE_FLAG) {
+    return '';
+  }
+
+  //Ignore List (to skip these already noted errors)
+  var ignoreList = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
+
+  checkForRequests();
+
+  //Round 1: Check for Requests
+  function checkForRequests() {
+
+    if (SERVICE_APPROVED_ACTIONS == 0) {
+      checkForOrders(0);
+      return "";
+    }
+
+    //console.log('Checking for Requests...');
+
+    $.ajax({
+      type: 'GET',
+      url: ACCELERON_SERVER_ENDPOINT + '/bootstrap/initialise-processing',
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader("x-access-token", ACCELERON_SERVER_ACCESS_TOKEN);
+      },
+      success: function (data) {
+        if (!data.data.requestData) {
+          //go to next step 2 without cool off. no printing involved.
+          checkForOrders(0);
+
         }
+        else {
+          requestData = data.data.requestData
+          kotData = data.data.kotData
 
-        //Ignore List (to skip these already noted errors)
-        var ignoreList = window.localStorage.errorLog && window.localStorage.errorLog != "" ? JSON.parse(window.localStorage.errorLog) : [];
+          switch (requestData.action) {
+            case "PRINT_VIEW": {
 
-        checkForRequests(0);
+              var set_view_printer = findDefaultPrinter(requestData.machine, 'VIEW');
 
-        //Round 1: Check for Requests
-        function checkForRequests(index){
-
-          if(SERVICE_APPROVED_ACTIONS == 0){
-            checkForOrders(0);
-            return "";
-          }
-
-          //console.log('Checking for Requests...');
-
-          $.ajax({
-            type: 'GET',
-            url: COMMON_LOCAL_SERVER_IP+'/accelerate_action_requests/_design/requests/_view/fetchall',
-            contentType: "application/json",
-            dataType: 'json',
-            timeout: 10000,
-            success: function(data) {
-
-              if(data.rows.length == 0){
-                //go to next step 2 without cool off. no printing involved.
-                checkForOrders(0);
+              if (set_view_printer != '') {
+                sendToPrinter(kotData, 'VIEW', set_view_printer);
               }
-              else{
+              else {
+                sendToPrinter(kotData, 'VIEW');
+              }
                         
-                        var requestData = data.rows[index].value;
-              
-                        //fetch KOT
-                        var kot_request_data = requestData.KOT;
-
-                        $.ajax({
-                          type: 'GET',
-                          url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+kot_request_data,
-                          timeout: 10000,
-                          success: function(kotData) {
-                            if(data._id != ""){
-                                
-                                switch(requestData.action){
-                                  case "PRINT_VIEW":{
-
-                                    var set_view_printer = findDefaultPrinter(requestData.machine, 'VIEW');
-
-                                    if(set_view_printer != ''){
-                                      sendToPrinter(kotData, 'VIEW', set_view_printer);
-                                    }
-                                    else{
-                                      sendToPrinter(kotData, 'VIEW');
-                                    }
-                                    
-                                    showToast('Items View of #'+kotData.KOTNumber+' generated Successfully', '#27ae60');
-                                    
-                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
-                                    
-                                    //go starting again, after some cool off.
-                                    setTimeout(function(){ initialiseProcessing(); }, 5000);
-                                    break;
-                                  }
-                                  case "PRINT_KOT":{
-                                    printDuplicateTapsKOT(kotData, requestData);
-                                    showToast('Duplicate KOT #'+kotData.KOTNumber+' generated Successfully', '#27ae60');
-                                    
-                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
-                                    
-                                    break;
-                                  }
-                                  case "PRINT_BILL":{ 
-                                    confirmBillGeneration(kotData, requestData);
-                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
-                                    
-                                    //go starting again, after some cool off.
-                                    setTimeout(function(){ initialiseProcessing(); }, 5000);
-                                    break;
-                                  }
-                                  default:{
-
-                                    removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
-
-                                    //go starting again, after some cool off.
-                                    setTimeout(function(){ initialiseProcessing(); }, 5000);
-                                    break;
-                                  }
-                                }                                
-
-                            }
-                            else{
-                              showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
-                              
-                              //go to next step 2 without any cool off.
-                              checkForOrders(0);
-                            }
-                          },
-                          error: function(data) {
-
-                                var action_name = '';
-                                switch(requestData.action){
-                                  case "PRINT_VIEW":{
-                                    action_name = 'Printing View';
-                                    break;
-                                  }
-                                  case "PRINT_KOT":{
-                                    action_name = 'Printing Duplicate KOT';
-                                    break;
-                                  }
-                                  case "PRINT_BILL":{ 
-                                    action_name = 'Generating Bill';
-                                    break;
-                                  }
-                                }   
+              showToast('Items View of #' + kotData.KOTNumber + ' generated Successfully', '#27ae60');
+              removeAlreadyProccessedActionRequest(kotData.KOTNumber);
 
 
-                                //KOT not found 
-                                var splits = kot_request_data.split('_');
-                                showToast(action_name+' has been Failed: KOT #<b>'+splits[2]+'</b> is not found.', '#e74c3c');
 
-                                //Add to Error Log
-                                addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'KOT_NOT_FOUND', requestData.KOT, requestData);
-                                removeAlreadyProccessedActionRequest(requestData._id, requestData._rev);
-
-                                //go to next step 2 without cool off.
-                                checkForOrders(0);
-                          }
-                        });
-                    
-              }
-            },
-            error: function(data){
-              showToast('System Error: Unable to fetch action requests. Please contact Accelerate Support if problem persists.', '#e74c3c');
-              
-              //go to next step 2 without cool off.  
-              checkForOrders(0);
+                        
+              //go starting again, after some cool off.
+              setTimeout(function () { initialiseProcessing(); }, 5000);
+              break;
             }
+            case "PRINT_KOT": {
+              printDuplicateTapsKOT(kotData, requestData);
+              showToast('Duplicate KOT #' + kotData.KOTNumber + ' generated Successfully', '#27ae60');
+                        
+              removeAlreadyProccessedActionRequest(kotData.KOTNumber);
+                        
+              break;
+            }
+            case "PRINT_BILL": {
+              
 
-          });    
+              confirmBillGeneration(kotData, requestData);
+              removeAlreadyProccessedActionRequest(kotData.KOTNumber);
+                        
+              //go starting again, after some cool off.
+              setTimeout(function () { initialiseProcessing(); }, 5000);
+              break;
+            }
+            default: {
+
+              removeAlreadyProccessedActionRequest(kotData.KOTNumber);
+
+              //go starting again, after some cool off.
+              setTimeout(function () { initialiseProcessing(); }, 5000);
+              break;
+            }
+          }
+        }
         
+      },        
+      error: function (data) {
+
+        var action_name = '';
+        switch (requestData.action) {
+          case "PRINT_VIEW": {
+            action_name = 'Printing View';
+            break;
+          }
+          case "PRINT_KOT": {
+            action_name = 'Printing Duplicate KOT';
+            break;
+          }
+          case "PRINT_BILL": {
+            action_name = 'Generating Bill';
+            break;
+          }
         }
 
 
-        //Round 2: Check for Orders
-        function checkForOrders(index){
+        //KOT not found 
+        var splits = kot_request_data.split('_');
+        showToast(action_name + ' has been Failed: KOT #<b>' + splits[2] + '</b> is not found.', '#e74c3c');
+
+        //Add to Error Log
+        addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'KOT_NOT_FOUND', requestData.KOT, requestData);
+        removeAlreadyProccessedActionRequest(kotData.KOTNumber);
+
+        //go to next step 2 without cool off.
+        checkForOrders(0);
+      }
+    })    
+  }
+
+  //Round 2: Check for Orders
+  function checkForOrders(index) {
 
 
-          if(SERVICE_APPROVED_ORDERS == 0){
+    if (SERVICE_APPROVED_ORDERS == 0) {
 
-            //Update Message
-            document.getElementById("pendingOrderMessage").innerHTML = '<tag style="color: #ce8d27"><i class="fa fa-warning" style="color: #ce8d27"></i> Orders Disabled</tag>';
+      //Update Message
+      document.getElementById("pendingOrderMessage").innerHTML = '<tag style="color: #ce8d27"><i class="fa fa-warning" style="color: #ce8d27"></i> Orders Disabled</tag>';
 
-            checkForPrints(0);
-            return "";
-          }
+      checkForPrints(0);
+      return "";
+    }
 
-          //console.log('Checking for Orders...');
+    //console.log('Checking for Orders...');
 
-          $.ajax({
-            type: 'GET',
-            url: COMMON_LOCAL_SERVER_IP+'/accelerate_taps_orders/_design/orders/_view/view?include_docs=true',
-            contentType: "application/json",
-            dataType: 'json',
-            timeout: 10000,
-            success: function(data) {
+    $.ajax({
+      type: 'GET',
+      url: COMMON_LOCAL_SERVER_IP + '/accelerate_taps_orders/_design/orders/_view/view?include_docs=true',
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function (data) {
 
-              if(data.total_rows == 0){
-                document.getElementById("pendingOrderMessage").innerHTML = 'No Pending Orders';
-                
-                //go to next round 3, no need of any cool off.
-                checkForPrints(0);
-              }
-              else{
-                
-                //Update Message
-                document.getElementById("pendingOrderMessage").innerHTML = '<b>'+data.total_rows+'</b> Pending Order'+(data.total_rows > 1 ? 's': '');
+        if (data.total_rows == 0) {
+          document.getElementById("pendingOrderMessage").innerHTML = 'No Pending Orders';
+            
+          //go to next round 3, no need of any cool off.
+          checkForPrints(0);
+        }
+        else {
+            
+          //Update Message
+          document.getElementById("pendingOrderMessage").innerHTML = '<b>' + data.total_rows + '</b> Pending Order' + (data.total_rows > 1 ? 's' : '');
+          
+          var orderData = data.rows[index].doc;
+
+          if (orderData.tapsSource) { //Order from Others Sources
+
+            var billingModesData = DATA_BILLING_MODES;
+            var billingParametersData = DATA_BILLING_PARAMETERS;
+            var orderSourcesData = DATA_ORDER_SOURCES;
               
-                var orderData = data.rows[index].doc;
-
-                if(orderData.tapsSource){ //Order from Others Sources
-
-                    var billingModesData = DATA_BILLING_MODES;
-                    var billingParametersData = DATA_BILLING_PARAMETERS;
-                    var orderSourcesData = DATA_ORDER_SOURCES;
-                  
-                    var order_source = orderData.tapsSource.source;
-                    var order_mode_type = orderData.tapsSource.type;
-                    var selected_billing_mode_name = '';
-
-                    var super_memory_id = orderData._id;
-                    var super_memory_rev = orderData._rev;
-
-
-                    var c = 0;
-                    while(orderSourcesData[c]){
-
-                      if(orderSourcesData[c].code == order_source){
-                        if(order_mode_type == 'PARCEL'){
-                          selected_billing_mode_name = orderSourcesData[c].defaultTakeaway; 
-                        }
-                        else if(order_mode_type == 'DELIVERY'){
-                          selected_billing_mode_name = orderSourcesData[c].defaultDelivery; 
-                        }
-
-                        findBillingMode();
-                        break;
-                      }
-
-                      if(c == orderSourcesData.length - 1){
-                        throwSystemBlockingError('ORDER SOURCE NOT CONFIGURED: '+order_source+' order has been failed');
-                        return '';
-                      }
-
-                      c++;
-                    }
-
-                    var selectedBillingMode = '';
-                    
-                    function findBillingMode(){
-
-                      var m = 0;
-                      while(billingModesData[m]){
-                        if(billingModesData[m].name == selected_billing_mode_name){
-                          selectedBillingMode = billingModesData[m];
-                          standardiseCart();
-                          break;
-                        }
-
-                        if(m == billingModesData.length - 1){ //last iteration
-                          standardiseCart(); 
-                        }
-
-                        m++;
-                      }
-                    }
-
-
-
-                    //Standardise Cart w.r.t system menu
-                    function standardiseCart(){
-                      var incoming_cart = orderData.cart;
-                      var custom_item_id = 1;
-
-                      standardiseItem(0);
-
-                      function standardiseItem(index){
-
-                        var item_name = incoming_cart[index].name;
-                        
-                        var standardised_item = '';
-
-                        var otherMenuData = MENU_DATA_OTHER_MENU_MAPPINGS[order_source];
-                        var systemMenu = MENU_DATA_SYSTEM_ORIGINAL;
-
-                        var n = 0;
-                        var isFinishedProcessing = false;
-
-                        while(otherMenuData[n] && !isFinishedProcessing){
-
-                          if(otherMenuData[n].mappedName == item_name){ //item map found
-
-                              if(systemMenu[otherMenuData[n].systemCode]){
-                              
-                                var system_equivalent_item = systemMenu[otherMenuData[n].systemCode];
-
-                                if(system_equivalent_item.isCustom){  
-
-                                  var system_equivalent_price = 0;
-                                  var isEquivalentVariantFound = false;
-
-                                  for(var j = 0; j < system_equivalent_item.customOptions.length; j++){
-                                    if(system_equivalent_item.customOptions[j].customName == otherMenuData[n].systemVariant){
-                                      system_equivalent_price = system_equivalent_item.customOptions[j].customPrice;
-                                      isEquivalentVariantFound = true;
-                                      break;
-                                    }
-                                  }
-
-                                  if(isEquivalentVariantFound){
-                                      
-                                      standardised_item = {
-                                        "cartIndex": index + 1,
-                                        "name": system_equivalent_item.name,
-                                        "category": system_equivalent_item.category,
-                                        "price": system_equivalent_price,
-                                        "isCustom": true,
-                                        "variant": otherMenuData[n].systemVariant,
-                                        "code": system_equivalent_item.code,
-                                        "qty": incoming_cart[index].quantity,
-                                        "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
-                                        "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
-                                      }
-
-                                  }
-                                  else{
-                                      
-                                      standardised_item = {
-                                        "cartIndex": index + 1,
-                                        "name": incoming_cart[index].name,
-                                        "category": system_equivalent_item.category,
-                                        "price": incoming_cart[index].price,
-                                        "isCustom": false,
-                                        "code": system_equivalent_item.code,
-                                        "qty": incoming_cart[index].quantity,
-                                        "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
-                                        "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
-                                      }
-                                      
-                                  }
-                                }
-                                else{
-                                  
-                                  standardised_item = {
-                                    "cartIndex": index + 1,
-                                    "name": system_equivalent_item.name,
-                                    "category": system_equivalent_item.category,
-                                    "price": system_equivalent_item.price,
-                                    "isCustom": false,
-                                    "code": system_equivalent_item.code,
-                                    "qty": incoming_cart[index].quantity,
-                                    "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
-                                    "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
-                                  }
-
-                                }
-
-                              }
-                              else{ // item map found. while, the mapped item code does not exist in system menu.
-                                
-                                standardised_item = {
-                                  "cartIndex": index + 1,
-                                  "name": incoming_cart[index].name,
-                                  "category": "MANUAL_UNKNOWN",
-                                  "price": incoming_cart[index].price,
-                                  "isCustom": false,
-                                  "code": custom_item_id,
-                                  "qty": incoming_cart[index].quantity,
-                                  "cookingTime": 0
-                                }
-
-                                custom_item_id++;                              
-
-                              }
-
-                              incoming_cart[index] = standardised_item; //update 
-                              
-                              if(incoming_cart[index+1]){
-                                standardiseItem(index+1);
-                              }
-                              else{ //done, go to next step
-                                createOrder(incoming_cart);
-                              }
-
-                              isFinishedProcessing = true;
-
-                              break;
-                          }
-
-
-
-                          if(n == otherMenuData.length - 1){ //last iteration, no mapping found.
-                            
-                              standardised_item = {
-                                "cartIndex": index + 1,
-                                "name": incoming_cart[index].name,
-                                "category": "MANUAL_UNKNOWN",
-                                "price": incoming_cart[index].price,
-                                "isCustom": false,
-                                "code": custom_item_id,
-                                "qty": incoming_cart[index].quantity,
-                                "cookingTime": 0
-                              }
-
-                              custom_item_id++;
-
-                              incoming_cart[index] = standardised_item; //update 
-
-
-                              if(incoming_cart[index+1]){
-                                standardiseItem(index+1);
-                              }
-                              else{ //done, go to next step
-                                createOrder(incoming_cart);
-                              }
-
-                              isFinishedProcessing = true;
-                              
-                              break;
-                          }
-
-
-
-                          n++;
-                        } //while
-
-
-                      }
-
-                    }
-
-
-                    function createOrder(standardised_cart){
-
-                      if(selectedBillingMode == ''){
-                        throwSystemBlockingError('INVALID BILLING MODE: '+order_source+' order has been failed');
-                        return '';
-                      }
-
-                    
-                        //Proceed to create the order
-                    
-                          var orderMetaInfo = {};
-                            orderMetaInfo.mode = selectedBillingMode.name;
-                            orderMetaInfo.modeType = selectedBillingMode.type;
-                            orderMetaInfo.reference = orderData.orderDetails.reference; 
-                            orderMetaInfo.isOnline = false;
-
-                          var today = moment().format('DD-MM-YYYY');
-                          var time = moment().format('HHmm');
-
-                          var obj = {}; 
-
-                          obj._id = super_memory_id; /* TWEAK: to remove tap order after printing*/
-                          obj._rev = super_memory_rev;
-
-                          obj.KOTNumber = "";
-                          obj.orderDetails = orderMetaInfo;
-                          obj.table = orderData.table;
-
-                          obj.customerName = orderData.customerName;
-                          obj.customerMobile = orderData.customerMobile; 
-                          obj.guestCount = 0;
-                          obj.machineName = 'Auto Generated';
-                          
-                          obj.sessionName = order_source;
-
-                          obj.stewardName = orderData.stewardName;
-                          obj.stewardCode = '';
-
-                          obj.date = today;
-                          obj.timePunch = time;
-                          obj.timeKOT = "";
-                          obj.timeBill = "";
-                          obj.timeSettle = "";
-
-                          var cart_products = standardised_cart;
-                          obj.cart = standardised_cart;
-                          obj.specialRemarks = orderData.specialRemarks;
-                          obj.allergyInfo = [];
-
-
-                            /*Process Figures*/
-                            var subTotal = 0;
-                            var packagedSubTotal = 0;
-
-                            var minimum_cooking_time = 0;
-
-                            var n = 0;
-                            while(cart_products[n]){
-
-                                /* min cooking time */
-                                if(cart_products[n].cookingTime && cart_products[n].cookingTime > 0){
-                                    if(minimum_cooking_time <= cart_products[n].cookingTime){
-                                        minimum_cooking_time = cart_products[n].cookingTime;
-                                    }
-                                }
-
-
-                                subTotal = subTotal + cart_products[n].qty * cart_products[n].price;
-
-                                if(cart_products[n].isPackaged){
-                                    packagedSubTotal = packagedSubTotal + cart_products[n].qty * cart_products[n].price;
-                                }
-
-                                n++;
-                            }
-
-
-
-                            var tempExtrasList = selectedBillingMode.extras;
-                            var selectedModeExtras = [];
-
-                            var a = 0;
-                            var b = 0;
-                            while(tempExtrasList[a]){
-                                b = 0;
-                                while(billingParametersData[b]){     
-                                    if(tempExtrasList[a].name == billingParametersData[b].name){  
-                                        billingParametersData[a].value = parseFloat(tempExtrasList[b].value);              
-                                        selectedModeExtras.push(billingParametersData[a]);
-                                    }
-                                    
-                                    b++;
-                                }
-                                a++;
-                            }
-
-
-
-                          /*Calculate Taxes and Other Charges*/ 
-
-                          //Note: Skip tax and other extras (with isCompulsary no) on packaged food Pepsi ect. (marked with 'isPackaged' = true)
-
-                          var otherCharges = [];        
-                          var k = 0;
-
-                          if(selectedModeExtras.length > 0){
-                            for(k = 0; k < selectedModeExtras.length; k++){
-
-                                var tempExtraTotal = 0;
-
-                                if(selectedModeExtras[k].value != 0){
-                                    if(selectedModeExtras[k].excludePackagedFoods){
-                                            if(selectedModeExtras[k].unit == 'PERCENTAGE'){
-                                                tempExtraTotal = (selectedModeExtras[k].value * (subTotal-packagedSubTotal))/100;
-                                            }
-                                            else if(selectedModeExtras[k].unit == 'FIXED'){
-                                                tempExtraTotal = selectedModeExtras[k].value;
-                                            }                       
-                                    }
-                                    else{
-                                            if(selectedModeExtras[k].unit == 'PERCENTAGE'){
-                                                tempExtraTotal = selectedModeExtras[k].value * subTotal/100;
-                                            }
-                                            else if(selectedModeExtras[k].unit == 'FIXED'){
-                                                tempExtraTotal = selectedModeExtras[k].value;
-                                            }                               
-                                    }
-
-
-                                }
-
-                                tempExtraTotal = Math.round(tempExtraTotal * 100) / 100;
-
-                                otherCharges.push({
-                                    "name": selectedModeExtras[k].name,
-                                    "value": selectedModeExtras[k].value,
-                                    "unit": selectedModeExtras[k].unit,
-                                    "amount": tempExtraTotal,
-                                    "isPackagedExcluded": selectedModeExtras[k].excludePackagedFoods
-                                })
-                            }
-                          }
-
-
-                          obj.extras = otherCharges;
-                          obj.discount = {};
-                          obj.customExtras = {};
-
-                          printFreshKOT(obj, 'REQUEST_AUTO_BILL_GENERATION');
-                          showToast('The <b>'+order_source+'</b> Order generated Successfully!');
-
-                    } //create order
-              
-                } // swiggy, zomato orders..
-                else{ //Order from Mobile Devices
-
-                    if(orderData.KOTNumber != ''){ //Editing Order case..
-
-                        var kotID = orderData.KOTNumber;
-
-                        //Check if it's already existing KOT (editing or not)
-                        var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : ''; 
-                        if(!accelerate_licencee_branch || accelerate_licencee_branch == ''){
-                          showToast('Invalid Licence Error: KOT can not be generated. Please contact Accelerate Support if problem persists.', '#e74c3c');
-                          return '';
-                        }
-
-                        var kot_request_data = accelerate_licencee_branch +"_KOT_"+ kotID;
-
-                        $.ajax({
-                          type: 'GET',
-                          url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot/'+kot_request_data,
-                          timeout: 10000,
-                          success: function(oldKOTData) {
-                            if(oldKOTData._id != ""){
-                              printEditedKOT(oldKOTData, orderData);
-                            }
-                            else{
-                              showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
-                              
-                              //start again
-                              removeTapsOrderRequest(orderData._id, orderData._rev);
-                              setTimeout(function(){ initialiseProcessing(); }, 3000);
-                            }
-                          },
-                          error: function(data) {
-
-                            //KOT not found 
-                            showToast('Editing KOT Failed: KOT #<b>'+kotID+'</b> is not found on the server.', '#e74c3c');
-
-                            //Add to Error Log
-                            var errorObj = {
-                              "table" : orderData.table,
-                              "staffName" : orderData.stewardName,
-                              "staffCode" : orderData.stewardCode,
-                              "machine": orderData.machineName
-                            }
-
-                            addToErrorLog(moment().format('hh:mm a'), 'ORDER', 'KOT_NOT_FOUND', kot_request_data, errorObj);
-                            removeTapsOrderRequest(orderData._id, orderData._rev);
-
-                            //start again
-                            setTimeout(function(){ initialiseProcessing(); }, 3000);
-                          }
-                        });
-                    }
-                    else{
-                        printFreshKOT(orderData); //Fresh Order case..
-                    }
-                    
+            var order_source = orderData.tapsSource.source;
+            var order_mode_type = orderData.tapsSource.type;
+            var selected_billing_mode_name = '';
+
+            var super_memory_id = orderData._id;
+            var super_memory_rev = orderData._rev;
+
+
+            var c = 0;
+            while (orderSourcesData[c]) {
+
+              if (orderSourcesData[c].code == order_source) {
+                if (order_mode_type == 'PARCEL') {
+                  selected_billing_mode_name = orderSourcesData[c].defaultTakeaway;
+                }
+                else if (order_mode_type == 'DELIVERY') {
+                  selected_billing_mode_name = orderSourcesData[c].defaultDelivery;
                 }
 
+                findBillingMode();
+                break;
               }
-            },
-            error: function(data){
-              showToast('System Error: Unable to fetch orders. Please contact Accelerate Support if problem persists.', '#e74c3c');
-              
-              //go to next round - 3
-              checkForPrints(0);
+
+              if (c == orderSourcesData.length - 1) {
+                throwSystemBlockingError('ORDER SOURCE NOT CONFIGURED: ' + order_source + ' order has been failed');
+                return '';
+              }
+
+              c++;
             }
 
-          }); 
+            var selectedBillingMode = '';
+                
+            function findBillingMode() {
 
-        }    
+              var m = 0;
+              while (billingModesData[m]) {
+                if (billingModesData[m].name == selected_billing_mode_name) {
+                  selectedBillingMode = billingModesData[m];
+                  standardiseCart();
+                  break;
+                }
 
+                if (m == billingModesData.length - 1) { //last iteration
+                  standardiseCart();
+                }
 
-        //Round 3: Check for Prints (running KOTs punched from Non-mobile devices)
-        function checkForPrints(index){
-
-          if(SERVICE_APPROVED_PRINTS == 0){
-
-            //Update Message
-            document.getElementById("pendingPrintsMessage").innerHTML = '<tag style="color: #ce8d27"><i class="fa fa-warning" style="color: #ce8d27"></i> KOTs Disabled</tag>';
-
-            setTimeout(function(){ initialiseProcessing(); }, 5000);
-            return "";
-          }
-
-          $.ajax({
-            type: 'GET',
-            url: COMMON_LOCAL_SERVER_IP+'/accelerate_kot_print_requests/_design/print-requests/_view/fetchall',
-            contentType: "application/json",
-            dataType: 'json',
-            timeout: 10000,
-            success: function(data) {
-
-              if(data.rows.length == 0){
-                //Update Message
-                document.getElementById("pendingPrintsMessage").innerHTML = 'No Pending KOTs';
-
-                //Relax! and start again! 
-                setTimeout(function(){ initialiseProcessing(); }, 5000);
+                m++;
               }
-              else{
+            }
 
-                        //Update Message
-                        document.getElementById("pendingPrintsMessage").innerHTML = '<b>'+data.total_rows+'</b> Pending KOT'+(data.total_rows > 1 ? 's': '');
 
-                        var requestData = data.rows[index].value;
 
-                        requestData.printRequest.modeType = requestData.orderDetails.modeType;
-                        
-                        switch(requestData.printRequest.action){
-                          case "KOT_NEW":{
-                            printKOTRequestNew(requestData);
-                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
-                            break;
-                          }
-                          case "KOT_EDITING":{
-                            printKOTRequestEdited(requestData, requestData.printRequest.comparison);
-                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
-                            break;
-                          }
-                          case "KOT_DUPLICATE":{
-                            printKOTRequestDuplicate(requestData);
-                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
-                            break;
-                          }
-                          case "KOT_CANCEL":{
-                            printKOTRequestCancel(requestData);
-                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
-                            break;
-                          }
-                          default:{
-                            
-                            removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
+            //Standardise Cart w.r.t system menu
+            function standardiseCart() {
+              var incoming_cart = orderData.cart;
+              var custom_item_id = 1;
 
-                            //go to starting again, after some cool off.
-                            setTimeout(function(){ initialiseProcessing(); }, 5000);
-                            
+              standardiseItem(0);
+
+              function standardiseItem(index) {
+
+                var item_name = incoming_cart[index].name;
+                    
+                var standardised_item = '';
+
+                var otherMenuData = MENU_DATA_OTHER_MENU_MAPPINGS[order_source];
+                var systemMenu = MENU_DATA_SYSTEM_ORIGINAL;
+
+                var n = 0;
+                var isFinishedProcessing = false;
+
+                while (otherMenuData[n] && !isFinishedProcessing) {
+
+                  if (otherMenuData[n].mappedName == item_name) { //item map found
+
+                    if (systemMenu[otherMenuData[n].systemCode]) {
+                          
+                      var system_equivalent_item = systemMenu[otherMenuData[n].systemCode];
+
+                      if (system_equivalent_item.isCustom) {
+
+                        var system_equivalent_price = 0;
+                        var isEquivalentVariantFound = false;
+
+                        for (var j = 0; j < system_equivalent_item.customOptions.length; j++) {
+                          if (system_equivalent_item.customOptions[j].customName == otherMenuData[n].systemVariant) {
+                            system_equivalent_price = system_equivalent_item.customOptions[j].customPrice;
+                            isEquivalentVariantFound = true;
                             break;
                           }
                         }
 
-             
+                        if (isEquivalentVariantFound) {
+                                  
+                          standardised_item = {
+                            "cartIndex": index + 1,
+                            "name": system_equivalent_item.name,
+                            "category": system_equivalent_item.category,
+                            "price": system_equivalent_price,
+                            "isCustom": true,
+                            "variant": otherMenuData[n].systemVariant,
+                            "code": system_equivalent_item.code,
+                            "qty": incoming_cart[index].quantity,
+                            "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
+                            "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
+                          }
+
+                        }
+                        else {
+                                  
+                          standardised_item = {
+                            "cartIndex": index + 1,
+                            "name": incoming_cart[index].name,
+                            "category": system_equivalent_item.category,
+                            "price": incoming_cart[index].price,
+                            "isCustom": false,
+                            "code": system_equivalent_item.code,
+                            "qty": incoming_cart[index].quantity,
+                            "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
+                            "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
+                          }
+                                  
+                        }
+                      }
+                      else {
+                              
+                        standardised_item = {
+                          "cartIndex": index + 1,
+                          "name": system_equivalent_item.name,
+                          "category": system_equivalent_item.category,
+                          "price": system_equivalent_item.price,
+                          "isCustom": false,
+                          "code": system_equivalent_item.code,
+                          "qty": incoming_cart[index].quantity,
+                          "cookingTime": system_equivalent_item.cookingTime ? system_equivalent_item.cookingTime : 0,
+                          "isPackaged": system_equivalent_item.isPackaged ? system_equivalent_item.isPackaged : false
+                        }
+
+                      }
+
+                    }
+                    else { // item map found. while, the mapped item code does not exist in system menu.
+                            
+                      standardised_item = {
+                        "cartIndex": index + 1,
+                        "name": incoming_cart[index].name,
+                        "category": "MANUAL_UNKNOWN",
+                        "price": incoming_cart[index].price,
+                        "isCustom": false,
+                        "code": custom_item_id,
+                        "qty": incoming_cart[index].quantity,
+                        "cookingTime": 0
+                      }
+
+                      custom_item_id++;
+
+                    }
+
+                    incoming_cart[index] = standardised_item; //update 
+                          
+                    if (incoming_cart[index + 1]) {
+                      standardiseItem(index + 1);
+                    }
+                    else { //done, go to next step
+                      createOrder(incoming_cart);
+                    }
+
+                    isFinishedProcessing = true;
+
+                    break;
+                  }
+
+
+
+                  if (n == otherMenuData.length - 1) { //last iteration, no mapping found.
+                        
+                    standardised_item = {
+                      "cartIndex": index + 1,
+                      "name": incoming_cart[index].name,
+                      "category": "MANUAL_UNKNOWN",
+                      "price": incoming_cart[index].price,
+                      "isCustom": false,
+                      "code": custom_item_id,
+                      "qty": incoming_cart[index].quantity,
+                      "cookingTime": 0
+                    }
+
+                    custom_item_id++;
+
+                    incoming_cart[index] = standardised_item; //update 
+
+
+                    if (incoming_cart[index + 1]) {
+                      standardiseItem(index + 1);
+                    }
+                    else { //done, go to next step
+                      createOrder(incoming_cart);
+                    }
+
+                    isFinishedProcessing = true;
+                          
+                    break;
+                  }
+
+
+
+                  n++;
+                } //while
+
+
               }
-            },
-            error: function(data){
-              showToast('System Error: Unable to fetch print requests. Please contact Accelerate Support if problem persists.', '#e74c3c');
-              
-              //Relax! and start again! 
-              setTimeout(function(){ initialiseProcessing(); }, 5000);
+
             }
 
-          });    
+
+            function createOrder(standardised_cart) {
+
+              if (selectedBillingMode == '') {
+                throwSystemBlockingError('INVALID BILLING MODE: ' + order_source + ' order has been failed');
+                return '';
+              }
+
+                
+              //Proceed to create the order
+                
+              var orderMetaInfo = {};
+              orderMetaInfo.mode = selectedBillingMode.name;
+              orderMetaInfo.modeType = selectedBillingMode.type;
+              orderMetaInfo.reference = orderData.orderDetails.reference;
+              orderMetaInfo.isOnline = false;
+
+              var today = moment().format('DD-MM-YYYY');
+              var time = moment().format('HHmm');
+
+              var obj = {};
+
+              obj._id = super_memory_id; /* TWEAK: to remove tap order after printing*/
+              obj._rev = super_memory_rev;
+
+              obj.KOTNumber = "";
+              obj.orderDetails = orderMetaInfo;
+              obj.table = orderData.table;
+
+              obj.customerName = orderData.customerName;
+              obj.customerMobile = orderData.customerMobile;
+              obj.guestCount = 0;
+              obj.machineName = 'Auto Generated';
+                      
+              obj.sessionName = order_source;
+
+              obj.stewardName = orderData.stewardName;
+              obj.stewardCode = '';
+
+              obj.date = today;
+              obj.timePunch = time;
+              obj.timeKOT = "";
+              obj.timeBill = "";
+              obj.timeSettle = "";
+
+              var cart_products = standardised_cart;
+              obj.cart = standardised_cart;
+              obj.specialRemarks = orderData.specialRemarks;
+              obj.allergyInfo = [];
+
+
+              /*Process Figures*/
+              var subTotal = 0;
+              var packagedSubTotal = 0;
+
+              var minimum_cooking_time = 0;
+
+              var n = 0;
+              while (cart_products[n]) {
+
+                /* min cooking time */
+                if (cart_products[n].cookingTime && cart_products[n].cookingTime > 0) {
+                  if (minimum_cooking_time <= cart_products[n].cookingTime) {
+                    minimum_cooking_time = cart_products[n].cookingTime;
+                  }
+                }
+
+
+                subTotal = subTotal + cart_products[n].qty * cart_products[n].price;
+
+                if (cart_products[n].isPackaged) {
+                  packagedSubTotal = packagedSubTotal + cart_products[n].qty * cart_products[n].price;
+                }
+
+                n++;
+              }
+
+
+
+              var tempExtrasList = selectedBillingMode.extras;
+              var selectedModeExtras = [];
+
+              var a = 0;
+              var b = 0;
+              while (tempExtrasList[a]) {
+                b = 0;
+                while (billingParametersData[b]) {
+                  if (tempExtrasList[a].name == billingParametersData[b].name) {
+                    billingParametersData[a].value = parseFloat(tempExtrasList[b].value);
+                    selectedModeExtras.push(billingParametersData[a]);
+                  }
+                                
+                  b++;
+                }
+                a++;
+              }
+
+
+
+              /*Calculate Taxes and Other Charges*/
+
+              //Note: Skip tax and other extras (with isCompulsary no) on packaged food Pepsi ect. (marked with 'isPackaged' = true)
+
+              var otherCharges = [];
+              var k = 0;
+
+              if (selectedModeExtras.length > 0) {
+                for (k = 0; k < selectedModeExtras.length; k++) {
+
+                  var tempExtraTotal = 0;
+
+                  if (selectedModeExtras[k].value != 0) {
+                    if (selectedModeExtras[k].excludePackagedFoods) {
+                      if (selectedModeExtras[k].unit == 'PERCENTAGE') {
+                        tempExtraTotal = (selectedModeExtras[k].value * (subTotal - packagedSubTotal)) / 100;
+                      }
+                      else if (selectedModeExtras[k].unit == 'FIXED') {
+                        tempExtraTotal = selectedModeExtras[k].value;
+                      }
+                    }
+                    else {
+                      if (selectedModeExtras[k].unit == 'PERCENTAGE') {
+                        tempExtraTotal = selectedModeExtras[k].value * subTotal / 100;
+                      }
+                      else if (selectedModeExtras[k].unit == 'FIXED') {
+                        tempExtraTotal = selectedModeExtras[k].value;
+                      }
+                    }
+
+
+                  }
+
+                  tempExtraTotal = Math.round(tempExtraTotal * 100) / 100;
+
+                  otherCharges.push({
+                    "name": selectedModeExtras[k].name,
+                    "value": selectedModeExtras[k].value,
+                    "unit": selectedModeExtras[k].unit,
+                    "amount": tempExtraTotal,
+                    "isPackagedExcluded": selectedModeExtras[k].excludePackagedFoods
+                  })
+                }
+              }
+
+
+              obj.extras = otherCharges;
+              obj.discount = {};
+              obj.customExtras = {};
+
+              printFreshKOT(obj, 'REQUEST_AUTO_BILL_GENERATION');
+              showToast('The <b>' + order_source + '</b> Order generated Successfully!');
+
+            } //create order
+          
+          } // swiggy, zomato orders..
+          else { //Order from Mobile Devices
+
+            if (orderData.KOTNumber != '') { //Editing Order case..
+
+              var kotID = orderData.KOTNumber;
+
+              //Check if it's already existing KOT (editing or not)
+              var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : '';
+              if (!accelerate_licencee_branch || accelerate_licencee_branch == '') {
+                showToast('Invalid Licence Error: KOT can not be generated. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                return '';
+              }
+
+              var kot_request_data = accelerate_licencee_branch + "_KOT_" + kotID;
+
+              $.ajax({
+                type: 'GET',
+                url: COMMON_LOCAL_SERVER_IP + '/accelerate_kot/' + kot_request_data,
+                timeout: 10000,
+                success: function (oldKOTData) {
+                  if (oldKOTData._id != "") {
+                    printEditedKOT(oldKOTData, orderData);
+                  }
+                  else {
+                    showToast('System Error: KOT is not found. Please contact Accelerate Support if problem persists.', '#e74c3c');
+                          
+                    //start again
+                    removeTapsOrderRequest(orderData._id, orderData._rev);
+                    setTimeout(function () { initialiseProcessing(); }, 3000);
+                  }
+                },
+                error: function (data) {
+
+                  //KOT not found 
+                  showToast('Editing KOT Failed: KOT #<b>' + kotID + '</b> is not found on the server.', '#e74c3c');
+
+                  //Add to Error Log
+                  var errorObj = {
+                    "table": orderData.table,
+                    "staffName": orderData.stewardName,
+                    "staffCode": orderData.stewardCode,
+                    "machine": orderData.machineName
+                  }
+
+                  addToErrorLog(moment().format('hh:mm a'), 'ORDER', 'KOT_NOT_FOUND', kot_request_data, errorObj);
+                  removeTapsOrderRequest(orderData._id, orderData._rev);
+
+                  //start again
+                  setTimeout(function () { initialiseProcessing(); }, 3000);
+                }
+              });
+            }
+            else {
+              printFreshKOT(orderData); //Fresh Order case..
+            }
+                
+          }
 
         }
+      },
+      error: function (data) {
+        showToast('System Error: Unable to fetch orders. Please contact Accelerate Support if problem persists.', '#e74c3c');
+          
+        //go to next round - 3
+        checkForPrints(0);
+      }
+
+    });
+
+  }
+
+
+    //Round 3: Check for Prints (running KOTs punched from Non-mobile devices)
+    function checkForPrints(index) {
+
+    if (SERVICE_APPROVED_PRINTS == 0) {
+
+      //Update Message
+      document.getElementById("pendingPrintsMessage").innerHTML = '<tag style="color: #ce8d27"><i class="fa fa-warning" style="color: #ce8d27"></i> KOTs Disabled</tag>';
+
+      setTimeout(function () { initialiseProcessing(); }, 5000);
+      return "";
+    }
+
+    $.ajax({
+      type: 'GET',
+      url: COMMON_LOCAL_SERVER_IP + '/accelerate_kot_print_requests/_design/print-requests/_view/fetchall',
+      contentType: "application/json",
+      dataType: 'json',
+      timeout: 10000,
+      success: function (data) {
+
+        if (data.rows.length == 0) {
+          //Update Message
+          document.getElementById("pendingPrintsMessage").innerHTML = 'No Pending KOTs';
+
+          //Relax! and start again! 
+          setTimeout(function () { initialiseProcessing(); }, 5000);
+        }
+        else {
+
+          //Update Message
+          document.getElementById("pendingPrintsMessage").innerHTML = '<b>' + data.total_rows + '</b> Pending KOT' + (data.total_rows > 1 ? 's' : '');
+
+          var requestData = data.rows[index].value;
+
+          requestData.printRequest.modeType = requestData.orderDetails.modeType;
+                    
+          switch (requestData.printRequest.action) {
+            case "KOT_NEW": {
+              printKOTRequestNew(requestData);
+              removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
+              break;
+            }
+            case "KOT_EDITING": {
+              printKOTRequestEdited(requestData, requestData.printRequest.comparison);
+              removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
+              break;
+            }
+            case "KOT_DUPLICATE": {
+              printKOTRequestDuplicate(requestData);
+              removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
+              break;
+            }
+            case "KOT_CANCEL": {
+              printKOTRequestCancel(requestData);
+              removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
+              break;
+            }
+            default: {
+                        
+              removeKOTPrintRequest(requestData._id, requestData._rev, requestData.printRequest);
+
+              //go to starting again, after some cool off.
+              setTimeout(function () { initialiseProcessing(); }, 5000);
+                        
+              break;
+            }
+          }
+
+          
+        }
+      },
+      error: function (data) {
+        showToast('System Error: Unable to fetch print requests. Please contact Accelerate Support if problem persists.', '#e74c3c');
+          
+        //Relax! and start again! 
+        setTimeout(function () { initialiseProcessing(); }, 5000);
+      }
+
+    });
+
+  }
 
 }
 
@@ -3011,25 +3009,6 @@ function removeTapsOrderRequest(id, revID, optionalRequest){
 }
 
 
-function removeAlreadyProccessedActionRequest(id, revID, optionalRequest){
-
-        $.ajax({
-          type: 'DELETE',
-          url: COMMON_LOCAL_SERVER_IP+'/accelerate_action_requests/'+id+'?rev='+revID,
-          contentType: "application/json",
-          dataType: 'json',
-          timeout: 10000,
-          success: function(data) {     
-            if(optionalRequest == 'RENDER_ERROR_LOG'){
-              renderErrorsLogCount();
-            }
-          },
-          error: function(data) {
-            showToast('Server Warning: Unable to modify action request. Please contact Accelerate Support.', '#e67e22');
-          }
-        });         
-}
-
 function removeKOTPrintRequest(id, revID, paramsObj){
 
         $.ajax({
@@ -4038,280 +4017,93 @@ function printDuplicateTapsKOT(data, requestData){
 /* Bill Generation */
 function confirmBillGeneration(kotData, actionRequestObj){
 
-    var requestData = {
-      "selector"  :{ 
-                    "identifierTag": "ACCELERATE_BILL_INDEX" 
-                  },
-      "fields"    : ["_rev", "identifierTag", "value"]
-    }
+  $.ajax({
+    type: "POST",
+    url:
+      ACCELERON_SERVER_ENDPOINT + "/billing/generate-bill?kotnumber=" + kotData.KOTNumber,
+    contentType: "application/json",
+    dataType: "json",
+    timeout: 10000,
+    beforeSend: function (xhr) {
+      xhr.setRequestHeader("x-access-token",ACCELERON_SERVER_ACCESS_TOKEN);
+    },
+    success: function (data) {
+      billResponse = data.data;
+      if (billResponse) {
 
-    $.ajax({
-      type: 'POST',
-      url: COMMON_LOCAL_SERVER_IP+'/accelerate_settings/_find',
-      data: JSON.stringify(requestData),
-      contentType: "application/json",
-      dataType: 'json',
-      timeout: 10000,
-      success: function(data) {
-        if(data.docs.length > 0){
-          if(data.docs[0].identifierTag == 'ACCELERATE_BILL_INDEX'){
+        let billNumber = billResponse.newBillFile.KOTNumber;
+        var newBillFile = billResponse.newBillFile;
 
-            var billNumber = parseInt(data.docs[0].value) + 1;
-            confirmBillGenerationAfterProcess(billNumber, kotData, data.docs[0]._rev, actionRequestObj);
-                
-          }
-          else{
-            showToast('Not Found Error: Bill Index data not found. Please contact Accelerate Support.', '#e74c3c');
-          }
+
+
+        //PRINTING THE BILL
+        var set_bill_printer = findDefaultPrinter(actionRequestObj.machine, 'BILL');
+
+
+        if(set_bill_printer != ''){
+            sendToPrinter(newBillFile, 'BILL', set_bill_printer);
         }
         else{
-          showToast('Not Found Error: Bill Index data not found. Please contact Accelerate Support.', '#e74c3c');
+            sendToPrinter(newBillFile, 'BILL');
         }
 
-      },
-      error: function(data) {
-        showToast('System Error: Unable to read Bill Index. Please contact Accelerate Support.', '#e74c3c');
-        
-        //Add to Error Log
-        addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'SYSTEM_BILL_ERROR', actionRequestObj.KOT, actionRequestObj);      
+
+        clearAllMetaDataOfBilling();
+        hideBillPreviewModal();
+        const modeType = billResponse.billingMode;
+
+        var isRenderingTableOnRight = window.localStorage.appCustomSettings_OrderPageRightPanelDisplay && window.localStorage.appCustomSettings_OrderPageRightPanelDisplay == "TABLE";
+        if (optionalPageRef == "ORDER_PUNCHING") {
+
+            if (isRenderingTableOnRight && (billResponse.isTableSetFree || billResponse.isTableStatusUpdated)) {
+                //re-render right panel tables
+                renderTables();
+            }
+
+          renderCustomerInfo();
+          if (modeType != "DINE") {
+            //Pop up bill settlement window
+            settleBillAndPush(
+              encodeURI(JSON.stringify(billResponse.newBillFile)),
+              "ORDER_PUNCHING"
+            );
+          }
+        } else if (optionalPageRef == "SEATING_STATUS") {
+          //Already handled inside billTableMapping() call
+            preloadTableStatus();
+        } else if (optionalPageRef == "LIVE_ORDERS") {
+          //DINE case Already handled inside billTableMapping() call
+            renderAllKOTs();
+        }
+
+
+
+
+        if (modeType != "DINE") {
+          //Pop up bill settlement window
+          settleBillAndPush(encodeURI(JSON.stringify(billResponse.newBillFile)), "ORDER_PUNCHING");
+        }
+
+      
+
+        if (optionalPageRef == "LIVE_ORDERS") {
+          renderAllKOTs();
+        }
+
+        //Update bill number on server
+      } else {
+        showToast("Warning: Bill was not Generated. Try again.", "#e67e22");
       }
-    });
-}
+    },
+    error: function (data) {
+        addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'SYSTEM_BILL_ERROR', actionRequestObj.KOT, actionRequestObj);      
 
-
-function confirmBillGenerationAfterProcess(billNumber, kotData, revID, actionRequestObj){
-
-          console.log('Generating Bill > '+billNumber+' from KOT '+kotData.KOTNumber);
-
-          var kotfile = kotData;
-
-          var raw_cart = kotfile.cart;
-          var beautified_cart = [];
-
-          for(var n = 0; n < raw_cart.length; n++){
-            
-            if(n == 0){
-              beautified_cart.push(raw_cart[0]);
-            }
-            else{
-
-              var duplicateFound = false;
-              var k = 0;
-              while(beautified_cart[k]){
-                if(beautified_cart[k].code == raw_cart[n].code){
-                  if(beautified_cart[k].isCustom && raw_cart[n].isCustom){
-                    if(beautified_cart[k].variant == raw_cart[n].variant){
-                      beautified_cart[k].qty = beautified_cart[k].qty + raw_cart[n].qty;
-                      duplicateFound = true;
-                      break;
-                    }
-                  }
-                  else{
-                    beautified_cart[k].qty = beautified_cart[k].qty + raw_cart[n].qty;
-                    duplicateFound = true;
-                    break;
-                  }
-                }
-
-                k++;
-              }
-
-              if(!duplicateFound){
-                beautified_cart.push(raw_cart[n]);
-              }
-
-            }
-
-          }
-
-
-          kotfile.cart = beautified_cart;
-
-
-          var memory_id = kotfile._id;
-          var memory_rev = kotfile._rev;
-
-          kotfile.billNumber = billNumber,
-          kotfile.paymentMode = "";
-          kotfile.totalAmountPaid = "";
-          kotfile.paymentReference = "";
-
-          var branch_code = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : '';
-          kotfile.outletCode = branch_code != '' ? branch_code : 'UNKNOWN';
-
-
-          /* BILL SUM CALCULATION */
-
-          //Calculate Sum to be paid
-          var grandPayableBill = 0;
-
-          var totalCartAmount = 0;
-          var totalPackagedAmount = 0;
-
-
-          var n = 0;
-          while(kotfile.cart[n]){
-            totalCartAmount += kotfile.cart[n].price * kotfile.cart[n].qty;
-
-            if(kotfile.cart[n].isPackaged){
-              totalPackagedAmount += kotfile.cart[n].qty * kotfile.cart[n].price;
-            }
-
-            grandPayableBill += kotfile.cart[n].price * kotfile.cart[n].qty;
-            n++;
-          }
-
-          //add extras
-          if(!jQuery.isEmptyObject(kotfile.extras)){
-            var m = 0;
-            while(kotfile.extras[m]){
-              grandPayableBill += kotfile.extras[m].amount;
-              m++;
-            }
-          } 
-
-          //add custom extras if any
-          if(!jQuery.isEmptyObject(kotfile.customExtras)){
-            grandPayableBill += kotfile.customExtras.amount;
-          }  
-
-
-          //substract discounts if any
-          if(!jQuery.isEmptyObject(kotfile.discount)){
-            grandPayableBill -= kotfile.discount.amount;
-          
-            if(kotfile.discount.type == 'NOCOSTBILL'){ //Remove all the charges (Special Case)
-              grandPayableBill = 0;
-
-              kotfile.customExtras = {};
-              kotfile.extras = [];
-            }
-
-          }  
-
-          grandPayableBill = parseFloat(grandPayableBill).toFixed(2);   
-          grandPayableBillRounded = properRoundOff(grandPayableBill);   
-
-          kotfile.payableAmount = grandPayableBillRounded;
-          kotfile.calculatedRoundOff = Math.round((grandPayableBillRounded - grandPayableBill) * 100) / 100;
-
-          kotfile.grossCartAmount = totalCartAmount;
-          kotfile.grossPackagedAmount = totalPackagedAmount;
-
-
-          kotfile.timeBill = getCurrentTime('TIME');
-          
-
-          //Remove Unwanted Stuff
-          delete kotfile.specialRemarks;
-          delete kotfile.allergyInfo;
-
-          var c = 0;
-          while(kotfile.cart[c]){
-            
-            delete kotfile.cart[c].ingredients;
-            delete kotfile.cart[c].comments;
-            
-            c++;
-          }
-
-
-            /*Save NEW BILL*/
-
-            //Remove _rev and _id (KOT File Scraps!)
-            var newBillFile = kotfile;
-            delete newBillFile._id;
-            delete newBillFile._rev
-
-
-            //Set _id from Branch mentioned in Licence
-            var accelerate_licencee_branch = window.localStorage.accelerate_licence_branch ? window.localStorage.accelerate_licence_branch : ''; 
-            if(!accelerate_licencee_branch || accelerate_licencee_branch == ''){
-              showToast('Invalid Licence Error: Bill can not be generated. Please contact Accelerate Support if problem persists.', '#e74c3c');
-              return '';
-            }
-
-            kotfile._id = accelerate_licencee_branch+'_BILL_'+billNumber;
-
-
-            //Post to local Server
-            $.ajax({
-              type: 'POST',
-              url: COMMON_LOCAL_SERVER_IP+'/accelerate_bills/',
-              data: JSON.stringify(newBillFile),
-              contentType: "application/json",
-              dataType: 'json',
-              timeout: 10000,
-              success: function(data) {
-                if(data.ok){
-
-                        //DELETE THE KOT
-                        deleteKOTFromServer(memory_id, memory_rev);
-
-
-
-                        //PRINTING THE BILL
-                        var set_bill_printer = findDefaultPrinter(actionRequestObj.machine, 'BILL');
-
-
-                        if(set_bill_printer != ''){
-                            sendToPrinter(newBillFile, 'BILL', set_bill_printer);
-                        }
-                        else{
-                            sendToPrinter(newBillFile, 'BILL');
-                        }
-
-
-                        
-
-                        if(kotfile.orderDetails.modeType == 'DINE'){
-                          billTableMapping(kotfile.table, billNumber, kotfile.payableAmount, 2);
-                        }
-
-                        //Update bill number on server
-                        var updateData = {
-                            "_rev": revID,
-                            "identifierTag": "ACCELERATE_BILL_INDEX",
-                            "value": billNumber
-                        }
-
-                        $.ajax({
-                            type: 'PUT',
-                            url: COMMON_LOCAL_SERVER_IP+'accelerate_settings/ACCELERATE_BILL_INDEX/',
-                            data: JSON.stringify(updateData),
-                            contentType: "application/json",
-                            dataType: 'json',
-                            timeout: 10000,
-                            success: function(data) {
-                              
-                            },
-                            error: function(data) {
-                              showToast('System Error: Unable to update Billing Index. Next Bill Number might be faulty. Please contact Accelerate Support.', '#e74c3c');
-                            
-                              //Add to Error Log
-                              addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'SYSTEM_BILL_ERROR', actionRequestObj.KOT, actionRequestObj);   
-                            }
-
-                        });  
-                }
-                else{
-                  showToast('Warning: Bill was not Generated. Try again.', '#e67e22');
-                }
-              },
-              error: function(data){   
-                if(data.responseJSON.error == "conflict"){
-                  showToast('Bill Number Conflict: <b>Apply Quick Fix #2</b> and try again. Please contact Accelerate Support if problem persists.', '#e74c3c');   
-                } 
-                else{
-                  showToast('System Error: Unable to generate the bill. Please contact Accelerate Support if problem persists.', '#e74c3c');
-                }  
-
-                //Add to Error Log
-                addToErrorLog(moment().format('hh:mm a'), 'REQUEST', 'BILL_GENERATION_FAILED', actionRequestObj.KOT, actionRequestObj);
-              }
-            });  
-            //End - post KOT to Server
-   
+        showToast(
+          "System Error: Unable to generate the bill. Please contact Accelerate Support if problem persists.",
+          "#e74c3c"
+        );
+    },
+  });
 }
 
 function properRoundOff(amount){

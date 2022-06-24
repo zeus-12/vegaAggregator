@@ -1,8 +1,11 @@
 "use strict";
 const BaseService = ACCELERONCORE._services.BaseService;
 const SettingsService = require("../services/SettingsService");
+let BootstrapModel = require('../models/BootstrapModel');
 const ManageMenuService = require("../services/ManageMenuService");
+const KOTService = require("../services/KOTService");
 const DEFAULT_KEY_FOR_GENERIC_SETTINGS = "Any";
+
 
 class BootstrapService extends BaseService {
 
@@ -11,6 +14,8 @@ class BootstrapService extends BaseService {
         this.request = request;
         this.SettingsService = new SettingsService(request);
         this.ManageMenuService = new ManageMenuService(request);
+        this.KOTService = new KOTService(request);
+        this.BootstrapModel = new BootstrapModel(request);
     }
 
     async initialiseAcceleronPOS(machineName) {
@@ -117,50 +122,72 @@ class BootstrapService extends BaseService {
     }
 
 
-  async getDataForAggregatorInitialisation() {
-      
-    let otherMenuData = await this.ManageMenuService.getAllMenuMappings().catch((error)=>{throw new ErrorResponse(
-        ResponseType.BAD_REQUEST,
-        ErrorType.mapped_menu_type_is_empty_or_invalid
-      );})
-      
-    let billingModesData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_MODES").catch((error) => { throw new ErrorResponse(
-        ResponseType.BAD_REQUEST,
-        ErrorType.bill_mode_name_empty_or_invalid 
-    );
-    })
-      
-    let orderSourcesData = await this.SettingsService.getSettingsById("ACCELERATE_ORDER_SOURCES").catch((error) => { throw new ErrorResponse(
-        ResponseType.BAD_REQUEST,
-        ErrorType.order_source_name_empty_or_invalid 
-    );
-    })
-      
-    let registeredDevicesData = await this.SettingsService.getSettingsById("ACCELERATE_REGISTERED_DEVICES").catch((error) => { throw new ErrorResponse(
-        ResponseType.BAD_REQUEST,
-        ErrorType.registered_devices_empty_or_invalid
-    );
-    })
-      
-    let billingParametersData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_PARAMETERS").catch((error) => { throw new ErrorResponse(
-        ResponseType.BAD_REQUEST,
-        ErrorType.bill_param_name_empty_or_invalid
-    );
-    })
-      
-    let masterMenuData = await this.SettingsService.getSettingsById("ACCELERATE_MASTER_MENU").catch((error) => { throw new ErrorResponse(
-        ResponseType.BAD_REQUEST,
-        ErrorType.menu_is_empty
-      ); })
+    async getDataForAggregatorInitialisation() {
+        
+        let otherMenuData = await this.ManageMenuService.getAllMenuMappings().catch((error)=>{throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.mapped_menu_type_is_empty_or_invalid
+        );})
+        
+        let billingModesData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_MODES").catch((error) => { throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.bill_mode_name_empty_or_invalid 
+        );
+        })
+        
+        let orderSourcesData = await this.SettingsService.getSettingsById("ACCELERATE_ORDER_SOURCES").catch((error) => { throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.order_source_name_empty_or_invalid 
+        );
+        })
+        
+        let registeredDevicesData = await this.SettingsService.getSettingsById("ACCELERATE_REGISTERED_DEVICES").catch((error) => { throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.registered_devices_empty_or_invalid
+        );
+        })
+        
+        let billingParametersData = await this.SettingsService.getSettingsById("ACCELERATE_BILLING_PARAMETERS").catch((error) => { throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.bill_param_name_empty_or_invalid
+        );
+        })
+        
+        let masterMenuData = await this.SettingsService.getSettingsById("ACCELERATE_MASTER_MENU").catch((error) => { throw new ErrorResponse(
+            ResponseType.BAD_REQUEST,
+            ErrorType.menu_is_empty
+        ); })
+        
+        let masterMenu = masterMenuData.value
+        
+
+        return {otherMenuData,billingModesData,orderSourcesData,registeredDevicesData,billingParametersData,masterMenu}
+
+
+    }
+        
     
-    let masterMenu = masterMenuData.value
-    
+    async listenRequest() {
 
-    return {otherMenuData,billingModesData,orderSourcesData,registeredDevicesData,billingParametersData,masterMenu}
+        let actionRequestData = await this.BootstrapModel.getAllActionRequests()
+        if(actionRequestData.rows.length == 0) return {requestData:null}
+        var requestData = actionRequestData.rows[0]?.value
+
+        let kotId = requestData.KOT         
+        let kotData = await this.KOTService.getKOTById(kotId).catch((error) => { throw error })
+        return {kotData,requestData}
+    } 
 
 
-  }
-  
+    async getActionRequestById(actionRequestId) {
+        return await this.BootstrapModel.getActionRequestById(actionRequestId).catch((error)=> {throw error})
+    }
+
+    async deleteActionRequestById(actionRequestId) {
+        let actionRequestData = await this.BootstrapModel.getActionRequestById(actionRequestId)
+        const actionRequestRev = actionRequestData._rev
+        return await this.BootstrapModel.deleteActionRequestById(actionRequestId,actionRequestRev).catch((error)=> {throw error})
+    }
 }
 
 module.exports = BootstrapService;
